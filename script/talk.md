@@ -44,11 +44,15 @@ _Told as a theme, not a resume. The origin story first, then where it led._
 
 > "I worked hard in high school. Much like y'all probably, I cared about my grades. I stressed about college applications and summer programs and my exact rank. But if I'm being honest, the things that shaped me most were never the things I did for a grade."
 
-> "It actually starts in middle school. I took robotics, and I really wanted to be the one who programmed the robot. I wanted to be the hacker type. Little did I know that so did every other kid in the class — like twenty of them were all fighting for time on the one computer."
+> "It actually starts in middle school. I took robotics, and I really wanted to be the one who programmed the robot. I wanted to be the hacker type. Little did I know that so did every other kid in the class — twenty other guys, all fighting for time on the one computer."
 >
-> "So instead of fighting for it, I looked around and thought: what can I actually get my hands on? And the answer was the TI-84. Those were free reign. Nobody wanted to program a calculator."
+> "And I was the only girl."
+
+_[let that land]_
+
+> "I could have fought for that spot. But I looked around and thought: this space isn't really making room for me. So what can I actually get my hands on? And the answer was the TI-84. Those were free reign. Nobody wanted to program a calculator."
 >
-> "So I taught myself. And the first thing I built was a prank. If you typed in a small calculation, it'd give you an answer that was... almost right. Randomly off by somewhere between -5 and 5. Just enough to make you second-guess yourself."
+> "So I made my own space. And I taught myself. And the first thing I built was a prank. If you typed in a small calculation, it'd give you an answer that was... almost right. Randomly off by somewhere between -5 and 5. Just enough to make you second-guess yourself."
 
 _[beat, let them laugh]_
 
@@ -65,6 +69,8 @@ _[beat]_
 _[brief laugh]_
 
 > "From there it kept going. I built a grade calculator so I always knew exactly what I needed on the next test. An app that cycled through the worst photos of my friends. I competed in robotics — this time actually getting to program — and 3D printing and quiz bowl. Played violin in the school musical. Sang at a showcase."
+>
+> "And that pattern of making my own space kept showing up. In a lot of these rooms, I was one of very few women, sometimes the only one. You get used to walking in and doing a quick scan. You learn to find the other people who are a little outside the main group too, and you build with them instead."
 >
 > "None of these things connected on a resume. But they all connected in my head — because every one of them was: here's something I'm curious about, here are people I want to do it with, let's see what happens."
 
@@ -166,17 +172,29 @@ _60-90 seconds of chaos. Your room shifts back and forth. Have fun with it._
 
 _Calm. Direct. No slides for this part — just you on screen._
 
-> "I'm not going to tell you that coding will get you into a good school or guarantee you a specific job. I don't know what the world looks like in ten years, and anyone who tells you they do is guessing."
+> "I want to tell you something about why I'm actually here."
 >
-> "What I do know is this: the most interesting problems live at the edges of things. Between biology and software. Between people and systems. Between what exists and what's clearly missing but nobody's built yet."
+> "When I was sitting where you're sitting — in that school, in those hallways — there was no Girls Who Code. There was no club. There was no older woman who came back and said 'hey, I did this and you can too.'"
 >
-> "And the skill that lets you work at those edges is learning to think in systems. To see how parts connect. What breaks. What can be automated, what can't. What the actual problem is underneath the one everyone's trying to solve."
+> "There was just me, a TI-84, and a robotics class full of guys who weren't trying to be mean — they just didn't think to make room. So I made my own."
 >
-> "Coding is one of the best ways to develop that skill — not because you'll write code forever, but because it forces you to be precise about how things work. You can't be fuzzy about logic when a computer is involved. And that clarity transfers to everything: how you understand an organization, how you see a problem, how you think about people."
+> "I had to figure a lot of it out alone."
+
+_[beat]_
+
+> "You don't have to do that. You are sitting in a room full of people who are here for the same reason you are. That is not nothing. That is actually everything. The thing that made Ben and me both better programmers wasn't a class — it was having someone next to us who pushed us. You have a whole room of that."
 >
-> "The people who'll shape the next twenty years aren't necessarily the deepest experts in one thing. They're the ones who can move between worlds, see the connections, and actually build something at the intersection."
+> "I'm the OG girl who coded at this school. You're what comes next. And what comes next has a running start."
+
+_[brief pause, then shift tone slightly]_
+
+> "Here's the one idea I want you to take with you: the most interesting problems in the world live at the edges — between biology and software, between people and systems, between what exists and what's clearly missing. And the people who get to work on those problems are the ones who learned to think across lines. To understand how things connect. To be precise about how systems work, whether those systems are code, or organizations, or people."
+>
+> "Coding is one of the best ways to build that muscle. Not because you'll write code forever — but because you can't be fuzzy about logic when a computer is involved. And that clarity transfers to everything."
 >
 > "You don't have to know what you want to build yet. You just have to stay curious. Keep making things — even if they're ridiculous, even if they're just for you, even if they're just to see if it works."
+>
+> "And keep making them together."
 
 _[beat]_
 
