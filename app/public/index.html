@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0A0A10">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Light Room — Ashika's Talk</title>
+  <link rel="stylesheet" href="/css/design-system.css">
+  <style>
+    /* ── App-level layout ─────────────────────────────────────── */
+    html, body {
+      height: 100%;
+      background: var(--color-bg);
+      overscroll-behavior: none;
+    }
+
+    /* ── Connection status ──────────────────────────────────────── */
+    #connection-status {
+      position: fixed;
+      top: var(--space-3);
+      right: var(--space-3);
+      z-index: var(--z-top);
+      font-family: var(--font-mono);
+      font-size: var(--text-2xs);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-muted);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    #connection-status.visible { opacity: 1; }
+
+    /* ══════════════════════════════════════════════════════════
+       SCREEN 1: LOBBY
+       ══════════════════════════════════════════════════════════ */
+
+    #screen-lobby {
+      background: var(--color-bg);
+      padding: var(--space-6) var(--space-5);
+      position: relative;
+      overflow-y: auto;
+    }
+
+    /* Warm glow from top when room color is set */
+    #screen-lobby::before {
+      content: '';
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150%;
+      height: 300px;
+      background: radial-gradient(
+        ellipse at 50% 0%,
+        color-mix(in srgb, var(--room-color-a) 18%, transparent),
+        transparent 65%
+      );
+      pointer-events: none;
+      z-index: 0;
+      transition: background var(--transition-ambient);
+    }
+
+    #screen-lobby > * { position: relative; z-index: 1; }
+
+    .lobby-header {
+      padding-top: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .lobby-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-3);
+    }
+
+    .lobby-eyebrow .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--room-color-a);
+      box-shadow: 0 0 8px 2px var(--room-color-a);
+      animation: live-pulse 2.4s ease-in-out infinite;
+      transition: background var(--transition-glow), box-shadow var(--transition-glow);
+    }
+
+    @keyframes live-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .lobby-header h1 {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: var(--space-2);
+    }
+
+    .lobby-header h1 em {
+      font-style: normal;
+      color: var(--room-color-a);
+      text-shadow:
+        0 0 30px color-mix(in srgb, var(--room-color-a) 50%, transparent);
+      transition: color var(--transition-glow), text-shadow var(--transition-glow);
+    }
+
+    .lobby-header p {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+
+    /* Counter box */
+    #lobby-counter-box {
+      margin-bottom: var(--space-6);
+    }
+
+    .lobby-counter .lobby-counter__people {
+      margin-top: var(--space-3);
+    }
+
+    /* Form */
+    .lobby-form label {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-2);
+    }
+
+    .lobby-section-label {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin: var(--space-5) 0 var(--space-3);
+    }
+
+    /* Color preview strip — replaced dither with smooth gradient */
+    #lobby-preview-strip {
+      width: 100%;
+      height: 36px;
+      border-radius: var(--radius-md);
+      margin: var(--space-3) 0;
+      background: linear-gradient(
+        90deg,
+        var(--room-color-a),
+        var(--room-color-b)
+      );
+      box-shadow: 0 0 20px -4px var(--room-color-a);
+      transition:
+        background var(--transition-ambient),
+        box-shadow var(--transition-ambient);
+    }
+
+    /* Join button — uses room color */
+    #lobby-join-btn {
+      background: var(--room-color-a);
+      border-color: transparent;
+      color: rgba(0, 0, 0, 0.85);
+      box-shadow: 0 0 24px -4px var(--room-color-a);
+      transition:
+        background var(--transition-glow),
+        box-shadow var(--transition-glow),
+        transform var(--transition-fast);
+    }
+
+    #lobby-join-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Joined state */
+    #lobby-joined {
+      text-align: center;
+      padding: var(--space-12) var(--space-4);
+    }
+
+    .lobby-joined-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: var(--space-4);
+    }
+
+    #lobby-joined h2 {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 600;
+      color: var(--color-text);
+      letter-spacing: -0.02em;
+      line-height: 1.4;
+      margin-bottom: var(--space-3);
+    }
+
+    #lobby-joined p {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      line-height: 1.8;
+    }
+
+    /* Color preview after join */
+    #joined-color-preview {
+      border-radius: var(--radius-lg);
+      margin-top: var(--space-6);
+      height: 52px;
+      background: linear-gradient(
+        90deg,
+        var(--room-color-a),
+        var(--room-color-b)
+      );
+      box-shadow: 0 0 32px -6px var(--room-color-a);
+      transition:
+        background var(--transition-ambient),
+        box-shadow var(--transition-ambient);
+    }
+
+    .lobby-pulse {
+      display: inline-block;
+      animation: pulse-scale 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse-scale {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.08); opacity: 0.75; }
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SCREEN 2: COLOR CONTROL
+       ══════════════════════════════════════════════════════════ */
+
+    #screen-color {
+      background: var(--color-bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    #screen-color::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: radial-gradient(
+        ellipse at 50% 0%,
+        color-mix(in srgb, var(--room-color-a) 15%, transparent),
+        transparent 70%
+      );
+      pointer-events: none;
+      transition: background var(--transition-ambient);
+    }
+
+    .color-screen-header {
+      padding: var(--space-5) var(--space-5) var(--space-3);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .color-screen-header h2 {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-1);
+    }
+
+    .color-screen-header p {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+    }
+
+    #color-grid-main {
+      flex: 1;
+      padding: var(--space-3) var(--space-4);
+      position: relative;
+      z-index: 1;
+      overflow-y: auto;
+    }
+
+    /* Bottom: current sent color status */
+    .color-sent-strip {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .color-sent-strip__swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--current-color, #FF6EB4);
+      flex-shrink: 0;
+      box-shadow: 0 0 12px -2px currentColor;
+      transition: background var(--transition-glow);
+    }
+
+    .color-sent-strip__text {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    .color-sent-strip__label {
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text);
+      display: block;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SCREEN 3: AMBIENT / STORY MODE
+       ══════════════════════════════════════════════════════════ */
+
+    #screen-ambient {
+      position: relative;
+    }
+
+    #screen-ambient .ambient-bg {
+      position: absolute;
+      inset: 0;
+      transition: background var(--transition-ambient);
+    }
+
+    #screen-ambient .ambient-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .ambient-corner {
+      padding: var(--space-5) var(--space-5) 0;
+    }
+
+    .ambient-corner p {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: rgba(255, 255, 255, 0.6);
+      background: rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 5px 10px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      letter-spacing: 0.03em;
+    }
+
+    .ambient-spacer {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ambient-bottom {
+      padding: var(--space-3) var(--space-4) var(--space-5);
+    }
+
+    /* Park a question btn in ambient */
+    .ambient-action-row {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 var(--space-4) var(--space-3);
+    }
+
+    #park-question-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    #park-question-btn:hover {
+      background: rgba(255, 255, 255, 0.13);
+      color: #FFFFFF;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SCREEN 4: PHOTO COLLAGE
+       ══════════════════════════════════════════════════════════ */
+
+    #screen-photos {
+      background: #050508;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8) var(--space-5);
+      position: relative;
+    }
+
+    #screen-photos::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        ellipse at 50% 50%,
+        color-mix(in srgb, var(--room-color-a) 12%, transparent),
+        transparent 65%
+      );
+      pointer-events: none;
+      transition: background var(--transition-ambient);
+    }
+
+    .photo-container {
+      width: 100%;
+      max-width: 340px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Photo navigation dots */
+    .photo-nav {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-2);
+      margin-top: var(--space-5);
+      z-index: 1;
+    }
+
+    .photo-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      cursor: pointer;
+      transition:
+        background var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
+      padding: 0;
+      min-height: 0;
+    }
+
+    .photo-dot.active {
+      background: var(--room-color-a);
+      transform: scale(1.3);
+      box-shadow: 0 0 8px 2px var(--room-color-a);
+    }
+
+    .photo-caption-row {
+      text-align: center;
+      margin-top: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: rgba(255, 255, 255, 0.3);
+      letter-spacing: 0.06em;
+      z-index: 1;
+    }
+
+    .swipe-hint {
+      font-size: var(--text-xs);
+      color: rgba(255, 255, 255, 0.18);
+      text-align: center;
+      margin-top: var(--space-2);
+      letter-spacing: 0.04em;
+    }
+
+    /* Photo decorations — subtler now */
+    .photo-frame__decoration {
+      position: absolute;
+      font-size: 14px;
+      line-height: 1;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SCREEN 5: FREE TEXT
+       ══════════════════════════════════════════════════════════ */
+
+    #screen-text {
+      background: var(--color-bg);
+      padding: var(--space-8) var(--space-5);
+      position: relative;
+    }
+
+    #screen-text::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 240px;
+      background: radial-gradient(
+        ellipse at 50% 0%,
+        color-mix(in srgb, var(--room-color-a) 12%, transparent),
+        transparent 70%
+      );
+      pointer-events: none;
+      transition: background var(--transition-ambient);
+    }
+
+    .text-prompt {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.03em;
+      line-height: 1.3;
+      margin-bottom: var(--space-6);
+      position: relative;
+    }
+
+    .text-prompt em {
+      font-style: normal;
+      display: block;
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: 400;
+      color: var(--color-text-muted);
+      margin-top: var(--space-1);
+      letter-spacing: 0;
+    }
+
+    #text-submit-btn {
+      background: var(--room-color-a);
+      border-color: transparent;
+      color: rgba(0, 0, 0, 0.85);
+      font-weight: 600;
+      box-shadow: 0 0 20px -6px var(--room-color-a);
+      transition:
+        background var(--transition-glow),
+        box-shadow var(--transition-glow),
+        transform var(--transition-fast);
+    }
+
+    .text-feed-label {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-text-dim);
+      margin-bottom: var(--space-2);
+    }
+
+    #text-feed {
+      max-height: 35vh;
+      overflow-y: auto;
+      margin-top: var(--space-4);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SCREEN 6: DEMO REVEAL
+       ══════════════════════════════════════════════════════════ */
+
+    #screen-demo {
+      background: var(--color-bg);
+      padding: var(--space-8) var(--space-5);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #screen-demo::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(
+          ellipse at 50% 30%,
+          color-mix(in srgb, var(--room-color-a) 8%, transparent),
+          transparent 60%
+        );
+      pointer-events: none;
+      transition: background var(--transition-ambient);
+    }
+
+    .demo-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      text-align: center;
+      margin-bottom: var(--space-2);
+      position: relative;
+    }
+
+    .demo-subtitle {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      text-align: center;
+      margin-top: var(--space-2);
+      margin-bottom: var(--space-6);
+      position: relative;
+    }
+
+    .demo-caption {
+      font-size: var(--text-xs);
+      color: var(--color-text-dim);
+      text-align: center;
+      margin-bottom: var(--space-6);
+      font-style: italic;
+      position: relative;
+    }
+
+    #demo-counter-display {
+      text-align: center;
+      margin: var(--space-4) 0;
+      position: relative;
+    }
+
+    #demo-terminal {
+      flex: 1;
+      min-height: 180px;
+      max-height: 40vh;
+      position: relative;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SCREEN 7: Q&A
+       ══════════════════════════════════════════════════════════ */
+
+    #screen-qa {
+      position: relative;
+    }
+
+    #screen-qa .qa-bg {
+      position: absolute;
+      inset: 0;
+      transition: background var(--transition-ambient);
+    }
+
+    #screen-qa .qa-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: var(--space-5);
+    }
+
+    .qa-header {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.03em;
+      text-align: center;
+      padding: var(--space-4) 0;
+      margin-bottom: var(--space-2);
+    }
+
+    .qa-header span {
+      display: block;
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: 400;
+      color: var(--color-text-muted);
+      letter-spacing: 0;
+      margin-top: 4px;
+    }
+
+    #qa-feed {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: var(--space-2) 0;
+    }
+
+    .qa-input-row {
+      display: flex;
+      gap: var(--space-2);
+      padding: var(--space-3) 0;
+    }
+
+    .qa-input-row .input-pixel {
+      flex: 1;
+    }
+
+    #qa-submit-btn {
+      background: var(--room-color-a);
+      border-color: transparent;
+      color: rgba(0, 0, 0, 0.85);
+      font-weight: 700;
+      box-shadow: 0 0 14px -4px var(--room-color-a);
+      transition:
+        background var(--transition-glow),
+        box-shadow var(--transition-glow);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SCREEN 8: SEND-OFF
+       Already handled in design-system.css (.sendoff class)
+       ══════════════════════════════════════════════════════════ */
+
+    /* ── Modal overlay ─────────────────────────────────────────── */
+    #question-modal .modal-sheet h3 {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: var(--space-2);
+      letter-spacing: -0.02em;
+    }
+
+    .modal-sheet .modal-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+      line-height: 1.6;
+    }
+
+    /* Park submit btn */
+    #park-submit-btn {
+      background: var(--room-color-a);
+      border-color: transparent;
+      color: rgba(0, 0, 0, 0.85);
+      font-weight: 600;
+    }
+
+    /* People row — person SVG icons */
+    .people-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-top: var(--space-2);
+    }
+
+    /* ── ZAP feedback ──────────────────────────────────────────── */
+    /* .nyc-zap is a container set up in JS — give it the display block */
+    .nyc-zap {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: rgba(0, 0, 0, 0.85);
+    }
+  </style>
+</head>
+<body class="noise-layer">
+
+<div class="app-root" id="app">
+
+  <!-- Connection status pill -->
+  <div id="connection-status" role="status" aria-live="polite">
+    <span id="connection-text">connecting...</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 1: LOBBY
+       ══════════════════════════════════════════════════════════ -->
+  <section id="screen-lobby" class="screen active" aria-label="Join the room">
+
+    <!-- Pre-join form -->
+    <div id="lobby-form-view">
+      <div class="lobby-header">
+        <p class="lobby-eyebrow">
+          <span class="live-dot" aria-hidden="true"></span>
+          NYC — Live
+        </p>
+        <h1>You're connecting<br>to <em>New York City</em></h1>
+        <p>Pick a color. Your choice changes<br>the actual lights in Ashika's room.</p>
+      </div>
+
+      <!-- Live counter -->
+      <div class="lobby-counter" id="lobby-counter-box">
+        <div>
+          <div class="lobby-counter__number" id="lobby-count">0</div>
+          <div class="lobby-counter__label">in the room right now</div>
+          <div class="people-row" id="lobby-people-row">
+            <!-- Person SVGs injected by JS -->
+          </div>
+        </div>
+      </div>
+
+      <form class="lobby-form mt-6" id="lobby-form" autocomplete="off" novalidate>
+        <label for="name-input">Your name</label>
+        <input
+          type="text"
+          id="name-input"
+          class="input-pixel"
+          placeholder="what do you go by?"
+          maxlength="24"
+          autocomplete="off"
+          spellcheck="false"
+          required
+        >
+
+        <span class="lobby-section-label mt-4">Choose your color</span>
+
+        <!-- Color palette — 4 columns of large swatches -->
+        <div class="color-grid" id="lobby-palette" role="radiogroup" aria-label="Choose a color">
+          <!-- Swatches injected by JS from palette.js -->
+        </div>
+
+        <!-- Color preview bar (was dither-bg, kept class for JS compat) -->
+        <div id="lobby-preview-strip" class="dither-bg" aria-hidden="true"></div>
+
+        <button
+          type="submit"
+          class="btn-pixel btn-pixel--wide btn-pixel--lg mt-4"
+          id="lobby-join-btn"
+          aria-label="Join the room"
+        >
+          Join the room
+        </button>
+      </form>
+    </div>
+
+    <!-- Post-join confirmation -->
+    <div id="lobby-joined" class="hidden">
+      <span class="lobby-joined-icon lobby-pulse" aria-hidden="true">💡</span>
+      <h2 id="lobby-joined-msg">You're in!</h2>
+      <p>
+        Ashika's lights are live.<br>
+        Your color is in the mix.<br>
+        Watch for your turn.
+      </p>
+      <div id="joined-color-preview" class="dither-bg" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 2: COLOR CONTROL
+       ══════════════════════════════════════════════════════════ -->
+  <section id="screen-color" class="screen" aria-label="Color control">
+    <div class="color-screen-header">
+      <h2>Change the lights</h2>
+      <p>Last color sent wins</p>
+    </div>
+
+    <div id="color-grid-main">
+      <div class="color-grid" id="color-palette-main" role="radiogroup" aria-label="Choose a color to send">
+        <!-- Swatches injected by JS -->
+      </div>
+    </div>
+
+    <!-- Bottom: sent color status -->
+    <div class="color-sent-strip">
+      <div class="color-sent-strip__swatch" id="sent-color-swatch"></div>
+      <div>
+        <span class="color-sent-strip__label" id="sent-color-name">—</span>
+        <div class="color-sent-strip__text" id="sent-color-status">tap a color above</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 3: AMBIENT / STORY MODE
+       ══════════════════════════════════════════════════════════ -->
+  <section id="screen-ambient" class="screen" aria-label="Ambient mode">
+    <div class="ambient-bg dither-bg" id="ambient-dither-bg"></div>
+
+    <div class="ambient-content">
+      <div class="ambient-corner">
+        <p id="ambient-user-tag">watching the lights</p>
+      </div>
+
+      <div class="ambient-spacer" id="sparkle-container" aria-hidden="true">
+        <!-- Sparkles injected by JS -->
+      </div>
+
+      <div class="ambient-bottom">
+        <!-- Reaction bar -->
+        <div class="reaction-bar" role="group" aria-label="React to the talk">
+          <button class="reaction-btn" data-emoji="👀" aria-label="Eyes reaction">
+            <span aria-hidden="true">👀</span>
+            <span class="reaction-count" data-emoji-count="👀">0</span>
+          </button>
+          <button class="reaction-btn" data-emoji="💡" aria-label="Lightbulb reaction">
+            <span aria-hidden="true">💡</span>
+            <span class="reaction-count" data-emoji-count="💡">0</span>
+          </button>
+          <button class="reaction-btn" data-emoji="🔥" aria-label="Fire reaction">
+            <span aria-hidden="true">🔥</span>
+            <span class="reaction-count" data-emoji-count="🔥">0</span>
+          </button>
+          <button class="reaction-btn" data-emoji="😮" aria-label="Wow reaction">
+            <span aria-hidden="true">😮</span>
+            <span class="reaction-count" data-emoji-count="😮">0</span>
+          </button>
+        </div>
+
+        <!-- Park a question -->
+        <div class="ambient-action-row">
+          <button
+            class="btn-pixel btn-pixel--sm"
+            id="park-question-btn"
+            aria-label="Park a question for later"
+            aria-haspopup="dialog"
+          >
+            Park a question
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 4: PHOTO COLLAGE
+       ══════════════════════════════════════════════════════════ -->
+  <section id="screen-photos" class="screen" aria-label="Photo collage">
+    <div class="photo-container" id="photo-container">
+      <div class="photo-frame" id="photo-frame">
+        <div class="photo-frame__decoration" style="top:-10px; right:-10px" id="photo-deco-1">⭐</div>
+        <div class="photo-frame__decoration" style="bottom:40px; left:-12px" id="photo-deco-2">💖</div>
+
+        <!-- Placeholder — real photos come from /photos/ -->
+        <div
+          id="photo-display"
+          style="width:100%; aspect-ratio:4/3; background:var(--color-surface-2); display:flex; align-items:center; justify-content:center;"
+        >
+          <p style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-dim); text-align:center; padding:1rem; line-height:2; letter-spacing:0.04em">
+            Add photos to<br>/photos/highschool/<br>and /photos/college/
+          </p>
+        </div>
+        <div class="photo-frame__caption" id="photo-caption">CSHS</div>
+      </div>
+    </div>
+
+    <div class="photo-nav" id="photo-nav" role="group" aria-label="Photo navigation">
+      <!-- Dots injected by JS -->
+    </div>
+
+    <p class="photo-caption-row" id="photo-counter-text"></p>
+    <p class="swipe-hint">swipe to navigate</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 5: FREE TEXT INPUT
+       ══════════════════════════════════════════════════════════ -->
+  <section id="screen-text" class="screen" aria-label="Open question">
+    <p class="text-prompt">
+      What do you actually love?
+      <em>not tech. anything.</em>
+    </p>
+
+    <form id="text-form" autocomplete="off" novalidate>
+      <textarea
+        id="text-input"
+        class="input-pixel input-pixel--textarea"
+        placeholder="music, art, cooking, people, places..."
+        maxlength="140"
+        rows="3"
+        aria-label="What do you love"
+      ></textarea>
+      <button
+        type="submit"
+        class="btn-pixel btn-pixel--wide mt-4"
+        id="text-submit-btn"
+      >
+        Send it
+      </button>
+    </form>
+
+    <div style="margin-top: var(--space-6)">
+      <p class="text-feed-label">from the room</p>
+      <div class="feed" id="text-feed" aria-live="polite" aria-label="Live responses">
+        <!-- Feed items injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 6: DEMO REVEAL
+       ══════════════════════════════════════════════════════════ -->
+  <section id="screen-demo" class="screen" aria-label="Demo reveal">
+    <p class="demo-title">this room sent</p>
+
+    <div id="demo-counter-display">
+      <div class="big-counter" id="demo-count-number" aria-live="polite">0</div>
+    </div>
+
+    <p class="demo-subtitle">color changes to NYC</p>
+    <p class="demo-caption">
+      that's the whole trick.<br>software is just very precise.
+    </p>
+
+    <!-- Terminal log -->
+    <div class="terminal" id="demo-terminal" aria-label="Message log">
+      <span class="terminal-line">$ connecting to NYC...</span><br>
+      <span class="terminal-cursor" aria-hidden="true"></span>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 7: Q&A
+       ══════════════════════════════════════════════════════════ -->
+  <section id="screen-qa" class="screen" aria-label="Q and A">
+    <div class="qa-bg dither-bg" id="qa-dither-bg"></div>
+
+    <div class="qa-content">
+      <h2 class="qa-header">
+        Ask Ashika anything
+        <span>no wrong questions</span>
+      </h2>
+
+      <!-- Scrolling question feed -->
+      <div class="feed" id="qa-feed" aria-live="polite" aria-label="Questions">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Input row -->
+      <div class="qa-input-row">
+        <input
+          type="text"
+          id="qa-input"
+          class="input-pixel"
+          placeholder="type your question..."
+          maxlength="200"
+          autocomplete="off"
+          aria-label="Your question"
+        >
+        <button
+          class="btn-pixel btn-pixel--sm"
+          id="qa-submit-btn"
+          aria-label="Send question"
+        >
+          Send
+        </button>
+      </div>
+
+      <!-- Reactions in Q&A -->
+      <div class="reaction-bar" role="group" aria-label="React">
+        <button class="reaction-btn" data-emoji="👀" aria-label="Eyes">
+          <span aria-hidden="true">👀</span>
+          <span class="reaction-count" data-emoji-count="👀">0</span>
+        </button>
+        <button class="reaction-btn" data-emoji="💡" aria-label="Lightbulb">
+          <span aria-hidden="true">💡</span>
+          <span class="reaction-count" data-emoji-count="💡">0</span>
+        </button>
+        <button class="reaction-btn" data-emoji="🔥" aria-label="Fire">
+          <span aria-hidden="true">🔥</span>
+          <span class="reaction-count" data-emoji-count="🔥">0</span>
+        </button>
+        <button class="reaction-btn" data-emoji="😮" aria-label="Wow">
+          <span aria-hidden="true">😮</span>
+          <span class="reaction-count" data-emoji-count="😮">0</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 8: SEND-OFF
+       ══════════════════════════════════════════════════════════ -->
+  <section id="screen-sendoff" class="screen sendoff" aria-label="Thank you">
+    <div id="sendoff-sparkles" aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
+
+    <div style="position:relative; z-index:1; text-align:center">
+      <p class="sendoff__text">
+        Make something.<br>
+        Show someone.<br>
+        Keep going.
+      </p>
+      <p class="sendoff__credit">— Ashika Verma, MIT EECS '24</p>
+    </div>
+  </section>
+
+</div><!-- /.app-root -->
+
+<!-- ══════════════════════════════════════════════════════════
+     MODAL: Park a question
+     ══════════════════════════════════════════════════════════ -->
+<div id="question-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Park a question">
+  <div class="modal-sheet">
+    <h3>Park a question</h3>
+    <p class="modal-desc">
+      Ashika will see it on her screen.<br>She'll call on you later.
+    </p>
+    <form id="park-form" autocomplete="off" novalidate>
+      <textarea
+        id="park-input"
+        class="input-pixel input-pixel--textarea"
+        placeholder="what's on your mind?"
+        maxlength="200"
+        rows="3"
+        aria-label="Your question"
+      ></textarea>
+      <div style="display:flex; gap:var(--space-3); margin-top:var(--space-4)">
+        <button
+          type="button"
+          class="btn-pixel btn-pixel--ghost"
+          id="park-cancel-btn"
+          style="flex:1"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-pixel"
+          id="park-submit-btn"
+          style="flex:2"
+        >
+          Send it
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ZAP feedback layer -->
+<div id="zap-layer" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;z-index:var(--z-top)"></div>
+
+<!-- Confetti container -->
+<div id="confetti-layer" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;z-index:var(--z-top);overflow:hidden"></div>
+
+<!-- Mode flash overlay -->
+<div id="mode-flash" aria-hidden="true" style="display:none"></div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Host — Light Room</title>
+  <link rel="stylesheet" href="/css/design-system.css">
+  <style>
+    /* ── Host-specific layout ─────────────────────────────────── */
+    html, body {
+      height: 100%;
+      background: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    .host-root {
+      max-width: 600px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      padding: var(--space-5);
+      padding-bottom: 120px;
+    }
+
+    /* ── Auth gate ──────────────────────────────────────────────── */
+    #auth-gate {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-6);
+      padding: var(--space-6);
+      background: var(--color-bg);
+      position: relative;
+    }
+
+    #auth-gate::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120%;
+      height: 400px;
+      background: radial-gradient(
+        ellipse at 50% 20%,
+        color-mix(in srgb, var(--room-color-a) 15%, transparent),
+        transparent 65%
+      );
+      pointer-events: none;
+    }
+
+    .auth-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      position: relative;
+    }
+
+    #auth-gate h1 {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      text-align: center;
+      position: relative;
+    }
+
+    #auth-gate h1 em {
+      font-style: normal;
+      color: var(--room-color-a);
+      text-shadow: 0 0 30px color-mix(in srgb, var(--room-color-a) 40%, transparent);
+    }
+
+    #auth-gate p {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      text-align: center;
+      position: relative;
+    }
+
+    #auth-gate form {
+      width: 100%;
+      max-width: 320px;
+      position: relative;
+    }
+
+    #auth-gate .btn-pixel {
+      background: var(--room-color-a);
+      border-color: transparent;
+      color: rgba(0, 0, 0, 0.85);
+      font-weight: 600;
+      box-shadow: 0 0 20px -4px var(--room-color-a);
+    }
+
+    #auth-error {
+      font-size: var(--text-sm);
+      color: #ff6b6b;
+      margin-top: var(--space-3);
+      text-align: center;
+      display: none;
+    }
+
+    /* ── Sections ───────────────────────────────────────────────── */
+    .host-section {
+      margin-bottom: var(--space-6);
+    }
+
+    .host-section-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-3);
+    }
+
+    /* ── Header strip ───────────────────────────────────────────── */
+    .host-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-2) 0 var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+      margin-bottom: var(--space-5);
+    }
+
+    .host-header h1 {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .host-header h1 span {
+      display: block;
+      font-size: var(--text-xs);
+      font-family: var(--font-mono);
+      font-weight: 400;
+      color: var(--color-text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .host-status-pill {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-green);
+      background: color-mix(in srgb, var(--color-green) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-green) 25%, transparent);
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Mode grid ──────────────────────────────────────────────── */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+    }
+
+    /* Host color grid — smaller swatches than student view */
+    #host-color-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    #host-color-grid .color-swatch {
+      height: 48px;
+      border-radius: var(--radius-sm);
+    }
+
+    #host-color-grid .color-swatch .swatch-name {
+      display: none; /* too small to show names at this size */
+    }
+
+    /* ── Scrollbar ──────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 99px;
+    }
+
+    /* Empty state text in lists */
+    .empty-state {
+      font-size: var(--text-sm);
+      color: var(--color-text-dim);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Auth Gate ──────────────────────────────────────────────────────────── -->
+<div id="auth-gate">
+  <p class="auth-eyebrow">Host Dashboard</p>
+  <h1>Light <em>Room</em></h1>
+  <p>Ashika only. Enter the access key.</p>
+  <form id="auth-form" autocomplete="off" style="width:100%; max-width:320px">
+    <input
+      type="password"
+      id="auth-input"
+      class="input-pixel"
+      placeholder="access key..."
+      autocomplete="current-password"
+      aria-label="Host access key"
+    >
+    <button
+      type="submit"
+      class="btn-pixel btn-pixel--wide mt-4"
+    >
+      Enter
+    </button>
+    <p id="auth-error">Wrong key. Try again.</p>
+  </form>
+</div>
+
+<!-- ── Host Dashboard (hidden until authed) ───────────────────────────────── -->
+<div id="host-dashboard" class="host-root" style="display:none">
+
+  <!-- Header -->
+  <div class="host-header">
+    <h1>
+      <span>Light Room</span>
+      Host Dashboard
+    </h1>
+    <div id="host-status-pill" class="host-status-pill">● connecting</div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="host-section">
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-number" id="host-student-count">0</span>
+        <span class="stat-label">students</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" id="host-color-count">0</span>
+        <span class="stat-label">colors sent</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" id="host-q-count">0</span>
+        <span class="stat-label">questions</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Current room color -->
+  <div class="host-section">
+    <p class="host-section-title">Current room color</p>
+    <div class="room-color-bar" id="host-room-color-bar"></div>
+    <p
+      style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-dim); margin-top:var(--space-2)"
+      id="host-room-color-label"
+    >—</p>
+  </div>
+
+  <!-- Mode switcher -->
+  <div class="host-section">
+    <p class="host-section-title">Mode switcher</p>
+    <div class="mode-grid">
+      <button class="host-mode-btn" data-mode="lobby" aria-label="Switch to Lobby mode">
+        <span class="mode-emoji">🏠</span>
+        Lobby
+      </button>
+      <button class="host-mode-btn" data-mode="color" aria-label="Switch to Color Control mode">
+        <span class="mode-emoji">🎨</span>
+        Color Control
+      </button>
+      <button class="host-mode-btn" data-mode="ambient" aria-label="Switch to Ambient mode">
+        <span class="mode-emoji">✨</span>
+        Ambient
+      </button>
+      <button class="host-mode-btn" data-mode="photos" aria-label="Switch to Photo Collage mode">
+        <span class="mode-emoji">📸</span>
+        Photos
+      </button>
+      <button class="host-mode-btn" data-mode="text" aria-label="Switch to Free Text mode">
+        <span class="mode-emoji">💬</span>
+        Open Question
+      </button>
+      <button class="host-mode-btn" data-mode="demo" aria-label="Switch to Demo Reveal mode">
+        <span class="mode-emoji">🎉</span>
+        Demo Reveal
+      </button>
+      <button class="host-mode-btn" data-mode="qa" aria-label="Switch to Q&A mode">
+        <span class="mode-emoji">🙋</span>
+        Q&amp;A
+      </button>
+      <button class="host-mode-btn" data-mode="sendoff" aria-label="Switch to Send-off mode">
+        <span class="mode-emoji">💖</span>
+        Send-off
+      </button>
+    </div>
+  </div>
+
+  <!-- Host color picker — direct bulb override -->
+  <div class="host-section">
+    <p class="host-section-title">Override color (bypasses students)</p>
+    <div class="color-grid" id="host-color-grid" role="radiogroup" aria-label="Choose a color to send to lights">
+      <!-- Injected by host.js -->
+    </div>
+    <div class="host-color-preview">
+      <div class="host-color-swatch" id="host-picked-swatch"></div>
+      <span class="host-color-label" id="host-picked-label">select a color above</span>
+    </div>
+  </div>
+
+  <!-- Reaction pulse -->
+  <div class="host-section">
+    <p class="host-section-title">Reaction pulse</p>
+    <div class="reaction-pulse-grid">
+      <div class="reaction-pulse-item">
+        <div class="reaction-pulse-header">
+          <span class="reaction-pulse-emoji">👀</span>
+          <span class="reaction-pulse-count" data-pulse-emoji="👀">0</span>
+        </div>
+        <div class="pixel-progress">
+          <div class="pixel-progress__bar" id="pulse-bar-eyes" style="--progress-color:#4DBBFF; width:0%"></div>
+        </div>
+      </div>
+      <div class="reaction-pulse-item">
+        <div class="reaction-pulse-header">
+          <span class="reaction-pulse-emoji">💡</span>
+          <span class="reaction-pulse-count" data-pulse-emoji="💡">0</span>
+        </div>
+        <div class="pixel-progress">
+          <div class="pixel-progress__bar" id="pulse-bar-bulb" style="--progress-color:#FBBF24; width:0%"></div>
+        </div>
+      </div>
+      <div class="reaction-pulse-item">
+        <div class="reaction-pulse-header">
+          <span class="reaction-pulse-emoji">🔥</span>
+          <span class="reaction-pulse-count" data-pulse-emoji="🔥">0</span>
+        </div>
+        <div class="pixel-progress">
+          <div class="pixel-progress__bar" id="pulse-bar-fire" style="--progress-color:#FF6B35; width:0%"></div>
+        </div>
+      </div>
+      <div class="reaction-pulse-item">
+        <div class="reaction-pulse-header">
+          <span class="reaction-pulse-emoji">😮</span>
+          <span class="reaction-pulse-count" data-pulse-emoji="😮">0</span>
+        </div>
+        <div class="pixel-progress">
+          <div class="pixel-progress__bar" id="pulse-bar-wow" style="--progress-color:#C77DFF; width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student list -->
+  <div class="host-section">
+    <p class="host-section-title">Students in the room</p>
+    <div class="student-list" id="student-list" aria-live="polite">
+      <p class="empty-state">Waiting for students...</p>
+    </div>
+  </div>
+
+  <!-- Text responses -->
+  <div class="host-section" id="text-responses-section">
+    <p class="host-section-title">Open question responses</p>
+    <div class="text-preview-feed" id="host-text-feed" aria-live="polite">
+      <p class="empty-state">Responses will appear here...</p>
+    </div>
+  </div>
+
+  <!-- Question queue -->
+  <div class="host-section">
+    <p class="host-section-title">
+      Question queue
+      (<span id="q-count-display">0</span>)
+    </p>
+    <div class="question-queue" id="question-queue" aria-live="polite">
+      <p class="empty-state">Questions will appear here...</p>
+    </div>
+  </div>
+
+</div><!-- /#host-dashboard -->
+
+<script type="module" src="/js/host.js"></script>
+</body>
+</html>

@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<!--
+  PIXEL ART DESIGN SYSTEM SHOWCASE
+  ===================================
+  Open this file directly in a browser — no server needed.
+  Everything works standalone: fonts load from Google Fonts,
+  JS is inline, no external dependencies.
+
+  This is your component reference + visual spec.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Art Design System — Light Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    /* ================================================================
+       DESIGN TOKENS
+       ================================================================ */
+    :root {
+      --font-pixel: 'Press Start 2P', monospace;
+      --text-xs:   8px;
+      --text-sm:   10px;
+      --text-base: 12px;
+      --text-md:   14px;
+      --text-lg:   16px;
+      --text-xl:   20px;
+      --text-2xl:  24px;
+      --text-3xl:  32px;
+      --text-4xl:  40px;
+
+      --color-bg:          #FFF8F0;
+      --color-surface:     #FFECD4;
+      --color-border:      #2D1B00;
+      --color-text:        #2D1B00;
+      --color-text-muted:  #8B5E3C;
+      --color-text-light:  #FFFFFF;
+
+      --color-pink:        #FF6EB4;
+      --color-pink-dark:   #D94F95;
+      --color-yellow:      #FFD93D;
+      --color-green:       #6BCB77;
+      --color-blue:        #4DBBFF;
+      --color-purple:      #C77DFF;
+
+      --room-color-a: #FF6EB4;
+      --room-color-b: #FFB3D9;
+
+      --space-1: 4px;  --space-2: 8px;   --space-3: 12px;
+      --space-4: 16px; --space-5: 20px;  --space-6: 24px;
+      --space-8: 32px; --space-10: 40px; --space-12: 48px;
+      --tap-min: 48px;
+
+      --transition-fast:   80ms steps(2, end);
+      --transition-medium: 160ms steps(4, end);
+      --transition-smooth: 300ms ease;
+      --transition-dither: 1200ms ease;
+
+      --pixel-border-sm:
+        2px 0 0 0 var(--color-border),
+        -2px 0 0 0 var(--color-border),
+        0 2px 0 0 var(--color-border),
+        0 -2px 0 0 var(--color-border);
+
+      --pixel-border-md:
+        3px 0 0 0 var(--color-border),
+        -3px 0 0 0 var(--color-border),
+        0 3px 0 0 var(--color-border),
+        0 -3px 0 0 var(--color-border),
+        3px 3px 0 0 var(--color-border),
+        -3px 3px 0 0 var(--color-border),
+        3px -3px 0 0 var(--color-border),
+        -3px -3px 0 0 var(--color-border);
+    }
+
+    /* ================================================================
+       RESET
+       ================================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-pixel);
+      font-size: var(--text-base);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.8;
+      -webkit-font-smoothing: none;
+      image-rendering: pixelated;
+    }
+
+    /* ================================================================
+       SHOWCASE LAYOUT
+       ================================================================ */
+    .showcase {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    .showcase-title {
+      font-size: var(--text-2xl);
+      color: var(--color-pink);
+      text-shadow: 4px 4px 0 var(--color-border);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .showcase-subtitle {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-bottom: 48px;
+      line-height: 2;
+    }
+
+    .section {
+      margin-bottom: 64px;
+    }
+
+    .section-title {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-bottom: 24px;
+      padding-bottom: 8px;
+      border-bottom: 4px solid var(--color-border);
+    }
+
+    .component-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .component-label {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-top: 8px;
+    }
+
+    .demo-box {
+      padding: 24px;
+      background: var(--color-surface);
+      box-shadow: var(--pixel-border-md);
+      margin-bottom: 16px;
+    }
+
+    /* ================================================================
+       DITHERED BACKGROUNDS
+       ================================================================ */
+    .dither-demo {
+      width: 100%;
+      height: 80px;
+      margin-bottom: 12px;
+    }
+
+    .dither-bg {
+      background-color: var(--room-color-a);
+      background-image: radial-gradient(
+        circle at 1px 1px,
+        var(--room-color-b) 1px,
+        transparent 0
+      );
+      background-size: 2px 2px;
+    }
+
+    /* ================================================================
+       PIXEL BORDERS
+       ================================================================ */
+    .pixel-border { box-shadow: var(--pixel-border-sm); }
+    .pixel-border--md { box-shadow: var(--pixel-border-md); }
+    .pixel-border--lg {
+      box-shadow:
+        4px 0 0 0 var(--color-border),
+        -4px 0 0 0 var(--color-border),
+        0 4px 0 0 var(--color-border),
+        0 -4px 0 0 var(--color-border),
+        4px 4px 0 0 var(--color-border),
+        -4px 4px 0 0 var(--color-border),
+        4px -4px 0 0 var(--color-border),
+        -4px -4px 0 0 var(--color-border);
+    }
+
+    .pixel-panel {
+      background: var(--color-surface);
+      box-shadow:
+        -4px -4px 0 0 rgba(255,255,255,0.6),
+        4px 4px 0 0 rgba(0,0,0,0.3),
+        var(--pixel-border-md);
+      padding: var(--space-4);
+    }
+
+    /* ================================================================
+       BUTTONS
+       ================================================================ */
+    .btn-pixel {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      min-height: var(--tap-min);
+      padding: var(--space-3) var(--space-5);
+      font-family: var(--font-pixel);
+      font-size: var(--text-sm);
+      color: var(--color-text-light);
+      background: var(--color-pink);
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      line-height: 1.4;
+      box-shadow:
+        4px 0 0 0 var(--color-border),
+        -4px 0 0 0 var(--color-border),
+        0 4px 0 0 var(--color-border),
+        0 -4px 0 0 var(--color-border),
+        4px 4px 0 0 var(--color-border),
+        -4px 4px 0 0 var(--color-border),
+        4px -4px 0 0 var(--color-border),
+        -4px -4px 0 0 var(--color-border),
+        6px 6px 0 0 rgba(0,0,0,0.35);
+      transition: transform 80ms steps(2, end), box-shadow 80ms steps(2, end);
+    }
+
+    .btn-pixel:active {
+      transform: translate(2px, 2px);
+      box-shadow:
+        4px 0 0 0 var(--color-border),
+        -4px 0 0 0 var(--color-border),
+        0 4px 0 0 var(--color-border),
+        0 -4px 0 0 var(--color-border),
+        4px 4px 0 0 var(--color-border),
+        -4px 4px 0 0 var(--color-border),
+        4px -4px 0 0 var(--color-border),
+        -4px -4px 0 0 var(--color-border),
+        2px 2px 0 0 rgba(0,0,0,0.2);
+    }
+
+    .btn-pixel--yellow { background: var(--color-yellow); color: var(--color-text); }
+    .btn-pixel--green  { background: var(--color-green); color: var(--color-text); }
+    .btn-pixel--blue   { background: var(--color-blue); color: var(--color-text); }
+    .btn-pixel--purple { background: var(--color-purple); }
+    .btn-pixel--ghost  {
+      background: transparent;
+      color: var(--color-text);
+      box-shadow:
+        4px 0 0 0 var(--color-border),
+        -4px 0 0 0 var(--color-border),
+        0 4px 0 0 var(--color-border),
+        0 -4px 0 0 var(--color-border),
+        4px 4px 0 0 var(--color-border),
+        -4px 4px 0 0 var(--color-border),
+        4px -4px 0 0 var(--color-border),
+        -4px -4px 0 0 var(--color-border),
+        6px 6px 0 0 rgba(0,0,0,0.2);
+    }
+    .btn-pixel--lg { font-size: var(--text-base); padding: var(--space-4) var(--space-8); min-height: 60px; }
+    .btn-pixel--sm { font-size: var(--text-xs); padding: var(--space-2) var(--space-3); min-height: var(--tap-min); }
+    .btn-pixel--wide { width: 100%; }
+
+    /* ================================================================
+       INPUTS
+       ================================================================ */
+    .input-pixel {
+      display: block;
+      width: 100%;
+      min-height: var(--tap-min);
+      padding: var(--space-3) var(--space-4);
+      font-family: var(--font-pixel);
+      font-size: var(--text-sm);
+      color: var(--color-text);
+      background: #FFFFFF;
+      border: none;
+      outline: none;
+      line-height: 1.8;
+      box-shadow:
+        4px 0 0 0 var(--color-border),
+        -4px 0 0 0 var(--color-border),
+        0 4px 0 0 var(--color-border),
+        0 -4px 0 0 var(--color-border),
+        4px 4px 0 0 var(--color-border),
+        -4px 4px 0 0 var(--color-border),
+        4px -4px 0 0 var(--color-border),
+        -4px -4px 0 0 var(--color-border),
+        inset 2px 2px 0 0 rgba(0,0,0,0.1);
+    }
+
+    .input-pixel:focus {
+      box-shadow:
+        4px 0 0 0 var(--color-pink),
+        -4px 0 0 0 var(--color-pink),
+        0 4px 0 0 var(--color-pink),
+        0 -4px 0 0 var(--color-pink),
+        4px 4px 0 0 var(--color-pink),
+        -4px 4px 0 0 var(--color-pink),
+        4px -4px 0 0 var(--color-pink),
+        -4px -4px 0 0 var(--color-pink),
+        inset 2px 2px 0 0 rgba(0,0,0,0.08);
+    }
+
+    .input-pixel::placeholder { color: var(--color-text-muted); opacity: 1; }
+
+    /* ================================================================
+       COLOR SWATCH GRID
+       ================================================================ */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-2);
+      padding: var(--space-2);
+    }
+
+    .color-swatch {
+      aspect-ratio: 1;
+      min-height: 48px;
+      cursor: pointer;
+      border: none;
+      background: var(--swatch-color, #FF6EB4);
+      transition: transform 80ms steps(2, end), box-shadow 80ms steps(2, end);
+      box-shadow:
+        3px 0 0 0 var(--color-border),
+        -3px 0 0 0 var(--color-border),
+        0 3px 0 0 var(--color-border),
+        0 -3px 0 0 var(--color-border),
+        3px 3px 0 0 var(--color-border),
+        -3px 3px 0 0 var(--color-border),
+        3px -3px 0 0 var(--color-border),
+        -3px -3px 0 0 var(--color-border),
+        5px 5px 0 0 rgba(0,0,0,0.3);
+    }
+
+    .color-swatch:active, .color-swatch.selected {
+      transform: translate(2px, 2px);
+      box-shadow:
+        3px 0 0 0 var(--color-border),
+        -3px 0 0 0 var(--color-border),
+        0 3px 0 0 var(--color-border),
+        0 -3px 0 0 var(--color-border),
+        3px 3px 0 0 var(--color-border),
+        -3px 3px 0 0 var(--color-border),
+        3px -3px 0 0 var(--color-border),
+        -3px -3px 0 0 var(--color-border),
+        2px 2px 0 0 rgba(0,0,0,0.15);
+    }
+
+    .color-swatch.selected::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-pixel);
+      font-size: 14px;
+      color: rgba(255,255,255,0.9);
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+    }
+
+    .color-swatch { position: relative; }
+
+    /* ================================================================
+       REACTION BUTTONS
+       ================================================================ */
+    .reaction-bar {
+      display: flex;
+      gap: var(--space-2);
+      justify-content: center;
+      padding: var(--space-3);
+    }
+
+    .reaction-btn {
+      min-width: 56px;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 20px;
+      cursor: pointer;
+      border: none;
+      background: rgba(255,255,255,0.9);
+      box-shadow:
+        3px 0 0 0 var(--color-border),
+        -3px 0 0 0 var(--color-border),
+        0 3px 0 0 var(--color-border),
+        0 -3px 0 0 var(--color-border),
+        3px 3px 0 0 var(--color-border),
+        -3px 3px 0 0 var(--color-border),
+        3px -3px 0 0 var(--color-border),
+        -3px -3px 0 0 var(--color-border),
+        4px 4px 0 0 rgba(0,0,0,0.3);
+      transition: transform 80ms steps(2, end);
+    }
+
+    .reaction-btn:active {
+      transform: translate(2px, 2px);
+    }
+
+    .reaction-btn small {
+      font-family: var(--font-pixel);
+      font-size: 7px;
+      color: var(--color-text-muted);
+    }
+
+    /* ================================================================
+       FEED ITEMS
+       ================================================================ */
+    .feed-item {
+      padding: var(--space-3) var(--space-4);
+      background: rgba(255,255,255,0.9);
+      font-family: var(--font-pixel);
+      font-size: var(--text-xs);
+      line-height: 1.8;
+      color: var(--color-text);
+      margin-bottom: 8px;
+      box-shadow:
+        2px 0 0 0 var(--color-border),
+        -2px 0 0 0 var(--color-border),
+        0 2px 0 0 var(--color-border),
+        0 -2px 0 0 var(--color-border),
+        2px 2px 0 0 var(--color-border),
+        -2px 2px 0 0 var(--color-border),
+        2px -2px 0 0 var(--color-border),
+        -2px -2px 0 0 var(--color-border),
+        3px 3px 0 0 rgba(0,0,0,0.2);
+    }
+
+    .feed-item__name {
+      color: var(--item-color, var(--color-pink));
+      font-size: var(--text-xs);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .feed-item__dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--item-color, var(--color-pink));
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    /* ================================================================
+       TERMINAL
+       ================================================================ */
+    .terminal {
+      background: #0D0D0D;
+      padding: var(--space-4);
+      font-family: var(--font-pixel);
+      font-size: var(--text-xs);
+      line-height: 2;
+      color: #00FF41;
+      box-shadow: var(--pixel-border-md);
+    }
+
+    @keyframes terminal-blink {
+      0%, 100% { opacity: 1; } 50% { opacity: 0; }
+    }
+
+    .terminal-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 12px;
+      background: #00FF41;
+      vertical-align: middle;
+      animation: terminal-blink 1s steps(1, end) infinite;
+    }
+
+    /* ================================================================
+       PHOTO FRAME
+       ================================================================ */
+    .photo-frame {
+      background: #FFFFFF;
+      padding: 12px 12px 48px 12px;
+      position: relative;
+      display: inline-block;
+      box-shadow:
+        6px 0 0 0 var(--color-border),
+        -6px 0 0 0 var(--color-border),
+        0 6px 0 0 var(--color-border),
+        0 -6px 0 0 var(--color-border),
+        6px 6px 0 0 var(--color-border),
+        -6px 6px 0 0 var(--color-border),
+        6px -6px 0 0 var(--color-border),
+        -6px -6px 0 0 var(--color-border),
+        10px 10px 0 0 rgba(0,0,0,0.4);
+    }
+
+    .photo-frame__img {
+      width: 200px;
+      height: 150px;
+      background: linear-gradient(135deg, #FF6EB4 0%, #C77DFF 50%, #4DBBFF 100%);
+      display: block;
+    }
+
+    .photo-frame__caption {
+      font-family: var(--font-pixel);
+      font-size: 8px;
+      color: var(--color-text-muted);
+      text-align: center;
+      padding-top: 8px;
+    }
+
+    .photo-frame__deco {
+      position: absolute;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    /* ================================================================
+       SEND-OFF
+       ================================================================ */
+    .sendoff-demo {
+      background: var(--color-pink);
+      padding: 40px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sendoff-text {
+      font-family: var(--font-pixel);
+      font-size: var(--text-lg);
+      color: #FFFFFF;
+      line-height: 3;
+      text-shadow: 3px 3px 0 var(--color-pink-dark, #D94F95);
+    }
+
+    .sendoff-credit {
+      font-family: var(--font-pixel);
+      font-size: var(--text-xs);
+      color: rgba(255,255,255,0.7);
+      margin-top: 24px;
+    }
+
+    /* ================================================================
+       SPARKLE
+       ================================================================ */
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50%       { opacity: 1; transform: scale(1); }
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--sparkle-color, #FFD93D);
+      animation: sparkle var(--sparkle-duration, 1.5s) ease-in-out var(--sparkle-delay, 0s) infinite;
+    }
+
+    /* ================================================================
+       BIG COUNTER
+       ================================================================ */
+    .big-counter {
+      font-family: var(--font-pixel);
+      font-size: 40px;
+      color: var(--color-pink);
+      text-shadow: 4px 4px 0 var(--color-border);
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    /* ================================================================
+       LOBBY COUNTER
+       ================================================================ */
+    .lobby-counter {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: rgba(255,255,255,0.85);
+      box-shadow: var(--pixel-border-md);
+    }
+
+    .lobby-counter__number {
+      font-family: var(--font-pixel);
+      font-size: var(--text-2xl);
+      color: var(--color-pink);
+      line-height: 1;
+    }
+
+    .lobby-counter__label {
+      font-family: var(--font-pixel);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* ================================================================
+       PROGRESS BAR
+       ================================================================ */
+    .pixel-progress {
+      width: 100%;
+      height: 16px;
+      background: rgba(0,0,0,0.1);
+      box-shadow: var(--pixel-border-sm);
+      overflow: hidden;
+    }
+
+    .pixel-progress__bar {
+      height: 100%;
+      background: var(--color-pink);
+      transition: width 0.3s steps(8, end);
+    }
+
+    /* ================================================================
+       TYPOGRAPHY SCALE
+       ================================================================ */
+    .type-specimen {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .type-row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+    }
+
+    .type-size {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      min-width: 60px;
+    }
+
+    /* ================================================================
+       PALETTE DISPLAY
+       ================================================================ */
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+
+    .palette-cell {
+      padding: 8px 4px;
+      text-align: center;
+    }
+
+    .palette-swatch {
+      width: 100%;
+      aspect-ratio: 1;
+      margin-bottom: 4px;
+      box-shadow: 2px 2px 0 0 rgba(0,0,0,0.3);
+    }
+
+    .palette-name {
+      font-size: 6px;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+      word-break: break-all;
+    }
+
+    .palette-hex {
+      font-size: 5px;
+      color: var(--color-text-muted);
+      opacity: 0.7;
+    }
+
+    /* ================================================================
+       DITHER INTERACTIVE DEMO
+       ================================================================ */
+    .dither-interactive {
+      position: relative;
+    }
+
+    .dither-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .dither-color-btn {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      border: none;
+      box-shadow: 2px 2px 0 0 rgba(0,0,0,0.4);
+      transition: transform 80ms steps(2, end);
+    }
+
+    .dither-color-btn:active { transform: translate(1px, 1px); }
+
+    /* ================================================================
+       SCANLINES OVERLAY
+       ================================================================ */
+    .has-scanlines {
+      position: relative;
+    }
+
+    .has-scanlines::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.04) 2px,
+        rgba(0, 0, 0, 0.04) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* ================================================================
+       ZAP ANIMATION
+       ================================================================ */
+    @keyframes zap-in {
+      0%   { transform: scale(0.8); opacity: 0; }
+      40%  { transform: scale(1.15); opacity: 1; }
+      70%  { transform: scale(0.95); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes zap-out {
+      0%   { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.3); opacity: 0; }
+    }
+
+    .zap-demo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--color-pink);
+      color: white;
+      padding: 8px 16px;
+      font-family: var(--font-pixel);
+      font-size: 16px;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+      box-shadow:
+        4px 0 0 0 var(--color-border), -4px 0 0 0 var(--color-border),
+        0 4px 0 0 var(--color-border), 0 -4px 0 0 var(--color-border),
+        4px 4px 0 0 var(--color-border), -4px 4px 0 0 var(--color-border),
+        4px -4px 0 0 var(--color-border), -4px -4px 0 0 var(--color-border);
+    }
+
+    .zap-animate {
+      animation: zap-in 0.4s ease forwards;
+    }
+
+    /* ================================================================
+       CONFETTI
+       ================================================================ */
+    @keyframes confetti-fall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(300px) rotate(var(--confetti-spin, 360deg)); opacity: 0.3; }
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: 0;
+      left: var(--confetti-x, 50%);
+      width: 8px;
+      height: 8px;
+      background: var(--confetti-color, #FF6EB4);
+      animation: confetti-fall var(--confetti-duration, 2s) linear var(--confetti-delay, 0s) forwards;
+    }
+
+    .confetti-stage {
+      position: relative;
+      overflow: hidden;
+      height: 200px;
+      background: var(--color-surface);
+      box-shadow: var(--pixel-border-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="showcase">
+
+  <h1 class="showcase-title">PIXEL ART<br>DESIGN SYSTEM</h1>
+  <p class="showcase-subtitle">
+    Light Room — Ashika's High School Talk<br>
+    Stardew Valley meets cozy mobile game.<br>
+    Open this file in a browser to see it all live.
+  </p>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: TYPOGRAPHY
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">01. Typography — Press Start 2P</h2>
+    <div class="demo-box">
+      <div class="type-specimen">
+        <div class="type-row">
+          <span class="type-size">40px</span>
+          <span style="font-family:var(--font-pixel);font-size:40px;color:var(--color-pink);text-shadow:4px 4px 0 var(--color-border)">HEADING</span>
+        </div>
+        <div class="type-row">
+          <span class="type-size">32px</span>
+          <span style="font-family:var(--font-pixel);font-size:32px;color:var(--color-text)">BIG NUMBER</span>
+        </div>
+        <div class="type-row">
+          <span class="type-size">24px</span>
+          <span style="font-family:var(--font-pixel);font-size:24px;color:var(--color-text)">Counter value</span>
+        </div>
+        <div class="type-row">
+          <span class="type-size">20px</span>
+          <span style="font-family:var(--font-pixel);font-size:20px;color:var(--color-text)">Mode title</span>
+        </div>
+        <div class="type-row">
+          <span class="type-size">16px</span>
+          <span style="font-family:var(--font-pixel);font-size:16px;color:var(--color-text)">Section header</span>
+        </div>
+        <div class="type-row">
+          <span class="type-size">14px</span>
+          <span style="font-family:var(--font-pixel);font-size:14px;color:var(--color-text)">Large label text</span>
+        </div>
+        <div class="type-row">
+          <span class="type-size">12px</span>
+          <span style="font-family:var(--font-pixel);font-size:12px;color:var(--color-text)">Body / button text</span>
+        </div>
+        <div class="type-row">
+          <span class="type-size">10px</span>
+          <span style="font-family:var(--font-pixel);font-size:10px;color:var(--color-text)">Small labels, counts</span>
+        </div>
+        <div class="type-row">
+          <span class="type-size">8px</span>
+          <span style="font-family:var(--font-pixel);font-size:8px;color:var(--color-text-muted)">Tiny captions, metadata</span>
+        </div>
+      </div>
+      <p style="font-family:var(--font-pixel);font-size:8px;color:var(--color-text-muted);margin-top:16px;line-height:2">
+        Note: Press Start 2P reads visually large — always use 8px+ for readability.<br>
+        Line-height: 1.8 minimum. Letter-spacing: 0.5px on buttons.
+      </p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: DITHERED BACKGROUNDS
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">02. Dithered Backgrounds</h2>
+    <p style="font-family:var(--font-pixel);font-size:8px;color:var(--color-text-muted);margin-bottom:16px;line-height:2">
+      Technique: 2×2 CSS radial-gradient checkerboard. No blending — pure pixel squares.
+      Click the color buttons below to see the room color change.
+    </p>
+
+    <div class="dither-interactive">
+      <div
+        id="dither-live"
+        class="dither-demo dither-bg has-scanlines pixel-border--md"
+        style="height:120px; transition: background-color 1.2s ease;"
+      ></div>
+
+      <div class="dither-controls">
+        <span style="font-family:var(--font-pixel);font-size:8px;color:var(--color-text-muted);align-self:center">
+          Click to change:
+        </span>
+        <!-- Color pair buttons — JS renders these -->
+        <div id="dither-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+
+      <!-- Static dither demos for each color pair -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px">
+        <div>
+          <div style="height:48px;background-color:#FF6EB4;background-image:radial-gradient(circle at 1px 1px,#FFB3D9 1px,transparent 0);background-size:2px 2px" class="pixel-border"></div>
+          <p style="font-family:var(--font-pixel);font-size:7px;color:var(--color-text-muted);margin-top:4px">#FF6EB4 + #FFB3D9<br>Hot Pink</p>
+        </div>
+        <div>
+          <div style="height:48px;background-color:#4DBBFF;background-image:radial-gradient(circle at 1px 1px,#AADDFF 1px,transparent 0);background-size:2px 2px" class="pixel-border"></div>
+          <p style="font-family:var(--font-pixel);font-size:7px;color:var(--color-text-muted);margin-top:4px">#4DBBFF + #AADDFF<br>Sky Blue</p>
+        </div>
+        <div>
+          <div style="height:48px;background-color:#6BCB77;background-image:radial-gradient(circle at 1px 1px,#B5E8BB 1px,transparent 0);background-size:2px 2px" class="pixel-border"></div>
+          <p style="font-family:var(--font-pixel);font-size:7px;color:var(--color-text-muted);margin-top:4px">#6BCB77 + #B5E8BB<br>Mint</p>
+        </div>
+        <div>
+          <div style="height:48px;background-color:#FFD93D;background-image:radial-gradient(circle at 1px 1px,#FFECAA 1px,transparent 0);background-size:2px 2px" class="pixel-border"></div>
+          <p style="font-family:var(--font-pixel);font-size:7px;color:var(--color-text-muted);margin-top:4px">#FFD93D + #FFECAA<br>Sunshine</p>
+        </div>
+        <div>
+          <div style="height:48px;background-color:#C77DFF;background-image:radial-gradient(circle at 1px 1px,#E3BEFF 1px,transparent 0);background-size:2px 2px" class="pixel-border"></div>
+          <p style="font-family:var(--font-pixel);font-size:7px;color:var(--color-text-muted);margin-top:4px">#C77DFF + #E3BEFF<br>Lavender</p>
+        </div>
+        <div>
+          <div style="height:48px;background-color:#FF6B6B;background-image:radial-gradient(circle at 1px 1px,#FFB3B3 1px,transparent 0);background-size:2px 2px" class="pixel-border"></div>
+          <p style="font-family:var(--font-pixel);font-size:7px;color:var(--color-text-muted);margin-top:4px">#FF6B6B + #FFB3B3<br>Coral</p>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;background:#1A1A1A;padding:12px;font-family:monospace;font-size:11px;color:#00FF41;box-shadow:var(--pixel-border-md)">
+        <div style="color:#888;margin-bottom:4px">/* The dither CSS — copy this: */</div>
+        <div>.dither-bg {</div>
+        <div>&nbsp;&nbsp;background-color: var(--room-color-a);</div>
+        <div>&nbsp;&nbsp;background-image: radial-gradient(</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;circle at 1px 1px,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;var(--room-color-b) 1px,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;transparent 0</div>
+        <div>&nbsp;&nbsp;);</div>
+        <div>&nbsp;&nbsp;background-size: 2px 2px;</div>
+        <div>}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: PIXEL BORDERS
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">03. Pixel Borders (box-shadow technique)</h2>
+    <p style="font-family:var(--font-pixel);font-size:8px;color:var(--color-text-muted);margin-bottom:16px;line-height:2">
+      No border-radius. No border property. Pure box-shadow stacking.
+      Each "shadow" is one pixel-thick edge. Corner shadows complete the rectangle.
+    </p>
+
+    <div class="component-row">
+      <div>
+        <div style="width:80px;height:80px;background:var(--color-surface)" class="pixel-border">
+          <div style="font-family:var(--font-pixel);font-size:7px;padding:4px;color:var(--color-text-muted)">2px</div>
+        </div>
+        <p class="component-label">pixel-border (2px)</p>
+      </div>
+      <div>
+        <div style="width:80px;height:80px;background:var(--color-surface)" class="pixel-border--md">
+          <div style="font-family:var(--font-pixel);font-size:7px;padding:4px;color:var(--color-text-muted)">3px</div>
+        </div>
+        <p class="component-label">pixel-border--md (3px)</p>
+      </div>
+      <div>
+        <div style="width:80px;height:80px;background:var(--color-surface)" class="pixel-border--lg">
+          <div style="font-family:var(--font-pixel);font-size:7px;padding:4px;color:var(--color-text-muted)">4px</div>
+        </div>
+        <p class="component-label">pixel-border--lg (4px)</p>
+      </div>
+      <div>
+        <div style="width:80px;height:80px;background:var(--color-surface)" class="pixel-panel">
+          <div style="font-family:var(--font-pixel);font-size:7px;color:var(--color-text-muted)">raised</div>
+        </div>
+        <p class="component-label">pixel-panel (raised)</p>
+      </div>
+    </div>
+
+    <div style="background:#1A1A1A;padding:12px;font-family:monospace;font-size:11px;color:#00FF41;box-shadow:var(--pixel-border-md);margin-top:8px">
+      <div style="color:#888;margin-bottom:4px">/* pixel-border--md — the workhorse: */</div>
+      <div>box-shadow:</div>
+      <div>&nbsp;&nbsp;3px 0 0 0 #2D1B00,  /* right */</div>
+      <div>&nbsp;&nbsp;-3px 0 0 0 #2D1B00, /* left */</div>
+      <div>&nbsp;&nbsp;0 3px 0 0 #2D1B00,  /* bottom */</div>
+      <div>&nbsp;&nbsp;0 -3px 0 0 #2D1B00, /* top */</div>
+      <div>&nbsp;&nbsp;3px 3px 0 0 #2D1B00,  /* bottom-right corner */</div>
+      <div>&nbsp;&nbsp;-3px 3px 0 0 #2D1B00, /* bottom-left corner */</div>
+      <div>&nbsp;&nbsp;3px -3px 0 0 #2D1B00,  /* top-right corner */</div>
+      <div>&nbsp;&nbsp;-3px -3px 0 0 #2D1B00; /* top-left corner */</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: BUTTONS
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">04. Buttons</h2>
+    <div class="demo-box">
+      <div class="component-row" style="align-items:center">
+        <div>
+          <button class="btn-pixel">Primary</button>
+          <p class="component-label">Pink (default)</p>
+        </div>
+        <div>
+          <button class="btn-pixel btn-pixel--yellow">Sunshine</button>
+          <p class="component-label">Yellow</p>
+        </div>
+        <div>
+          <button class="btn-pixel btn-pixel--green">Mint</button>
+          <p class="component-label">Green</p>
+        </div>
+        <div>
+          <button class="btn-pixel btn-pixel--blue">Sky</button>
+          <p class="component-label">Blue</p>
+        </div>
+        <div>
+          <button class="btn-pixel btn-pixel--purple">Lavender</button>
+          <p class="component-label">Purple</p>
+        </div>
+        <div>
+          <button class="btn-pixel btn-pixel--ghost">Ghost</button>
+          <p class="component-label">Ghost</p>
+        </div>
+      </div>
+
+      <div style="max-width:320px;margin-top:16px">
+        <button class="btn-pixel btn-pixel--wide btn-pixel--lg">Join the room →</button>
+        <p class="component-label" style="margin-top:8px">Large CTA — full width</p>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-pixel btn-pixel--sm">Cancel</button>
+        <button class="btn-pixel btn-pixel--sm btn-pixel--yellow">Send 📬</button>
+      </div>
+      <p class="component-label" style="margin-top:8px">Small buttons</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: INPUTS
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">05. Inputs</h2>
+    <div class="demo-box" style="max-width:400px">
+      <input type="text" class="input-pixel" placeholder="type your name..." style="margin-bottom:12px">
+      <textarea class="input-pixel" rows="3" placeholder="what do you actually love?" style="resize:none"></textarea>
+      <p class="component-label" style="margin-top:8px">
+        Focus state: border turns pink. Inset shadow creates "sunken" pixel feel.
+      </p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: COLOR PALETTE
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">06. The 30-Color Palette</h2>
+    <p style="font-family:var(--font-pixel);font-size:8px;color:var(--color-text-muted);margin-bottom:16px;line-height:2">
+      Warm, joyful, diverse. Full hue coverage, no dark/muted tones.<br>
+      Each color has a paired "colorB" for dither backgrounds.
+    </p>
+    <div class="palette-grid" id="palette-display"></div>
+
+    <div style="margin-top:24px">
+      <p style="font-family:var(--font-pixel);font-size:8px;color:var(--color-text-muted);margin-bottom:12px">Interactive color grid (as it appears in the app):</p>
+      <div class="color-grid" id="demo-color-grid"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: REACTIONS
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">07. Reaction Buttons</h2>
+    <div class="demo-box">
+      <div class="reaction-bar">
+        <button class="reaction-btn" onclick="this.style.transform='translate(2px,2px)';setTimeout(()=>this.style.transform='',200)">
+          <span>👀</span>
+          <small>12</small>
+        </button>
+        <button class="reaction-btn" onclick="this.style.transform='translate(2px,2px)';setTimeout(()=>this.style.transform='',200)">
+          <span>💡</span>
+          <small>7</small>
+        </button>
+        <button class="reaction-btn" onclick="this.style.transform='translate(2px,2px)';setTimeout(()=>this.style.transform='',200)">
+          <span>🔥</span>
+          <small>23</small>
+        </button>
+        <button class="reaction-btn" onclick="this.style.transform='translate(2px,2px)';setTimeout(()=>this.style.transform='',200)">
+          <span>😮</span>
+          <small>4</small>
+        </button>
+      </div>
+      <p class="component-label">Tap for pressed animation. Count badge below emoji.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: PIXEL ART ICONS
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">08. Pixel Art Icons (SVG)</h2>
+    <p style="font-family:var(--font-pixel);font-size:8px;color:var(--color-text-muted);margin-bottom:16px;line-height:2">
+      Each icon is a 16×16 SVG with integer <rect> coordinates. Scale up with CSS — image-rendering:pixelated keeps them crisp.
+    </p>
+    <div class="demo-box">
+      <div class="component-row" id="icon-showcase">
+        <!-- Icons rendered by JS below -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: FEED ITEMS
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">09. Feed Items</h2>
+    <div class="demo-box">
+      <div class="feed-item" style="--item-color:#FF6EB4">
+        <span class="feed-item__name">
+          <span class="feed-item__dot"></span>Maya
+        </span>
+        music and making playlists for my friends
+      </div>
+      <div class="feed-item" style="--item-color:#4DBBFF">
+        <span class="feed-item__name">
+          <span class="feed-item__dot"></span>Jordan
+        </span>
+        drawing + animation, been doing it since 4th grade
+      </div>
+      <div class="feed-item" style="--item-color:#6BCB77">
+        <span class="feed-item__name">
+          <span class="feed-item__dot"></span>Priya
+        </span>
+        volleyball honestly, I live at practice
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: TERMINAL
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">10. Terminal Log (Demo Reveal)</h2>
+    <div class="terminal">
+      <span style="color:#888">[14:02:31] </span><span style="color:#FF6EB4">Maya</span><span> → #FF6EB4</span><br>
+      <span style="color:#888">[14:02:32] </span><span style="color:#4DBBFF">Jordan</span><span> → #4DBBFF</span><br>
+      <span style="color:#888">[14:02:33] </span><span style="color:#FFD93D">Alex</span><span> → #FFD93D</span><br>
+      <span style="color:#888">[14:02:33] </span><span style="color:#6BCB77">Priya</span><span> → #6BCB77</span><br>
+      <span style="color:#888">[14:02:34] </span><span style="color:#C77DFF">Sam</span><span> → #C77DFF</span><br>
+      <span class="terminal-cursor"></span>
+    </div>
+    <p class="component-label" style="margin-top:8px">
+      Green text (#00FF41) on near-black background. Names in their chosen color.
+    </p>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: PHOTO FRAME
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">11. Photo Frame (Polaroid)</h2>
+    <div class="demo-box" style="background:#1A1A1A">
+      <div style="display:flex;justify-content:center">
+        <div class="photo-frame">
+          <div class="photo-frame__deco" style="top:-14px;right:-14px">⭐</div>
+          <div class="photo-frame__deco" style="bottom:28px;left:-16px">💖</div>
+          <div class="photo-frame__img"></div>
+          <div class="photo-frame__caption">⭐ CSHS ⭐</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: CONFETTI
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">12. Pixel Confetti (Demo Reveal)</h2>
+    <div class="confetti-stage" id="confetti-stage">
+      <div class="big-counter">247</div>
+    </div>
+    <button class="btn-pixel btn-pixel--yellow mt-4" onclick="launchConfetti()" style="margin-top:12px">
+      Launch confetti! 🎉
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: SEND-OFF SCREEN
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">13. Send-off Screen</h2>
+    <div class="sendoff-demo has-scanlines" style="position:relative">
+      <div id="sendoff-sparkles" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
+      <p class="sendoff-text">
+        Make something.<br>
+        Show someone.<br>
+        Keep going.
+      </p>
+      <p class="sendoff-credit">— Ashika Verma, MIT EECS</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: LOBBY COUNTER
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">14. Lobby Counter</h2>
+    <div class="demo-box">
+      <div class="lobby-counter" style="margin-bottom:12px">
+        <div>
+          <div class="lobby-counter__number">12</div>
+          <div class="lobby-counter__label">classmates in the room</div>
+          <div id="demo-people-row" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION: PROGRESS BARS
+       ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2 class="section-title">15. Reaction Pulse Bars (Host Dashboard)</h2>
+    <div class="demo-box">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:18px">👀</span>
+            <span style="font-family:var(--font-pixel);font-size:10px;color:var(--color-yellow)">12</span>
+          </div>
+          <div class="pixel-progress"><div class="pixel-progress__bar" style="background:#4DBBFF;width:60%"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:18px">🔥</span>
+            <span style="font-family:var(--font-pixel);font-size:10px;color:var(--color-yellow)">23</span>
+          </div>
+          <div class="pixel-progress"><div class="pixel-progress__bar" style="background:#FF6B35;width:100%"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:18px">💡</span>
+            <span style="font-family:var(--font-pixel);font-size:10px;color:var(--color-yellow)">7</span>
+          </div>
+          <div class="pixel-progress"><div class="pixel-progress__bar" style="background:#FFD93D;width:35%"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:18px">😮</span>
+            <span style="font-family:var(--font-pixel);font-size:10px;color:var(--color-yellow)">4</span>
+          </div>
+          <div class="pixel-progress"><div class="pixel-progress__bar" style="background:#C77DFF;width:20%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.showcase -->
+
+<script>
+  // ── Palette data (inline so file is self-contained) ────────────────────
+  const PALETTE = [
+    { id: 'hot-pink',      hex: '#FF6EB4', colorB: '#FFB3D9', name: 'Hot Pink' },
+    { id: 'bubblegum',     hex: '#FF9FD2', colorB: '#FFD5EC', name: 'Bubblegum' },
+    { id: 'coral',         hex: '#FF6B6B', colorB: '#FFB3B3', name: 'Coral' },
+    { id: 'tomato',        hex: '#FF4040', colorB: '#FF9999', name: 'Tomato' },
+    { id: 'rose',          hex: '#FF0080', colorB: '#FF6EB4', name: 'Rose' },
+    { id: 'tangerine',     hex: '#FF8C42', colorB: '#FFB97A', name: 'Tangerine' },
+    { id: 'peach',         hex: '#FFB347', colorB: '#FFD699', name: 'Peach' },
+    { id: 'creamsicle',    hex: '#FF9950', colorB: '#FFCC99', name: 'Creamsicle' },
+    { id: 'sunshine',      hex: '#FFD93D', colorB: '#FFECAA', name: 'Sunshine' },
+    { id: 'lemon',         hex: '#FFEE58', colorB: '#FFFACD', name: 'Lemon' },
+    { id: 'gold',          hex: '#FFBB00', colorB: '#FFD966', name: 'Gold' },
+    { id: 'lime',          hex: '#AAFF00', colorB: '#D4FF80', name: 'Lime' },
+    { id: 'mint',          hex: '#6BCB77', colorB: '#B5E8BB', name: 'Mint' },
+    { id: 'sage',          hex: '#52B788', colorB: '#A7D7C0', name: 'Sage' },
+    { id: 'forest',        hex: '#2D9E5C', colorB: '#7DCCAA', name: 'Forest' },
+    { id: 'teal',          hex: '#00C9A7', colorB: '#80E7D3', name: 'Teal' },
+    { id: 'aqua',          hex: '#00BFFF', colorB: '#80DFFF', name: 'Aqua' },
+    { id: 'sky',           hex: '#4DBBFF', colorB: '#AADDFF', name: 'Sky' },
+    { id: 'cornflower',    hex: '#6495ED', colorB: '#AABEF6', name: 'Cornflower' },
+    { id: 'cobalt',        hex: '#0047AB', colorB: '#6699CC', name: 'Cobalt' },
+    { id: 'periwinkle',    hex: '#9999FF', colorB: '#CCCCFF', name: 'Periwinkle' },
+    { id: 'lavender',      hex: '#C77DFF', colorB: '#E3BEFF', name: 'Lavender' },
+    { id: 'violet',        hex: '#8B00FF', colorB: '#C980FF', name: 'Violet' },
+    { id: 'grape',         hex: '#9B59B6', colorB: '#C39BD3', name: 'Grape' },
+    { id: 'fuchsia',       hex: '#FF00FF', colorB: '#FF80FF', name: 'Fuchsia' },
+    { id: 'orchid',        hex: '#DA70D6', colorB: '#EDB8EB', name: 'Orchid' },
+    { id: 'cream',         hex: '#FFF8E7', colorB: '#FFFFFF', name: 'Cream' },
+    { id: 'butter',        hex: '#FFFACD', colorB: '#FFFFFF', name: 'Butter' },
+    { id: 'electric-blue', hex: '#00FFFF', colorB: '#80FFFF', name: 'Electric' },
+    { id: 'neon-green',    hex: '#39FF14', colorB: '#9AFF80', name: 'Neon' },
+  ];
+
+  // ── SVG Icons (inline) ─────────────────────────────────────────────────
+  const Icons = {
+    bulb(color='#FFD93D', size=32) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" style="image-rendering:pixelated;display:block">
+        <rect x="5" y="0" width="6" height="1" fill="${color}"/>
+        <rect x="3" y="1" width="10" height="1" fill="${color}"/>
+        <rect x="2" y="2" width="12" height="1" fill="${color}"/>
+        <rect x="1" y="3" width="14" height="1" fill="${color}"/>
+        <rect x="1" y="4" width="14" height="1" fill="${color}"/>
+        <rect x="1" y="5" width="14" height="1" fill="${color}"/>
+        <rect x="1" y="6" width="14" height="1" fill="${color}"/>
+        <rect x="2" y="7" width="12" height="1" fill="${color}"/>
+        <rect x="3" y="8" width="10" height="1" fill="${color}"/>
+        <rect x="4" y="3" width="3" height="2" fill="rgba(255,255,255,0.4)"/>
+        <rect x="4" y="9"  width="8" height="1" fill="${color}"/>
+        <rect x="5" y="10" width="6" height="1" fill="${color}"/>
+        <rect x="5" y="11" width="6" height="1" fill="${color}"/>
+        <rect x="4" y="12" width="8" height="1" fill="${color}"/>
+        <rect x="5" y="13" width="6" height="1" fill="${color}"/>
+        <rect x="5" y="14" width="6" height="1" fill="${color}"/>
+      </svg>`;
+    },
+    fire(size=32) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" style="image-rendering:pixelated;display:block">
+        <rect x="7" y="1" width="2" height="1" fill="#FFD93D"/>
+        <rect x="6" y="2" width="4" height="1" fill="#FFD93D"/>
+        <rect x="6" y="3" width="4" height="1" fill="#FFD93D"/>
+        <rect x="5" y="4" width="6" height="1" fill="#FF6B35"/>
+        <rect x="4" y="5" width="8" height="1" fill="#FF6B35"/>
+        <rect x="3" y="6" width="10" height="1" fill="#FF6B35"/>
+        <rect x="3" y="7" width="10" height="1" fill="#FF6B35"/>
+        <rect x="6" y="5" width="4" height="2" fill="#FFD93D" opacity="0.7"/>
+        <rect x="2" y="8"  width="12" height="1" fill="#FF6B35"/>
+        <rect x="2" y="9"  width="12" height="1" fill="#FF6B35"/>
+        <rect x="3" y="10" width="10" height="1" fill="#FF6B35"/>
+        <rect x="4" y="11" width="8"  height="1" fill="#FF6B35"/>
+        <rect x="5" y="12" width="6"  height="1" fill="#FF6B35"/>
+        <rect x="6" y="13" width="4"  height="1" fill="#FF6B35"/>
+        <rect x="6" y="14" width="4"  height="1" fill="#FF6B35"/>
+        <rect x="7" y="15" width="2"  height="1" fill="#FF6B35"/>
+      </svg>`;
+    },
+    mailbox(color='#2D1B00', size=32) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" style="image-rendering:pixelated;display:block">
+        <rect x="1" y="3"  width="14" height="10" fill="${color}"/>
+        <rect x="2" y="4"  width="5"  height="1"  fill="rgba(255,255,255,0.5)"/>
+        <rect x="9" y="4"  width="5"  height="1"  fill="rgba(255,255,255,0.5)"/>
+        <rect x="3" y="5"  width="3"  height="1"  fill="rgba(255,255,255,0.5)"/>
+        <rect x="10" y="5" width="3"  height="1"  fill="rgba(255,255,255,0.5)"/>
+        <rect x="7"  y="7"  width="2"  height="2"  fill="rgba(255,255,255,0.7)"/>
+      </svg>`;
+    },
+    arrowRight(color='#FF6EB4', size=32) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" style="image-rendering:pixelated;display:block">
+        <rect x="1" y="7" width="10" height="2" fill="${color}"/>
+        <rect x="11" y="5" width="2" height="6" fill="${color}"/>
+        <rect x="13" y="6" width="2" height="4" fill="${color}"/>
+        <rect x="15" y="7" width="1" height="2" fill="${color}"/>
+        <rect x="9"  y="5" width="2" height="2" fill="${color}"/>
+        <rect x="9"  y="9" width="2" height="2" fill="${color}"/>
+      </svg>`;
+    },
+    person(color='#2D1B00', size=24) {
+      const w = Math.round(size * 0.75);
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 16" width="${w}" height="${size}" style="image-rendering:pixelated;display:block">
+        <rect x="3" y="0" width="6" height="1" fill="${color}"/>
+        <rect x="2" y="1" width="8" height="3" fill="${color}"/>
+        <rect x="3" y="4" width="6" height="1" fill="${color}"/>
+        <rect x="4" y="5" width="4" height="1" fill="${color}"/>
+        <rect x="2" y="6"  width="8" height="4" fill="${color}"/>
+        <rect x="2" y="11" width="3" height="5" fill="${color}"/>
+        <rect x="7" y="11" width="3" height="5" fill="${color}"/>
+        <rect x="1" y="13" width="1" height="3" fill="${color}"/>
+        <rect x="10" y="13" width="1" height="3" fill="${color}"/>
+      </svg>`;
+    },
+    star(color='#FFD93D', size=16) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" style="image-rendering:pixelated;display:block">
+        <rect x="7"  y="0"  width="2" height="2" fill="${color}"/>
+        <rect x="7"  y="14" width="2" height="2" fill="${color}"/>
+        <rect x="0"  y="7"  width="2" height="2" fill="${color}"/>
+        <rect x="14" y="7"  width="2" height="2" fill="${color}"/>
+        <rect x="7"  y="2"  width="2" height="10" fill="${color}"/>
+        <rect x="2"  y="7"  width="12" height="2" fill="${color}"/>
+        <rect x="3"  y="3"  width="2" height="2" fill="${color}"/>
+        <rect x="11" y="3"  width="2" height="2" fill="${color}"/>
+        <rect x="3"  y="11" width="2" height="2" fill="${color}"/>
+        <rect x="11" y="11" width="2" height="2" fill="${color}"/>
+      </svg>`;
+    },
+    heart(color='#FF6EB4', size=16) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" style="image-rendering:pixelated;display:block">
+        <rect x="1"  y="2"  width="4" height="1" fill="${color}"/>
+        <rect x="11" y="2"  width="4" height="1" fill="${color}"/>
+        <rect x="0"  y="3"  width="6" height="4" fill="${color}"/>
+        <rect x="10" y="3"  width="6" height="4" fill="${color}"/>
+        <rect x="1"  y="7"  width="14" height="2" fill="${color}"/>
+        <rect x="2"  y="9"  width="12" height="2" fill="${color}"/>
+        <rect x="3"  y="11" width="10" height="2" fill="${color}"/>
+        <rect x="4"  y="13" width="8"  height="1" fill="${color}"/>
+        <rect x="5"  y="14" width="6"  height="1" fill="${color}"/>
+        <rect x="7"  y="15" width="2"  height="1" fill="${color}"/>
+        <rect x="2"  y="4"  width="2" height="2" fill="rgba(255,255,255,0.4)"/>
+      </svg>`;
+    },
+  };
+
+  // ── Render palette reference grid ───────────────────────────────────────
+  const paletteDisplay = document.getElementById('palette-display');
+  PALETTE.forEach(p => {
+    const cell = document.createElement('div');
+    cell.className = 'palette-cell';
+    cell.innerHTML = `
+      <div class="palette-swatch" style="background:${p.hex}"></div>
+      <div class="palette-name">${p.name}</div>
+      <div class="palette-hex">${p.hex}</div>
+    `;
+    paletteDisplay.appendChild(cell);
+  });
+
+  // ── Render interactive color grid ───────────────────────────────────────
+  const demoGrid = document.getElementById('demo-color-grid');
+  let selected = null;
+  PALETTE.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'color-swatch';
+    btn.style.setProperty('--swatch-color', p.hex);
+    btn.title = p.name;
+    if (i === 0) { btn.classList.add('selected'); selected = btn; }
+    btn.addEventListener('click', () => {
+      if (selected) selected.classList.remove('selected');
+      btn.classList.add('selected');
+      selected = btn;
+
+      // Update the live dither demo
+      const dither = document.getElementById('dither-live');
+      dither.style.setProperty('--room-color-a', p.hex);
+      dither.style.setProperty('--room-color-b', p.colorB);
+      dither.style.backgroundColor = p.hex;
+      dither.style.backgroundImage = `radial-gradient(circle at 1px 1px, ${p.colorB} 1px, transparent 0)`;
+    });
+    demoGrid.appendChild(btn);
+  });
+
+  // ── Dither demo color buttons ────────────────────────────────────────────
+  const ditherBtns = document.getElementById('dither-btns');
+  const ditherPairs = [
+    { a: '#FF6EB4', b: '#FFB3D9', label: 'Pink' },
+    { a: '#4DBBFF', b: '#AADDFF', label: 'Sky' },
+    { a: '#6BCB77', b: '#B5E8BB', label: 'Mint' },
+    { a: '#FFD93D', b: '#FFECAA', label: 'Gold' },
+    { a: '#C77DFF', b: '#E3BEFF', label: 'Lav' },
+    { a: '#FF6B6B', b: '#FFB3B3', label: 'Coral' },
+    { a: '#00C9A7', b: '#80E7D3', label: 'Teal' },
+    { a: '#FF8C42', b: '#FFB97A', label: 'Tang' },
+  ];
+
+  ditherPairs.forEach(pair => {
+    const btn = document.createElement('button');
+    btn.className = 'dither-color-btn';
+    btn.style.background = pair.a;
+    btn.title = pair.label;
+    btn.addEventListener('click', () => {
+      const dither = document.getElementById('dither-live');
+      dither.style.backgroundColor = pair.a;
+      dither.style.backgroundImage = `radial-gradient(circle at 1px 1px, ${pair.b} 1px, transparent 0)`;
+    });
+    ditherBtns.appendChild(btn);
+  });
+
+  // ── Icons showcase ──────────────────────────────────────────────────────
+  const iconShowcase = document.getElementById('icon-showcase');
+  const iconDefs = [
+    { label: 'Bulb (reaction)',  html: Icons.bulb('#FFD93D', 48) },
+    { label: 'Fire (reaction)',  html: Icons.fire(48) },
+    { label: 'Mailbox (question)', html: Icons.mailbox('#FF6EB4', 48) },
+    { label: 'Arrow → NYC',     html: Icons.arrowRight('#FF6EB4', 48) },
+    { label: 'Person (lobby)',   html: Icons.person('#2D1B00', 48) },
+    { label: 'Star (deco)',      html: Icons.star('#FFD93D', 48) },
+    { label: 'Heart (deco)',     html: Icons.heart('#FF6EB4', 48) },
+  ];
+
+  iconDefs.forEach(({ label, html }) => {
+    const wrap = document.createElement('div');
+    wrap.style.textAlign = 'center';
+    wrap.innerHTML = `
+      <div style="display:inline-flex;padding:8px;background:rgba(0,0,0,0.05)">${html}</div>
+      <p style="font-family:var(--font-pixel);font-size:7px;color:var(--color-text-muted);margin-top:6px;line-height:1.6">${label}</p>
+    `;
+    iconShowcase.appendChild(wrap);
+  });
+
+  // ── People row (lobby counter demo) ─────────────────────────────────────
+  const peopleRow = document.getElementById('demo-people-row');
+  const personColors = ['#FF6EB4','#FFD93D','#6BCB77','#4DBBFF','#C77DFF','#FF8C42','#00C9A7','#FF6B6B'];
+  for (let i = 0; i < 8; i++) {
+    const el = document.createElement('span');
+    el.innerHTML = Icons.person(personColors[i], 24);
+    peopleRow.appendChild(el);
+  }
+
+  // ── Sendoff sparkles ─────────────────────────────────────────────────────
+  const sparkleContainer = document.getElementById('sendoff-sparkles');
+  const sparkleColors = ['#FFD93D','#FF6EB4','#FFFFFF','#C77DFF','#4DBBFF'];
+  for (let i = 0; i < 20; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.style.left = `${Math.random() * 100}%`;
+    s.style.top  = `${Math.random() * 100}%`;
+    s.style.setProperty('--sparkle-color', sparkleColors[i % sparkleColors.length]);
+    s.style.setProperty('--sparkle-delay', `${Math.random() * 2}s`);
+    s.style.setProperty('--sparkle-duration', `${1.2 + Math.random() * 1.5}s`);
+    sparkleContainer.appendChild(s);
+  }
+
+  // ── Confetti launcher ────────────────────────────────────────────────────
+  function launchConfetti() {
+    const stage = document.getElementById('confetti-stage');
+    const colors = PALETTE.slice(0, 20).map(p => p.hex);
+
+    for (let i = 0; i < 40; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.setProperty('--confetti-x', `${Math.random() * 100}%`);
+      piece.style.setProperty('--confetti-delay', `${Math.random() * 0.5}s`);
+      piece.style.setProperty('--confetti-duration', `${1.2 + Math.random() * 0.8}s`);
+      piece.style.setProperty('--confetti-spin', `${(Math.random() * 720 - 360)}deg`);
+      piece.style.setProperty('--confetti-color', colors[Math.floor(Math.random() * colors.length)]);
+      stage.appendChild(piece);
+      piece.addEventListener('animationend', () => piece.remove(), { once: true });
+    }
+  }
+</script>
+</body>
+</html>

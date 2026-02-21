@@ -1,0 +1,17 @@
+{
+  "name": "light-room",
+  "version": "1.0.0",
+  "description": "Interactive light room app for Ashika's high school talk",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "HOST_KEY=ashika WIZ_IPS='' node server/server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
