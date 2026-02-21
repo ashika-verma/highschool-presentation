@@ -821,7 +821,8 @@
       font-family: var(--font-display);
       font-size: var(--text-lg);
       font-weight: 700;
-      color: rgba(0, 0, 0, 0.85);
+      /* Text color is set inline by JS via contrastColor() — CSS fallback only */
+      color: var(--room-btn-text, rgba(0, 0, 0, 0.85));
     }
   </style>
 </head>
@@ -1041,6 +1042,8 @@
         placeholder="music, art, games, people, places..."
         maxlength="200"
         rows="3"
+        autocomplete="off"
+        spellcheck="false"
         aria-label="What do you love"
       ></textarea>
       <button
@@ -1128,6 +1131,7 @@
           placeholder="type your question..."
           maxlength="200"
           autocomplete="off"
+          spellcheck="false"
           enterkeyhint="send"
           aria-label="Your question"
         >

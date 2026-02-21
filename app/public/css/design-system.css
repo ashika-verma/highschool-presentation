@@ -320,11 +320,11 @@ body {
   transform: scale(0.97);
 }
 
-/* Primary — room color filled */
+/* Primary — room color filled. Text uses contrast var for legibility on dark colors. */
 .btn--primary {
   background: var(--room-color-a);
   border-color: transparent;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--room-btn-text, rgba(0, 0, 0, 0.85));
   font-weight: 600;
   box-shadow: var(--glow-sm);
 }
@@ -897,7 +897,8 @@ body {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.85);
+  /* JS sets inline color via contrastColor(); CSS var is fallback */
+  color: var(--room-btn-text, rgba(0, 0, 0, 0.85));
   pointer-events: none;
   z-index: var(--z-top);
   white-space: nowrap;
