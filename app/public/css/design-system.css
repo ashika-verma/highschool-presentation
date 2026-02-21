@@ -984,7 +984,7 @@ body {
     #0A0A10 100%
   );
   background-size: 300% 300%;
-  animation: sendoff-gradient 8s ease infinite;
+  animation: sendoff-gradient 8s linear infinite;
 }
 
 .sendoff::before {

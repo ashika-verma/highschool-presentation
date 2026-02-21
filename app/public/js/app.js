@@ -15,6 +15,11 @@
 import { ws } from './ws-client.js';
 import { PALETTE, deriveDitherPair, findByHex } from './palette.js';
 
+// ─── Dedup sets — prevent double-adding optimistic vs. server-echo items ───
+// Key format: "<name>::<text>"
+const _selfSentTexts = new Set();
+const _selfSentQAs   = new Set();
+
 // ─── Session state ─────────────────────────────────────────────────────────
 
 const state = {
@@ -102,20 +107,29 @@ function wireWebSocket() {
     bumpReaction(emoji);
   });
 
-  // Free-text response from any student
+  // Free-text response from any student (server echo — skip if we sent it ourselves)
   ws.onMessage('text_response', (data) => {
+    const key = `${data.name}::${data.text}`;
+    if (_selfSentTexts.has(key)) { _selfSentTexts.delete(key); return; }
     addTextFeedItem(data);
   });
 
-  // Question submitted by any student
+  // Question submitted by any student (server echo — skip if we sent it ourselves)
   ws.onMessage('question', (data) => {
+    const key = `${data.name}::${data.text}`;
+    if (_selfSentQAs.has(key)) { _selfSentQAs.delete(key); return; }
     addQAFeedItem(data);
   });
 
-  // Server welcome — contains initial state
+  // Server welcome — contains initial state (fires on connect AND reconnect)
   ws.onMessage('welcome', (data) => {
     if (data.count !== undefined) updateLobbyCount(data.count);
-    if (data.mode)  switchMode(data.mode, false); // no flash on initial load
+    // Always apply the mode from welcome — even if it matches current state,
+    // a reconnecting student needs the correct screen shown
+    if (data.mode) {
+      state.mode = null; // force switchMode to not short-circuit on same-mode check
+      switchMode(data.mode, false); // no flash on reconnect
+    }
     if (data.totalColorChanges !== undefined) {
       state.totalColorChanges = data.totalColorChanges;
       $('demo-count-number').textContent = state.totalColorChanges;
@@ -588,11 +602,12 @@ function handleTextSubmit() {
   const text = input.value.trim();
   if (!text) return;
 
-  ws.sendTextResponse(state.name || 'Anonymous', text);
-
-  // Optimistically add to feed
+  // Add optimistically — mark so server echo doesn't double-add
+  const key = `${state.name}::${text}`;
+  _selfSentTexts.add(key);
   addTextFeedItem({ name: state.name, text, hex: state.colorHex }, true);
 
+  ws.sendTextResponse(state.name || 'Anonymous', text);
   input.value = '';
   $('text-submit-btn').textContent = 'Sent!';
   $('text-submit-btn').disabled = true;
@@ -633,9 +648,12 @@ function handleQASubmit() {
   const text = input.value.trim();
   if (!text) return;
 
-  ws.sendQuestion(state.name || 'Anonymous', text);
+  // Add optimistically — mark so server echo doesn't double-add
+  const key = `${state.name}::${text}`;
+  _selfSentQAs.add(key);
   addQAFeedItem({ name: state.name, text: text, hex: state.colorHex }, true);
 
+  ws.sendQuestion(state.name || 'Anonymous', text);
   input.value = '';
 
   // Brief confirmation on submit button
@@ -897,9 +915,14 @@ function doModeFlash(callback) {
 function animateCounter() {
   const el = $('demo-count-number');
   const target = state.totalColorChanges;
+  // Start from current displayed value so re-entering demo doesn't flash to 0
+  const startVal = parseInt(el.textContent, 10) || 0;
+  if (startVal >= target) {
+    el.textContent = target;
+    return;
+  }
   const duration = 2000;
   const startTime = performance.now();
-  const startVal = 0;
 
   function tick(now) {
     const elapsed = now - startTime;
