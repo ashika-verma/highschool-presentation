@@ -98,16 +98,20 @@ function connectHost() {
   ws.connect();
 
   ws.addEventListener('connected', () => {
-    $('host-status-pill').textContent = '● live';
-    $('host-status-pill').style.color = 'var(--color-green)';
+    const pill = $('host-status-pill');
+    pill.textContent = '● live';
+    pill.classList.add('is-live');
+    pill.style.color = '';  // let CSS class handle it
 
     // Announce as host
     ws.send({ type: 'host_join', key: state.hostKey });
   });
 
   ws.addEventListener('disconnected', () => {
-    $('host-status-pill').textContent = '● offline';
-    $('host-status-pill').style.color = '#ff6b6b';
+    const pill = $('host-status-pill');
+    pill.textContent = '● offline';
+    pill.classList.remove('is-live');
+    pill.style.color = '#ff6b6b';
   });
 
   ws.onMessage('welcome', (data) => {

@@ -304,7 +304,7 @@ const httpServer = http.createServer((req, res) => {
       mode: appState.mode,
       roomColorHex: appState.roomColorHex,
       totalColorChanges: appState.totalColorChanges,
-      count: appState.clients.size,
+      count: studentCount(),  // was appState.clients.size — included host connections
     }));
     return;
   }
@@ -382,8 +382,8 @@ wss.on('connection', (socket) => {
     totalColorChanges: appState.totalColorChanges,
     roomColor: appState.roomColorHex,
     photos: appState.photos,
-    textResponses: appState.textResponses.slice(-20),
-    questions: appState.questions.slice(-20),
+    textResponses: appState.textResponses.slice(-10),
+    questions: appState.questions.slice(-10),
     students: [...appState.clients.entries()]
       .filter(([, c]) => c.name && !c.isHost)
       .map(([, c]) => ({ name: c.name, hex: c.hex, colorsSent: c.colorsSent })),

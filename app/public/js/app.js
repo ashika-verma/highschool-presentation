@@ -416,7 +416,8 @@ function handleColorTap(color, btn) {
   // Note: totalColorChanges is incremented in the server's 'color' broadcast handler,
   // not here, to avoid double-counting (server echoes color back to all clients).
 
-  // Update bottom strip
+  // Update bottom strip — set both the CSS var and direct background for max compat
+  $('sent-color-swatch').style.setProperty('--current-color', color.hex);
   $('sent-color-swatch').style.background = color.hex;
   $('sent-color-name').textContent = color.name;
   $('sent-color-status').textContent = 'sent to NYC';
@@ -505,11 +506,14 @@ function setRoomColor(hex) {
 
 function updateAmbientTag() {
   const tag = $('ambient-user-tag');
+  const sent = state.colorsSent;
   if (state.name) {
-    const sent = state.colorsSent;
     tag.textContent = sent > 0
       ? `${state.name} • ${sent} color${sent !== 1 ? 's' : ''} sent to NYC`
       : `${state.name} • react below`;
+  } else {
+    // Reconnected without session — show generic connected state
+    tag.textContent = 'connected • tap to react';
   }
 }
 
