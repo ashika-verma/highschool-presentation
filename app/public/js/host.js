@@ -254,7 +254,7 @@ function renderStudentList() {
     const row = document.createElement('div');
     row.className = 'student-row';
     row.innerHTML = `
-      <div class="student-dot" style="background:${escHtml(data.hex)}; box-shadow: 2px 2px 0 0 rgba(0,0,0,0.4)"></div>
+      <div class="student-dot" style="background:${escHtml(data.hex)}; color:${escHtml(data.hex)}"></div>
       <span class="student-name">${escHtml(name)}</span>
       <span class="student-count">${data.colorsSent} sent</span>
     `;

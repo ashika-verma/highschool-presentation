@@ -237,6 +237,10 @@ function selectLobbyColor(color, btn) {
   strip.style.setProperty('--room-color-a', color.hex);
   strip.style.setProperty('--room-color-b', color.colorB);
 
+  // Show selected color name
+  const nameLabel = $('lobby-color-name-label');
+  if (nameLabel) nameLabel.textContent = color.name;
+
   // Also update the root so the join button (which inherits --room-color-a) updates too
   document.documentElement.style.setProperty('--room-color-a', color.hex);
   document.documentElement.style.setProperty('--room-color-b', color.colorB);
@@ -277,7 +281,10 @@ function showJoinedState() {
 
 function updateLobbyCount(count) {
   state.roomCount = count;
-  $('lobby-count').textContent = count;
+  const countEl = $('lobby-count');
+  countEl.textContent = count;
+  // Dim the number when 0 so it doesn't look like a dead state
+  countEl.style.opacity = count === 0 ? '0.3' : '1';
 
   // Update label: "in the room right now" vs "be the first"
   const label = document.querySelector('.lobby-counter__label');
@@ -553,12 +560,12 @@ function handleTextSubmit() {
   addTextFeedItem({ name: state.name, text, hex: state.colorHex }, true);
 
   input.value = '';
-  $('text-submit-btn').textContent = 'Sent! ✓';
+  $('text-submit-btn').textContent = 'Sent!';
   $('text-submit-btn').disabled = true;
   setTimeout(() => {
     $('text-submit-btn').textContent = 'Send it';
     $('text-submit-btn').disabled = false;
-  }, 3000);
+  }, 1500);
 }
 
 function addTextFeedItem({ name, text, hex }, animate = true) {
