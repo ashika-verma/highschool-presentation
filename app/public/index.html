@@ -581,10 +581,20 @@
 
     #screen-demo {
       background: var(--color-bg);
-      padding: var(--space-8) var(--space-5);
+      padding: var(--space-8) var(--space-5) var(--space-4);
       position: relative;
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* On short phones (iPhone SE: 667px), reduce top padding so counter stays visible */
+    @media (max-height: 680px) {
+      #screen-demo {
+        padding-top: var(--space-5);
+      }
+      .demo-subtitle { margin-bottom: var(--space-3); }
+      .demo-caption  { margin-bottom: var(--space-3); }
     }
 
     #screen-demo::before {
@@ -645,7 +655,7 @@
 
     #demo-terminal {
       flex: 1;
-      min-height: 180px;
+      min-height: 120px;
       max-height: 40vh;
       position: relative;
     }
@@ -951,11 +961,11 @@
           <button
             class="btn-pixel"
             id="park-question-btn"
-            aria-label="Save a question for Ashika"
+            aria-label="Ask Ashika a question"
             aria-haspopup="dialog"
             style="font-size:var(--text-sm)"
           >
-            Save a question
+            Ask Ashika a question
           </button>
         </div>
       </div>
@@ -1043,13 +1053,9 @@
         <span>MIT, career, life — genuinely anything</span>
       </h2>
 
-      <!-- Scrolling question feed -->
-      <div class="feed" id="qa-feed" aria-live="polite" aria-label="Questions">
-        <!-- Injected by JS -->
-      </div>
-
-      <!-- Reactions in Q&A — above input so they're discovered before keyboard opens -->
-      <div class="reaction-bar" role="group" aria-label="React">
+      <!-- Reactions in Q&A — above feed so they're discovered before keyboard opens,
+           and are reachable even when the feed is full of questions -->
+      <div class="reaction-bar" role="group" aria-label="React" style="margin-bottom:var(--space-2)">
         <button class="reaction-btn" data-emoji="👀" aria-label="Eyes">
           <span aria-hidden="true">👀</span>
           <span class="reaction-count" data-emoji-count="👀">0</span>
@@ -1066,6 +1072,11 @@
           <span aria-hidden="true">😮</span>
           <span class="reaction-count" data-emoji-count="😮">0</span>
         </button>
+      </div>
+
+      <!-- Scrolling question feed — below reactions so reactions are always reachable -->
+      <div class="feed" id="qa-feed" aria-live="polite" aria-label="Questions">
+        <!-- Injected by JS -->
       </div>
 
       <!-- Input row -->
@@ -1124,9 +1135,9 @@
      ══════════════════════════════════════════════════════════ -->
 <div id="question-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Save a question">
   <div class="modal-sheet">
-    <h3>Save a question</h3>
+    <h3>Ask Ashika</h3>
     <p class="modal-desc">
-      Ashika will see it on her screen.<br>She'll answer it if time permits.
+      She'll see it on her screen — and call on you if time permits.
     </p>
     <form id="park-form" autocomplete="off" novalidate>
       <textarea

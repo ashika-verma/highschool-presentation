@@ -221,6 +221,20 @@ function connectHost() {
   ws.onMessage('mode', (data) => {
     setActiveMode(data.mode);
   });
+
+  // Server echoes slide_goto back to all clients including host — sync host UI
+  // in case server clamped the index to a valid range.
+  ws.onMessage('slide_goto', (data) => {
+    state.currentSlideIndex = data.index;
+    renderSlidesNav();
+  });
+
+  // Server echoes slides_updated after save — sync host state
+  ws.onMessage('slides_updated', (data) => {
+    state.slides = data.slides;
+    state.currentSlideIndex = data.currentSlideIndex ?? 0;
+    renderSlidesNav();
+  });
 }
 
 // ─── Mode switching ─────────────────────────────────────────────────────────
