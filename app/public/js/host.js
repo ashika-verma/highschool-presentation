@@ -274,8 +274,11 @@ function renderStudentList() {
   state.students.forEach((data, name) => {
     const row = document.createElement('div');
     row.className = 'student-row';
+    // data.hex is already sanitized by the server (sanitizeHex enforces #RRGGBB format)
+    // Use it directly for CSS values — escHtml is not appropriate for CSS contexts
+    const safeHex = /^#[0-9A-Fa-f]{6}$/.test(data.hex) ? data.hex : '#888888';
     row.innerHTML = `
-      <div class="student-dot" style="background:${escHtml(data.hex)}; color:${escHtml(data.hex)}"></div>
+      <div class="student-dot" style="background:${safeHex}; color:${safeHex}"></div>
       <span class="student-name">${escHtml(name)}</span>
       <span class="student-count">${data.colorsSent} sent</span>
     `;
@@ -330,9 +333,11 @@ function addQuestion({ name, text, hex }, animate = true) {
   const item = document.createElement('div');
   item.className = 'question-item';
 
+  // hex is server-sanitized (#RRGGBB); use directly in CSS, not escHtml (wrong context)
+  const safeHex = /^#[0-9A-Fa-f]{6}$/.test(hex) ? hex : '#FF6EB4';
   item.innerHTML = `
     <div class="question-item__info">
-      <div class="question-item__name" style="color:${escHtml(hex || '#FF6EB4')}">${escHtml(name)}</div>
+      <div class="question-item__name" style="color:${safeHex}">${escHtml(name)}</div>
       <div class="question-item__text">${escHtml(text)}</div>
     </div>
     <button class="question-call-btn" aria-label="Call on ${escHtml(name)}">Call on →</button>

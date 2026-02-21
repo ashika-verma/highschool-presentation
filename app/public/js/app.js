@@ -916,8 +916,12 @@ function showScreen(name, animate = true) {
 
 function doModeFlash(callback) {
   const flash = $('mode-flash');
-  flash.className = 'mode-flash';
+  // Remove and re-add class to restart animation even if already running
+  flash.className = '';
   flash.style.display = 'block';
+  // Force reflow so class removal is applied before we re-add it
+  void flash.offsetWidth;
+  flash.className = 'mode-flash';
   flash.addEventListener('animationend', () => {
     flash.style.display = 'none';
     callback?.();

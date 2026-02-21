@@ -449,29 +449,26 @@
     }
 
     .photo-dot {
-      /* Use padding to create a large tap area; the dot itself is a ::before */
+      /* Padding creates a large invisible tap target around the dot */
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.22);
       border: none;
       cursor: pointer;
       transition:
         background var(--transition-fast),
-        transform var(--transition-fast),
         box-shadow var(--transition-fast);
-      /* 10px padding gives a 26px total tap size per side = 6+20 = 26px,
-         which with the adjacent gap is enough without overlapping neighbors */
       padding: 10px;
       background-clip: content-box;
+      -webkit-background-clip: content-box;
       min-height: 0;
     }
 
     .photo-dot.active {
       background: var(--room-color-a);
-      /* Use box-shadow to make the dot appear larger, not transform (which would scale padding) */
-      box-shadow: 0 0 0 2px var(--room-color-a), 0 0 10px 2px var(--room-color-a);
       background-clip: content-box;
+      -webkit-background-clip: content-box;
     }
 
     .photo-caption-row {
@@ -486,7 +483,7 @@
 
     .swipe-hint {
       font-size: var(--text-xs);
-      color: rgba(255, 255, 255, 0.18);
+      color: rgba(255, 255, 255, 0.35);
       text-align: center;
       margin-top: var(--space-2);
       letter-spacing: 0.04em;
@@ -599,7 +596,7 @@
     }
 
     #text-feed {
-      max-height: 35vh;
+      max-height: 28vh;
       overflow-y: auto;
       margin-top: var(--space-4);
     }
@@ -875,9 +872,9 @@
           type="submit"
           class="btn-pixel btn-pixel--wide btn-pixel--lg mt-4"
           id="lobby-join-btn"
-          aria-label="Join the room"
+          aria-label="Turn on the lights"
         >
-          Join the room
+          Turn on the lights
         </button>
       </form>
     </div>
