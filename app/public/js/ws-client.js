@@ -54,12 +54,14 @@ class PixelWSClient extends EventTarget {
     this.#ws.addEventListener('open', () => {
       this.#connected = true;
       this.#reconnectDelay = RECONNECT_BASE_MS;
-      // Drop stale color messages from queue — they'd change the light to an old
-      // color that no longer reflects user intent. Keep join and other types.
+      // Drop stale messages from the queue:
+      // - color: stale — would change the light to an outdated color
+      // - join: stale — app.js re-sends join from the welcome handler on reconnect,
+      //         so replaying an old queued join would cause a double-join
       this.#queue = this.#queue.filter(msg => {
         try {
           const parsed = JSON.parse(msg);
-          return parsed.type !== 'color';
+          return parsed.type !== 'color' && parsed.type !== 'join';
         } catch {
           return false;
         }
