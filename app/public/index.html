@@ -642,11 +642,31 @@
 
     .demo-caption {
       font-size: var(--text-sm); /* was xs */
-      color: var(--color-text-dim);
+      color: var(--color-text-muted);
       text-align: center;
       margin-bottom: var(--space-6);
       font-style: italic;
       position: relative;
+    }
+
+    /* "you did that." should be the emotional peak — full brightness */
+    .demo-caption-highlight {
+      display: block;
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      font-style: normal;
+      color: var(--room-color-a);
+      letter-spacing: -0.02em;
+      text-shadow: 0 0 30px color-mix(in srgb, var(--room-color-a) 50%, transparent);
+      margin-top: var(--space-2);
+      transition: color var(--transition-glow), text-shadow var(--transition-glow);
+    }
+    @supports not (color: color-mix(in srgb, red, blue)) {
+      .demo-caption-highlight {
+        color: var(--room-color-a);
+        text-shadow: none;
+      }
     }
 
     #demo-counter-display {
@@ -1028,12 +1048,13 @@
     <p class="demo-title">this room changed the lights</p>
 
     <div id="demo-counter-display">
-      <div class="big-counter" id="demo-count-number" aria-live="polite">0</div>
+      <div class="big-counter" id="demo-count-number" aria-live="polite">—</div>
     </div>
 
     <p class="demo-subtitle">color changes — live in NYC</p>
     <p class="demo-caption">
-      real software. real apartment. real bulbs. you did that.
+      real software. real apartment. real bulbs.<br>
+      <strong class="demo-caption-highlight">you did that.</strong>
     </p>
 
     <!-- Terminal log -->
@@ -1121,10 +1142,10 @@
       </p>
       <p class="sendoff__credit">— Ashika Verma, MIT EECS '24</p>
       <p style="
-        margin-top: var(--space-12);
+        margin-top: clamp(var(--space-6), 8vh, var(--space-12));
         font-family: var(--font-mono);
         font-size: var(--text-xs);
-        color: rgba(255,255,255,0.55);
+        color: rgba(255,255,255,0.65);
         letter-spacing: 0.06em;
         text-transform: uppercase;
       ">you just controlled real lights in NYC</p>

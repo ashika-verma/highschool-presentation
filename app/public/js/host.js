@@ -816,7 +816,10 @@ function wireScriptUI() {
     state.scriptVisible = !state.scriptVisible;
     if (section) section.style.display = state.scriptVisible ? 'block' : 'none';
     if (toggleBtn) {
-      toggleBtn.textContent = state.scriptVisible ? 'Hide Script' : 'Script';
+      // Reconstruct innerHTML to preserve the "/" hint span — setting textContent
+      // would blow away the child spans and permanently lose the "/" indicator.
+      const label = state.scriptVisible ? 'Hide Script' : 'Script';
+      toggleBtn.innerHTML = `<span>${label}</span><span style="font-family:var(--font-mono);font-size:9px;opacity:0.5;margin-left:5px;letter-spacing:0.04em">/</span>`;
       toggleBtn.setAttribute('aria-expanded', String(state.scriptVisible));
     }
     if (state.scriptVisible) {

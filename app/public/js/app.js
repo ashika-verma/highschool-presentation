@@ -126,7 +126,7 @@ function wireWebSocket() {
     setRoomColor(data.hex);
     appendTerminalLine(data.name, data.hex, data.hex);
     state.totalColorChanges++;
-    $('demo-count-number').textContent = state.totalColorChanges;
+    $('demo-count-number').textContent = state.totalColorChanges > 0 ? state.totalColorChanges : '—';
   });
 
   // Reaction from any student (including self — server echoes)
@@ -180,7 +180,7 @@ function wireWebSocket() {
     }
     if (data.totalColorChanges !== undefined) {
       state.totalColorChanges = data.totalColorChanges;
-      $('demo-count-number').textContent = state.totalColorChanges;
+      $('demo-count-number').textContent = state.totalColorChanges > 0 ? state.totalColorChanges : '—';
     }
     if (data.photos !== undefined) {
       // Legacy: keep photos array in state for potential future use
@@ -614,7 +614,7 @@ function handleColorTap(color, btn) {
   // The server excludes the sender from the 'color' broadcast, so we must
   // increment totalColorChanges here for our own taps to show in the demo counter.
   state.totalColorChanges++;
-  $('demo-count-number').textContent = state.totalColorChanges;
+  $('demo-count-number').textContent = state.totalColorChanges > 0 ? state.totalColorChanges : '—';
   appendTerminalLine(state.name || 'Anonymous', color.hex, color.hex);
 
   // Update bottom strip — set both the CSS var and direct background for max compat
@@ -741,8 +741,15 @@ function renderSlide(slide) {
   // On a 360px student phone, a 48px font would dominate.
   // Scale by the ratio of the actual canvas width to the design reference width.
   // Clamped between 0.5x and 1.0x so tiny phones still get readable text.
+  //
+  // IMPORTANT: canvas.clientWidth returns 0 when the screen is display:none
+  // (e.g. during the welcome WS event when mode is still 'lobby').
+  // Fall back to window.innerWidth only when clientWidth is > 0; otherwise
+  // use a fixed 390px reference (median modern phone width) so text renders at
+  // a reasonable size on first reveal rather than always locking to 0.5x.
   const DESIGN_REF_WIDTH = 600;
-  const canvasWidth = canvas.clientWidth || window.innerWidth;
+  const rawWidth = canvas.clientWidth;
+  const canvasWidth = rawWidth > 0 ? rawWidth : Math.min(window.innerWidth || 390, 480);
   const fontScale = Math.max(0.5, Math.min(1.0, canvasWidth / DESIGN_REF_WIDTH));
 
   // Render elements
@@ -1060,8 +1067,8 @@ function appendTerminalLine(name, hex, originalHex) {
 
   terminal.scrollTop = terminal.scrollHeight;
 
-  // Update counter
-  $('demo-count-number').textContent = state.totalColorChanges;
+  // Update counter — show '—' rather than '0' to avoid looking broken at zero
+  $('demo-count-number').textContent = state.totalColorChanges > 0 ? state.totalColorChanges : '—';
 }
 
 // ─── Confetti ──────────────────────────────────────────────────────────────
@@ -1119,13 +1126,8 @@ function switchMode(mode, flash = true) {
     _selfSentQAs.clear();
   }, 2000);
 
-  // Mode-specific setup (runs before screen switch / flash so state is ready when screen appears)
-  if (mode === 'photos') {
-    // Clamp index in case server reset or slide list changed — renderSlide(undefined) shows empty state
-    const safeIdx = Math.max(0, Math.min(state.currentSlide, state.slides.length - 1));
-    state.currentSlide = safeIdx;
-    renderSlide(state.slides[safeIdx]);
-  }
+  // Mode-specific setup that must run BEFORE the screen appears
+  // (used for things that don't depend on the DOM being visible)
 
   if (mode === 'demo') {
     // Clear the static "connecting to NYC..." placeholder line before showing real logs
@@ -1167,6 +1169,15 @@ function switchMode(mode, flash = true) {
     // Counter animation runs AFTER the flash completes so it isn't wasted under the overlay
     if (mode === 'demo') {
       animateCounter();
+    }
+
+    // Slides: renderSlide() AFTER the screen is visible so canvas.clientWidth is accurate.
+    // If rendered while display:none, clientWidth=0 and fontScale locks to 0.5 (undersized).
+    // This is the only place where correct sizing is guaranteed.
+    if (mode === 'photos') {
+      const safeIdx = Math.max(0, Math.min(state.currentSlide, state.slides.length - 1));
+      state.currentSlide = safeIdx;
+      renderSlide(state.slides[safeIdx]);
     }
   };
 
@@ -1228,8 +1239,9 @@ function animateCounter() {
   // The initial HTML value is '—' so parseInt returns NaN → we fall back to 0.
   const startVal = parseInt(el.textContent, 10) || 0;
   if (startVal >= target) {
-    // Show 0 rather than '—' so the screen doesn't look broken when no taps have happened
-    el.textContent = target;
+    // If genuinely 0 changes, keep showing '—' (not '0') so the screen doesn't
+    // look broken in the rare case the demo is entered before anyone has tapped.
+    el.textContent = target > 0 ? target : '—';
     return;
   }
   const duration = 2000;
