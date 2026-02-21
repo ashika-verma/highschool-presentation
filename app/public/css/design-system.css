@@ -249,9 +249,16 @@ body {
 .screen {
   position: absolute;
   inset: 0;
+  /* height: 100% ensures the screen is viewport-bounded even when an ID rule
+     overrides position to `relative` (ID specificity > class specificity).
+     Without a bounded height, overflow-y: auto never triggers — the element
+     grows with content and the parent's overflow:hidden clips instead. */
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  /* touch-action: pan-y lets the browser handle vertical swipe-to-scroll natively */
+  touch-action: pan-y;
   display: none;
   flex-direction: column;
 }
