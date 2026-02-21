@@ -69,7 +69,36 @@ const appState = {
   // Reaction totals — persisted so late-joining students and reconnecting host
   // see accurate cumulative counts, not "0" for everything.
   reactionCounts: { '👀': 0, '💡': 0, '🔥': 0, '😮': 0 },
+  // Slides — loaded from disk; default empty array if file doesn't exist
+  slides: loadSlides(),
+  currentSlideIndex: 0,
 };
+
+// ─── Slides ────────────────────────────────────────────────────────────────
+
+const SLIDES_PATH = path.join(__dirname, '../data/slides.json');
+
+function loadSlides() {
+  try {
+    if (!fs.existsSync(SLIDES_PATH)) return [];
+    const raw = fs.readFileSync(SLIDES_PATH, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn('[slides] Could not load slides.json:', err.message);
+    return [];
+  }
+}
+
+function saveSlides(slides) {
+  const dataDir = path.dirname(SLIDES_PATH);
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(SLIDES_PATH, JSON.stringify(slides, null, 2), 'utf8');
+}
+
+// ─── Script ────────────────────────────────────────────────────────────────
+
+const SCRIPT_PATH = path.join(__dirname, '../../script/talk.md');
 
 // ─── Photo list ────────────────────────────────────────────────────────────
 
@@ -314,6 +343,59 @@ const httpServer = http.createServer((req, res) => {
     return;
   }
 
+  // ── REST: slides ──
+  if (pathname === '/api/slides') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+      res.end(JSON.stringify(appState.slides));
+      return;
+    }
+    if (req.method === 'POST') {
+      // Require host key auth via query param or body
+      const authKey = url.searchParams.get('key');
+      if (authKey !== HOST_KEY) {
+        res.writeHead(401); res.end('Unauthorized'); return;
+      }
+      let body = '';
+      let bodyLen = 0;
+      req.on('data', chunk => {
+        bodyLen += chunk.length;
+        if (bodyLen > 512 * 1024) { res.writeHead(413); res.end(); return; } // 512KB max
+        body += chunk;
+      });
+      req.on('end', () => {
+        try {
+          const slides = JSON.parse(body);
+          if (!Array.isArray(slides)) { res.writeHead(400); res.end('Must be an array'); return; }
+          appState.slides = slides;
+          saveSlides(slides);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, count: slides.length }));
+        } catch {
+          res.writeHead(400); res.end('Invalid JSON');
+        }
+      });
+      return;
+    }
+  }
+
+  // ── REST: script ──
+  if (req.method === 'GET' && pathname === '/api/script') {
+    if (!fs.existsSync(SCRIPT_PATH)) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Script not found');
+      return;
+    }
+    try {
+      const scriptContent = fs.readFileSync(SCRIPT_PATH, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' });
+      res.end(scriptContent);
+    } catch {
+      res.writeHead(500); res.end('Error reading script');
+    }
+    return;
+  }
+
   // ── REST: state snapshot ──
   if (req.method === 'GET' && pathname === '/state') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -403,6 +485,9 @@ wss.on('connection', (socket) => {
     questions: appState.questions.slice(-10),
     // Cumulative reaction counts — lets late joiners and reconnectors see accurate totals
     reactionCounts: appState.reactionCounts,
+    // Slides — full array so students can render any slide index
+    slides: appState.slides,
+    currentSlideIndex: appState.currentSlideIndex,
     students: [...appState.clients.entries()]
       .filter(([, c]) => c.name && !c.isHost)
       .map(([, c]) => ({ name: c.name, hex: c.hex, colorsSent: c.colorsSent })),
@@ -576,6 +661,29 @@ function handleMessage(socket, msg) {
       if (mode === 'demo') {
         broadcast({ type: 'demo_start' });
       }
+      break;
+    }
+
+    case 'slide_goto': {
+      if (msg.key !== HOST_KEY || !client.isHost) return;
+      const idx = parseInt(msg.index, 10);
+      if (isNaN(idx) || idx < 0) return;
+      // Clamp to valid range
+      const clampedIdx = appState.slides.length > 0
+        ? Math.min(idx, appState.slides.length - 1)
+        : 0;
+      appState.currentSlideIndex = clampedIdx;
+      broadcast({ type: 'slide_goto', index: clampedIdx });
+      break;
+    }
+
+    case 'slides_reload': {
+      // Host reloaded slides after saving — refresh in-memory state
+      if (msg.key !== HOST_KEY || !client.isHost) return;
+      appState.slides = loadSlides();
+      appState.currentSlideIndex = 0;
+      // Broadcast updated slides to all students
+      broadcast({ type: 'slides_updated', slides: appState.slides, currentSlideIndex: 0 });
       break;
     }
 

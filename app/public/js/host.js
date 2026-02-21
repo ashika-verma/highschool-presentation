@@ -29,6 +29,13 @@ const state = {
   textResponses: [],
   roomColorHex: '#FF6EB4',
   hostKey: KEY,
+  // Slides
+  slides: [],
+  currentSlideIndex: 0,
+  selectedSlideIndex: 0,
+  // Script
+  scriptVisible: false,
+  scriptContent: '',
 };
 
 const $ = id => document.getElementById(id);
@@ -155,6 +162,11 @@ function connectHost() {
     }
     if (data.textResponses) {
       data.textResponses.forEach(r => addTextResponse(r, false));
+    }
+    if (data.slides !== undefined) {
+      state.slides = data.slides;
+      state.currentSlideIndex = data.currentSlideIndex ?? 0;
+      renderSlidesNav();
     }
   });
 
@@ -436,8 +448,403 @@ function escHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// ─── Slides ──────────────────────────────────────────────────────────────────
+
+function renderSlidesNav() {
+  const total = state.slides.length;
+  const idx = state.currentSlideIndex;
+  const label = $('slide-index-label');
+  if (label) {
+    label.textContent = total === 0 ? 'No slides' : `Slide ${idx + 1} / ${total}`;
+  }
+  renderSlideList();
+}
+
+function renderSlideList() {
+  const list = $('slide-list');
+  if (!list) return;
+  list.innerHTML = '';
+  state.slides.forEach((slide, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-pixel btn-pixel--sm';
+    btn.style.textAlign = 'left';
+    btn.style.fontSize = '11px';
+    btn.style.padding = '6px 10px';
+    btn.style.background = i === state.selectedSlideIndex
+      ? 'var(--color-surface-2)'
+      : 'var(--color-surface)';
+    btn.style.borderColor = i === state.selectedSlideIndex
+      ? 'var(--room-color-a)'
+      : 'var(--color-border)';
+    // Preview: first text element content or slide id
+    const firstText = (slide.elements || []).find(e => e.type === 'text');
+    btn.textContent = firstText
+      ? `${i + 1}. ${firstText.content.slice(0, 24)}`
+      : `${i + 1}. (slide)`;
+    btn.addEventListener('click', () => {
+      state.selectedSlideIndex = i;
+      renderSlideList();
+      renderSlideFieldEditor();
+    });
+    list.appendChild(btn);
+  });
+}
+
+function renderSlideFieldEditor() {
+  const slide = state.slides[state.selectedSlideIndex];
+  const bgPicker = $('slide-bg-picker');
+  const bgHex = $('slide-bg-hex');
+  if (!slide) {
+    const el = $('slide-element-list');
+    if (el) el.innerHTML = '<p style="font-size:11px;color:var(--color-text-dim)">No slide selected</p>';
+    return;
+  }
+  if (bgPicker) {
+    bgPicker.value = slide.bg || '#0A0A10';
+    if (bgHex) bgHex.textContent = slide.bg || '#0A0A10';
+    bgPicker.oninput = () => {
+      slide.bg = bgPicker.value;
+      if (bgHex) bgHex.textContent = bgPicker.value;
+    };
+  }
+  renderElementList(slide);
+}
+
+function renderElementList(slide) {
+  const list = $('slide-element-list');
+  if (!list) return;
+  list.innerHTML = '';
+  (slide.elements || []).forEach((el, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = `
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    `;
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between';
+    header.innerHTML = `<span style="font-family:var(--font-mono);color:var(--color-text-muted);font-size:10px">${el.type.toUpperCase()} ${i + 1}</span>`;
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'x';
+    delBtn.style.cssText = 'font-size:11px;color:#ff6b6b;background:none;border:none;cursor:pointer;padding:0 4px';
+    delBtn.addEventListener('click', () => {
+      slide.elements.splice(i, 1);
+      renderElementList(slide);
+    });
+    header.appendChild(delBtn);
+    row.appendChild(header);
+
+    if (el.type === 'text') {
+      row.appendChild(makeField('Content', el.content, v => { el.content = v; }));
+      row.appendChild(makeFieldRow([
+        ['Size', el.size, v => { el.size = parseInt(v) || 20; }, 'number', 60],
+        ['Weight', el.weight, v => { el.weight = parseInt(v) || 400; }, 'number', 60],
+      ]));
+      row.appendChild(makeFieldRow([
+        ['X%', el.x, v => { el.x = parseFloat(v) || 50; }, 'number', 60],
+        ['Y%', el.y, v => { el.y = parseFloat(v) || 50; }, 'number', 60],
+      ]));
+      row.appendChild(makeColorField('Color', el.color, v => { el.color = v; }));
+    } else if (el.type === 'image') {
+      row.appendChild(makeField('Src path (/photos/...)', el.src, v => { el.src = v; }));
+      row.appendChild(makeFieldRow([
+        ['X%', el.x, v => { el.x = parseFloat(v) || 50; }, 'number', 60],
+        ['Y%', el.y, v => { el.y = parseFloat(v) || 50; }, 'number', 60],
+        ['Width%', el.width, v => { el.width = parseFloat(v) || 80; }, 'number', 60],
+      ]));
+    }
+
+    list.appendChild(row);
+  });
+}
+
+function makeField(label, value, onChange) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+  const lbl = document.createElement('label');
+  lbl.textContent = label;
+  lbl.style.cssText = 'font-size:10px;color:var(--color-text-dim)';
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.value = value ?? '';
+  inp.style.cssText = 'font-size:12px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:4px;color:var(--color-text);padding:4px 8px;width:100%';
+  inp.addEventListener('input', () => onChange(inp.value));
+  wrap.appendChild(lbl);
+  wrap.appendChild(inp);
+  return wrap;
+}
+
+function makeFieldRow(fields) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px';
+  fields.forEach(([label, value, onChange, type, w]) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `display:flex;flex-direction:column;gap:2px;width:${w || 80}px`;
+    const lbl = document.createElement('label');
+    lbl.textContent = label;
+    lbl.style.cssText = 'font-size:10px;color:var(--color-text-dim)';
+    const inp = document.createElement('input');
+    inp.type = type || 'text';
+    inp.value = value ?? '';
+    inp.style.cssText = 'font-size:12px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:4px;color:var(--color-text);padding:4px 6px;width:100%';
+    inp.addEventListener('input', () => onChange(inp.value));
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    row.appendChild(wrap);
+  });
+  return row;
+}
+
+function makeColorField(label, value, onChange) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;align-items:center;gap:8px';
+  const lbl = document.createElement('label');
+  lbl.textContent = label;
+  lbl.style.cssText = 'font-size:10px;color:var(--color-text-dim);white-space:nowrap';
+  const inp = document.createElement('input');
+  inp.type = 'color';
+  inp.value = value || '#ffffff';
+  inp.style.cssText = 'width:36px;height:28px;border:1px solid var(--color-border);border-radius:4px;background:var(--color-surface);cursor:pointer';
+  const hexSpan = document.createElement('span');
+  hexSpan.textContent = value || '#ffffff';
+  hexSpan.style.cssText = 'font-family:var(--font-mono);font-size:10px;color:var(--color-text-dim)';
+  inp.addEventListener('input', () => {
+    hexSpan.textContent = inp.value;
+    onChange(inp.value);
+  });
+  wrap.appendChild(lbl);
+  wrap.appendChild(inp);
+  wrap.appendChild(hexSpan);
+  return wrap;
+}
+
+function wireSlidesUI() {
+  $('slide-prev-btn')?.addEventListener('click', () => {
+    if (state.slides.length === 0) return;
+    const idx = Math.max(0, state.currentSlideIndex - 1);
+    state.currentSlideIndex = idx;
+    ws.send({ type: 'slide_goto', index: idx, key: state.hostKey });
+    renderSlidesNav();
+  });
+
+  $('slide-next-btn')?.addEventListener('click', () => {
+    if (state.slides.length === 0) return;
+    const idx = Math.min(state.slides.length - 1, state.currentSlideIndex + 1);
+    state.currentSlideIndex = idx;
+    ws.send({ type: 'slide_goto', index: idx, key: state.hostKey });
+    renderSlidesNav();
+  });
+
+  $('slide-editor-toggle')?.addEventListener('click', () => {
+    const editor = $('slide-editor');
+    const btn = $('slide-editor-toggle');
+    if (!editor) return;
+    const open = editor.style.display === 'none';
+    editor.style.display = open ? 'block' : 'none';
+    btn.textContent = open ? 'Hide Editor' : 'Edit Slides';
+    if (open) renderSlideFieldEditor();
+  });
+
+  $('slide-add-btn')?.addEventListener('click', () => {
+    state.slides.push({ id: `slide-${Date.now()}`, bg: '#0A0A10', elements: [] });
+    state.selectedSlideIndex = state.slides.length - 1;
+    renderSlideList();
+    renderSlideFieldEditor();
+  });
+
+  $('slide-delete-btn')?.addEventListener('click', () => {
+    if (state.slides.length === 0) return;
+    state.slides.splice(state.selectedSlideIndex, 1);
+    state.selectedSlideIndex = Math.max(0, state.selectedSlideIndex - 1);
+    if (state.currentSlideIndex >= state.slides.length) {
+      state.currentSlideIndex = Math.max(0, state.slides.length - 1);
+    }
+    renderSlidesNav();
+    renderSlideFieldEditor();
+  });
+
+  $('slide-add-text-btn')?.addEventListener('click', () => {
+    const slide = state.slides[state.selectedSlideIndex];
+    if (!slide) return;
+    if (!slide.elements) slide.elements = [];
+    slide.elements.push({ type: 'text', content: 'New text', size: 24, color: '#FFFFFF', x: 50, y: 50, align: 'center', weight: 400 });
+    renderElementList(slide);
+  });
+
+  $('slide-add-img-btn')?.addEventListener('click', () => {
+    const slide = state.slides[state.selectedSlideIndex];
+    if (!slide) return;
+    if (!slide.elements) slide.elements = [];
+    slide.elements.push({ type: 'image', src: '/photos/highschool/', x: 50, y: 50, width: 80 });
+    renderElementList(slide);
+  });
+
+  $('slide-save-btn')?.addEventListener('click', async () => {
+    const btn = $('slide-save-btn');
+    const status = $('slide-save-status');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    try {
+      const res = await fetch(`/api/slides?key=${encodeURIComponent(state.hostKey)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state.slides),
+      });
+      if (res.ok) {
+        if (status) status.textContent = 'Saved!';
+        // Tell server to reload and broadcast to students
+        ws.send({ type: 'slides_reload', key: state.hostKey });
+        setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+      } else {
+        if (status) status.textContent = 'Save failed';
+      }
+    } catch {
+      if (status) status.textContent = 'Network error';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Save Slides';
+  });
+}
+
+// ─── Teleprompter / Script ────────────────────────────────────────────────────
+
+// Maps mode names to section markers in the script.
+// The script should contain lines like "[→ COLOR MODE]" for auto-scroll.
+const MODE_MARKERS = {
+  lobby:   '[→ LOBBY]',
+  color:   '[→ COLOR MODE]',
+  ambient: '[→ AMBIENT]',
+  photos:  '[→ PHOTOS]',
+  text:    '[→ TEXT]',
+  demo:    '[→ DEMO]',
+  qa:      '[→ Q&A]',
+  sendoff: '[→ SENDOFF]',
+};
+
+function renderScript(text) {
+  const panel = $('script-panel');
+  if (!panel) return;
+
+  // Simple markdown-lite render: bold, headers, mode markers, linebreaks
+  const html = text
+    .split('\n')
+    .map(line => {
+      // Mode markers — highlight them
+      const isMarker = Object.values(MODE_MARKERS).some(m => line.includes(m));
+      if (isMarker) {
+        return `<div class="script-mode-marker" data-line="${escHtml(line)}" style="
+          font-family:var(--font-mono);
+          font-size:10px;
+          letter-spacing:0.08em;
+          color:var(--room-color-a);
+          background:color-mix(in srgb, var(--room-color-a) 10%, transparent);
+          border-radius:4px;
+          padding:2px 8px;
+          margin:8px 0 4px;
+          display:inline-block;
+        ">${escHtml(line)}</div>`;
+      }
+      // Headers
+      if (line.startsWith('# ')) {
+        return `<div style="font-weight:700;font-size:var(--text-sm);color:var(--color-text);margin-top:12px">${escHtml(line.slice(2))}</div>`;
+      }
+      if (line.startsWith('## ')) {
+        return `<div style="font-weight:600;font-size:13px;color:var(--color-text);margin-top:8px">${escHtml(line.slice(3))}</div>`;
+      }
+      // Bold
+      const boldLine = escHtml(line).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      if (line.trim() === '') return '<div style="height:8px"></div>';
+      return `<div style="margin:1px 0">${boldLine}</div>`;
+    })
+    .join('');
+
+  panel.innerHTML = html;
+}
+
+function scrollScriptToMode(mode) {
+  const panel = $('script-panel');
+  if (!panel || !state.scriptVisible) return;
+  const marker = MODE_MARKERS[mode];
+  if (!marker) return;
+  const el = panel.querySelector(`[data-line="${escHtml(marker)}"]`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+async function loadScript() {
+  try {
+    const res = await fetch('/api/script');
+    if (res.ok) {
+      state.scriptContent = await res.text();
+      renderScript(state.scriptContent);
+    } else {
+      const panel = $('script-panel');
+      if (panel) panel.innerHTML = '<p style="font-style:italic;color:var(--color-text-dim);font-size:13px">No script file found (create script/talk.md)</p>';
+    }
+  } catch {
+    const panel = $('script-panel');
+    if (panel) panel.innerHTML = '<p style="color:#ff6b6b;font-size:13px">Error loading script</p>';
+  }
+}
+
+function wireScriptUI() {
+  const toggleBtn = $('script-toggle-btn');
+  const section = $('script-section');
+
+  function toggleScript() {
+    state.scriptVisible = !state.scriptVisible;
+    if (section) section.style.display = state.scriptVisible ? 'block' : 'none';
+    if (toggleBtn) {
+      toggleBtn.textContent = state.scriptVisible ? 'Hide Script' : 'Script';
+      toggleBtn.setAttribute('aria-expanded', String(state.scriptVisible));
+    }
+    if (state.scriptVisible) {
+      scrollScriptToMode(state.currentMode);
+    }
+  }
+
+  toggleBtn?.addEventListener('click', toggleScript);
+
+  // Keyboard shortcut: / toggles the teleprompter
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement === document.body) {
+      e.preventDefault();
+      toggleScript();
+    }
+  });
+}
+
+// Override setActiveMode to also scroll script and update slide label
+const _origSetActiveMode = setActiveMode;
+function setActiveModeWithExtras(mode) {
+  _origSetActiveMode(mode);
+  scrollScriptToMode(mode);
+  // Update mode label in script section
+  const modeLabel = $('script-mode-label');
+  if (modeLabel) modeLabel.textContent = `[→ ${mode.toUpperCase()}]`;
+}
+
 // ─── Boot ────────────────────────────────────────────────────────────────────
 
 boot();
 wireModeBtns();
 renderHostColorGrid();
+wireSlidesUI();
+wireScriptUI();
+loadScript();
+
+// Override setActiveMode after wireModeBtns so our wrapper runs
+// (wireModeBtns captures setActiveMode, so we patch the ws listener directly)
+ws.onMessage('mode', (data) => {
+  setActiveMode(data.mode);
+  scrollScriptToMode(data.mode);
+  const modeLabel = $('script-mode-label');
+  if (modeLabel) modeLabel.textContent = `[→ ${data.mode.toUpperCase()}]`;
+});

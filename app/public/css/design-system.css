@@ -1527,6 +1527,30 @@ body {
    add it without errors. The ambient glow transitions handle timing. */
 .dither-pulse { /* intentionally no animation — color handled via CSS vars */ }
 
+/* ============================================================
+   SLIDE SYSTEM — student slide canvas elements
+   ============================================================ */
+
+.slide-element-text {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: pre-wrap;
+  text-align: center;
+  font-family: var(--font-display);
+  line-height: 1.3;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.slide-element-img {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  max-height: 80%;
+  pointer-events: none;
+  z-index: 10;
+}
+
 .dither-bg,
 .ambient-bg,
 .qa-bg {

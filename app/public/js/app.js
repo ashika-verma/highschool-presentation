@@ -39,10 +39,13 @@ const state = {
   roomCount: 0,
   totalColorChanges: 0,
   messageLog: [],       // for demo terminal
-  photos: [],           // populated by server on welcome
+  photos: [],           // populated by server on welcome (legacy, kept for compat)
   currentPhoto: 0,
   textResponses: [],
   questions: [],
+  // Slides system
+  slides: [],           // populated by server on welcome
+  currentSlide: 0,
 };
 
 // ─── DOM refs ──────────────────────────────────────────────────────────────
@@ -173,10 +176,16 @@ function wireWebSocket() {
       $('demo-count-number').textContent = state.totalColorChanges;
     }
     if (data.photos !== undefined) {
-      // data.photos may be an empty array (no photos dir) or a populated array.
-      // Always call initPhotoSlideshow so the placeholder shows correctly.
+      // Legacy: keep photos array in state for potential future use
       state.photos = data.photos;
-      initPhotoSlideshow();
+    }
+    // Slides — load from server and render current slide
+    if (data.slides !== undefined) {
+      state.slides = data.slides;
+      if (data.currentSlideIndex !== undefined) {
+        state.currentSlide = data.currentSlideIndex;
+      }
+      renderSlide(state.slides[state.currentSlide]);
     }
     if (data.roomColor) setRoomColor(data.roomColor);
     if (data.reactionCounts) {
@@ -238,6 +247,19 @@ function wireWebSocket() {
   // Demo: trigger confetti
   ws.onMessage('demo_start', () => {
     triggerConfetti();
+  });
+
+  // Slide navigation from host
+  ws.onMessage('slide_goto', ({ index }) => {
+    state.currentSlide = index;
+    renderSlide(state.slides[index]);
+  });
+
+  // Full slide list updated after host saves
+  ws.onMessage('slides_updated', ({ slides, currentSlideIndex }) => {
+    state.slides = slides;
+    state.currentSlide = currentSlideIndex ?? 0;
+    renderSlide(state.slides[state.currentSlide]);
   });
 }
 
@@ -302,8 +324,6 @@ function wireUI() {
     }
   });
 
-  // Photo swipe
-  wirePhotoSwipe();
 }
 
 // ─── Lobby ─────────────────────────────────────────────────────────────────
@@ -671,6 +691,66 @@ function setRoomColor(hex) {
   document.documentElement.style.setProperty('--room-btn-text', textColor);
 }
 
+// ─── Slide renderer ────────────────────────────────────────────────────────
+//
+// Renders a slide onto #slide-canvas.
+// Each element is positioned absolutely using x/y as % from center.
+// The slide spec: { id, bg, elements: [ { type: 'text'|'image', ... } ] }
+
+function renderSlide(slide) {
+  const canvas = $('slide-canvas');
+  if (!canvas) return;
+
+  // Clear previous content (keep ::after pseudo-element — it's CSS)
+  canvas.innerHTML = '';
+
+  if (!slide) {
+    // Show empty state placeholder
+    const empty = document.createElement('div');
+    empty.className = 'slide-empty-state';
+    empty.innerHTML = '<span>no slides yet</span>';
+    canvas.appendChild(empty);
+    canvas.style.background = '#0A0A10';
+    return;
+  }
+
+  // Set background
+  canvas.style.background = slide.bg || '#0A0A10';
+
+  // Render elements
+  (slide.elements || []).forEach(el => {
+    if (el.type === 'text') {
+      const div = document.createElement('div');
+      div.className = 'slide-element-text';
+      div.style.left = `${el.x ?? 50}%`;
+      div.style.top  = `${el.y ?? 50}%`;
+      div.style.fontSize   = `${el.size ?? 20}px`;
+      div.style.color      = el.color || '#FFFFFF';
+      div.style.fontWeight = el.weight ?? 400;
+      div.style.textAlign  = el.align || 'center';
+      div.style.maxWidth   = '90%';
+      div.style.lineHeight = '1.3';
+      // Use textContent — never innerHTML for user data (XSS guard)
+      div.textContent = el.content || '';
+      canvas.appendChild(div);
+    } else if (el.type === 'image') {
+      const img = document.createElement('img');
+      img.className = 'slide-element-img';
+      img.style.left  = `${el.x ?? 50}%`;
+      img.style.top   = `${el.y ?? 50}%`;
+      img.style.width = `${el.width ?? 80}%`;
+      img.alt = '';
+      img.decoding = 'async';
+      // Sanitize src: must start with /photos/ or be a relative path — no external URLs
+      const safeSrc = (typeof el.src === 'string' && /^\/photos\//.test(el.src)) ? el.src : '';
+      if (safeSrc) {
+        img.src = safeSrc;
+      }
+      canvas.appendChild(img);
+    }
+  });
+}
+
 // ─── Ambient mode ──────────────────────────────────────────────────────────
 
 function updateAmbientTag() {
@@ -916,115 +996,8 @@ function addQAFeedItem({ name, text, hex }, animate = true) {
   feed.scrollTop = feed.scrollHeight;
 }
 
-// ─── Photo slideshow ────────────────────────────────────────────────────────
-
-let photoTimer = null;
-const PHOTO_INTERVAL = 8000;
-
-const photoDecorations = [
-  ['⭐', '💖'],
-  ['✨', '🌸'],
-  ['💫', '🌟'],
-  ['🎵', '💕'],
-  ['🎮', '⭐'],
-  ['🌈', '✨'],
-];
-
-function initPhotoSlideshow() {
-  const nav = $('photo-nav');
-  nav.innerHTML = '';
-
-  if (state.photos.length === 0) {
-    // No photos — show graceful placeholder, hide swipe hint and counter
-    $('photo-counter-text').textContent = '';
-    const swipeHint = document.querySelector('.swipe-hint');
-    if (swipeHint) swipeHint.style.display = 'none';
-    // Update placeholder text to say "no photos" rather than "loading..."
-    const placeholderLabel = document.querySelector('.photo-placeholder-label');
-    if (placeholderLabel) placeholderLabel.textContent = 'no photos added yet';
-    return;
-  }
-
-  // Photos are available — make sure swipe hint is visible
-  const swipeHint = document.querySelector('.swipe-hint');
-  if (swipeHint) swipeHint.style.display = '';
-
-  state.photos.forEach((_, i) => {
-    const dot = document.createElement('button');
-    dot.className = `photo-dot ${i === 0 ? 'active' : ''}`;
-    dot.setAttribute('aria-label', `Photo ${i + 1}`);
-    dot.addEventListener('click', () => goToPhoto(i));
-    nav.appendChild(dot);
-  });
-
-  showPhoto(0);
-  startPhotoTimer();
-}
-
-function showPhoto(index) {
-  if (state.photos.length === 0) return;
-
-  state.currentPhoto = index;
-  const photo = state.photos[index];
-  const frame = $('photo-display');
-  const caption = $('photo-caption');
-  const counter = $('photo-counter-text');
-
-  // Update image
-  if (photo.src) {
-    frame.innerHTML = `<img src="${escAttr(photo.src)}" alt="${escAttr(photo.alt || '')}" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block">`;
-  }
-
-  if (photo.caption) {
-    caption.textContent = photo.caption;
-  }
-
-  counter.textContent = `${index + 1} / ${state.photos.length}`;
-
-  // Update decorations
-  const decos = photoDecorations[index % photoDecorations.length];
-  $('photo-deco-1').textContent = decos[0];
-  $('photo-deco-2').textContent = decos[1];
-
-  // Update nav dots
-  $('photo-nav').querySelectorAll('.photo-dot').forEach((dot, i) => {
-    dot.classList.toggle('active', i === index);
-  });
-}
-
-function goToPhoto(index) {
-  const safeIndex = ((index % state.photos.length) + state.photos.length) % state.photos.length;
-  showPhoto(safeIndex);
-  resetPhotoTimer();
-}
-
-function startPhotoTimer() {
-  clearInterval(photoTimer);
-  photoTimer = setInterval(() => {
-    goToPhoto(state.currentPhoto + 1);
-  }, PHOTO_INTERVAL);
-}
-
-function resetPhotoTimer() {
-  clearInterval(photoTimer);
-  startPhotoTimer();
-}
-
-function wirePhotoSwipe() {
-  const container = $('photo-container');
-  let startX = 0;
-
-  container.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-  }, { passive: true });
-
-  container.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - startX;
-    if (Math.abs(dx) > 40) {
-      goToPhoto(state.currentPhoto + (dx < 0 ? 1 : -1));
-    }
-  }, { passive: true });
-}
+// ─── Photo/slide compat stub (photos array kept for legacy welcome data) ────
+// The actual slide rendering is handled by renderSlide() above.
 
 // ─── Demo reveal ────────────────────────────────────────────────────────────
 
@@ -1107,12 +1080,12 @@ function switchMode(mode, flash = true) {
     _selfSentQAs.clear();
   }, 2000);
 
-  // Stop photo slideshow timer when leaving photos mode to prevent timer leak
-  if (mode !== 'photos') {
-    clearInterval(photoTimer);
+  // Mode-specific setup (runs before screen switch / flash so state is ready when screen appears)
+  if (mode === 'photos') {
+    // Render current slide when entering slides mode
+    renderSlide(state.slides[state.currentSlide]);
   }
 
-  // Mode-specific setup (runs before screen switch / flash so state is ready when screen appears)
   if (mode === 'demo') {
     // Clear the static "connecting to NYC..." placeholder line before showing real logs
     const terminal = $('demo-terminal');

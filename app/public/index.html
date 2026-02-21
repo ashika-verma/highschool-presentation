@@ -438,127 +438,57 @@
     }
 
     /* ══════════════════════════════════════════════════════════
-       SCREEN 4: PHOTO COLLAGE
+       SCREEN 4: SLIDES
        ══════════════════════════════════════════════════════════ */
 
     #screen-photos {
       background: #050508;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: var(--space-8) var(--space-5);
       position: relative;
+      overflow: hidden;
     }
 
-    #screen-photos::before {
+    #slide-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Subtle room-color atmosphere overlay on slides */
+    #slide-canvas::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 65%);
+      background: radial-gradient(ellipse at 50% 100%, transparent 0%, transparent 70%);
       pointer-events: none;
+      z-index: 50;
       transition: background var(--transition-ambient);
     }
     @supports (color: color-mix(in srgb, red, blue)) {
-      #screen-photos::before {
+      #slide-canvas::after {
         background: radial-gradient(
-          ellipse at 50% 50%,
-          color-mix(in srgb, var(--room-color-a) 12%, transparent),
-          transparent 65%
+          ellipse at 50% 100%,
+          color-mix(in srgb, var(--room-color-a) 8%, transparent),
+          transparent 70%
         );
       }
     }
 
-    .photo-container {
-      width: 100%;
-      max-width: 340px;
-      position: relative;
-      z-index: 1;
-    }
-
-    /* Photo navigation dots */
-    .photo-nav {
-      display: flex;
-      justify-content: center;
-      gap: var(--space-2);
-      margin-top: var(--space-5);
-      z-index: 1;
-    }
-
-    .photo-dot {
-      /* Padding creates a large invisible tap target around the dot */
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.22);
-      border: none;
-      cursor: pointer;
-      transition:
-        background var(--transition-fast),
-        box-shadow var(--transition-fast);
-      padding: 10px;
-      background-clip: content-box;
-      -webkit-background-clip: content-box;
-      min-height: 0;
-    }
-
-    .photo-dot.active {
-      background: var(--room-color-a);
-      background-clip: content-box;
-      -webkit-background-clip: content-box;
-    }
-
-    .photo-caption-row {
-      text-align: center;
-      margin-top: var(--space-3);
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      color: rgba(255, 255, 255, 0.3);
-      letter-spacing: 0.06em;
-      z-index: 1;
-    }
-
-    .swipe-hint {
-      font-size: var(--text-xs);
-      color: rgba(255, 255, 255, 0.35);
-      text-align: center;
-      margin-top: var(--space-2);
-      letter-spacing: 0.04em;
-    }
-
-    /* Placeholder shown when no photos are loaded */
-    .photo-placeholder-empty {
-      width: 100%;
-      aspect-ratio: 4/3;
-      background: var(--color-surface);
-      border-radius: var(--radius-lg);
+    /* Slide empty state */
+    .slide-empty-state {
+      position: absolute;
+      inset: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: var(--space-3);
-    }
-
-    .photo-placeholder-icon {
-      font-size: 40px;
-      opacity: 0.4;
-    }
-
-    .photo-placeholder-label {
+      color: rgba(255,255,255,0.25);
       font-family: var(--font-mono);
       font-size: var(--text-xs);
-      color: var(--color-text-dim);
       letter-spacing: 0.08em;
       text-transform: uppercase;
-    }
-
-    /* Photo decorations — subtler now */
-    .photo-frame__decoration {
-      position: absolute;
-      font-size: 14px;
-      line-height: 1;
       pointer-events: none;
-      opacity: 0.7;
     }
 
     /* ══════════════════════════════════════════════════════════
@@ -1028,29 +958,12 @@
   </section>
 
   <!-- ══════════════════════════════════════════════════════════
-       SCREEN 4: PHOTO COLLAGE
+       SCREEN 4: SLIDES
        ══════════════════════════════════════════════════════════ -->
-  <section id="screen-photos" class="screen" aria-label="Photo collage">
-    <div class="photo-container" id="photo-container">
-      <div class="photo-frame" id="photo-frame">
-        <div class="photo-frame__decoration" style="top:-10px; right:-10px" id="photo-deco-1">⭐</div>
-        <div class="photo-frame__decoration" style="bottom:40px; left:-12px" id="photo-deco-2">💖</div>
-
-        <!-- Photo display — JS populates this with real images; shows placeholder when none loaded -->
-        <div id="photo-display" class="photo-placeholder-empty">
-          <span class="photo-placeholder-icon" aria-hidden="true">🖼️</span>
-          <p class="photo-placeholder-label">photos loading...</p>
-        </div>
-        <div class="photo-frame__caption" id="photo-caption"></div>
-      </div>
+  <section id="screen-photos" class="screen" aria-label="Slides">
+    <div id="slide-canvas" style="position:relative;width:100%;height:100%;overflow:hidden;background:#0A0A10">
+      <!-- Slide elements injected by JS -->
     </div>
-
-    <div class="photo-nav" id="photo-nav" role="group" aria-label="Photo navigation">
-      <!-- Dots injected by JS -->
-    </div>
-
-    <p class="photo-caption-row" id="photo-counter-text"></p>
-    <p class="swipe-hint" style="display:none">swipe to navigate</p>
   </section>
 
   <!-- ══════════════════════════════════════════════════════════

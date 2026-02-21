@@ -292,7 +292,10 @@
       <span>Light Room</span>
       Host Dashboard
     </h1>
-    <div id="host-status-pill" class="host-status-pill" aria-live="polite">connecting</div>
+    <div style="display:flex;gap:var(--space-2);align-items:center">
+      <button class="btn-pixel btn-pixel--sm" id="script-toggle-btn" aria-expanded="false" aria-controls="script-section" title="Toggle script (/)">Script</button>
+      <div id="host-status-pill" class="host-status-pill" aria-live="polite">connecting</div>
+    </div>
   </div>
 
   <!-- Stats row -->
@@ -367,6 +370,81 @@
         Send-off
         <span class="mode-cue">make something. show someone.</span>
       </button>
+    </div>
+  </div>
+
+  <!-- Script (teleprompter) -->
+  <div class="host-section" id="script-section" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-3)">
+      <p class="host-section-title" style="margin-bottom:0">Talk Script</p>
+      <span id="script-mode-label" style="font-family:var(--font-mono);font-size:var(--text-2xs);color:var(--room-color-a);letter-spacing:0.06em;text-transform:uppercase"></span>
+    </div>
+    <div id="script-panel" style="
+      max-height:40vh;
+      overflow-y:auto;
+      background:var(--color-surface);
+      border:1px solid var(--color-border);
+      border-radius:var(--radius-md);
+      padding:var(--space-4) var(--space-5);
+      font-family:var(--font-sans);
+      font-size:var(--text-sm);
+      line-height:1.8;
+      color:var(--color-text-muted);
+      scroll-behavior:smooth;
+    " aria-label="Talk script"></div>
+    <p style="font-family:var(--font-mono);font-size:10px;color:var(--color-text-dim);margin-top:var(--space-2);letter-spacing:0.04em">press / to toggle</p>
+  </div>
+
+  <!-- Slides control + editor -->
+  <div class="host-section" id="slides-section">
+    <p class="host-section-title">Slides</p>
+
+    <!-- Nav controls -->
+    <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)">
+      <button class="btn-pixel btn-pixel--sm" id="slide-prev-btn" aria-label="Previous slide">Prev</button>
+      <span id="slide-index-label" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted);flex:1;text-align:center">No slides</span>
+      <button class="btn-pixel btn-pixel--sm" id="slide-next-btn" aria-label="Next slide">Next</button>
+    </div>
+
+    <!-- Slide editor toggle -->
+    <button class="btn-pixel btn-pixel--sm" id="slide-editor-toggle" style="width:100%;margin-bottom:var(--space-3)">
+      Edit Slides
+    </button>
+
+    <!-- Slide editor panel (hidden by default) -->
+    <div id="slide-editor" style="display:none">
+      <!-- Slide list -->
+      <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
+        <div id="slide-list" style="flex:1;display:flex;flex-direction:column;gap:var(--space-2);max-height:120px;overflow-y:auto"></div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+          <button class="btn-pixel btn-pixel--sm" id="slide-add-btn" title="Add slide">+</button>
+          <button class="btn-pixel btn-pixel--sm" id="slide-delete-btn" title="Delete slide" style="color:#ff6b6b">Del</button>
+        </div>
+      </div>
+
+      <!-- Selected slide editor -->
+      <div id="slide-field-editor" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+        <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)">
+          <label style="font-size:var(--text-xs);color:var(--color-text-muted);white-space:nowrap">BG Color</label>
+          <input type="color" id="slide-bg-picker" value="#0A0A10" style="width:48px;height:32px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);cursor:pointer">
+          <span id="slide-bg-hex" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-dim)">#0A0A10</span>
+        </div>
+
+        <!-- Element list -->
+        <div id="slide-element-list" style="display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-3)"></div>
+
+        <!-- Add element buttons -->
+        <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
+          <button class="btn-pixel btn-pixel--sm" id="slide-add-text-btn" style="flex:1">+ Text</button>
+          <button class="btn-pixel btn-pixel--sm" id="slide-add-img-btn" style="flex:1">+ Image</button>
+        </div>
+
+        <!-- Save button -->
+        <button class="btn-pixel btn-pixel--wide" id="slide-save-btn" style="background:var(--room-color-a);color:var(--room-btn-text,#000);border-color:transparent">
+          Save Slides
+        </button>
+        <p id="slide-save-status" style="font-size:var(--text-xs);color:var(--color-text-dim);text-align:center;margin-top:var(--space-2)"></p>
+      </div>
     </div>
   </div>
 
