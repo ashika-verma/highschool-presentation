@@ -43,14 +43,19 @@
       transform: translateX(-50%);
       width: 150%;
       height: 300px;
-      background: radial-gradient(
-        ellipse at 50% 0%,
-        color-mix(in srgb, var(--room-color-a) 18%, transparent),
-        transparent 65%
-      );
+      background: radial-gradient(ellipse at 50% 0%, transparent 0%, transparent 65%);
       pointer-events: none;
       z-index: 0;
       transition: background var(--transition-ambient);
+    }
+    @supports (color: color-mix(in srgb, red, blue)) {
+      #screen-lobby::before {
+        background: radial-gradient(
+          ellipse at 50% 0%,
+          color-mix(in srgb, var(--room-color-a) 18%, transparent),
+          transparent 65%
+        );
+      }
     }
 
     #screen-lobby > * { position: relative; z-index: 1; }
@@ -259,13 +264,18 @@
       left: 0;
       right: 0;
       height: 200px;
-      background: radial-gradient(
-        ellipse at 50% 0%,
-        color-mix(in srgb, var(--room-color-a) 15%, transparent),
-        transparent 70%
-      );
+      background: radial-gradient(ellipse at 50% 0%, transparent 0%, transparent 70%);
       pointer-events: none;
       transition: background var(--transition-ambient);
+    }
+    @supports (color: color-mix(in srgb, red, blue)) {
+      #screen-color::before {
+        background: radial-gradient(
+          ellipse at 50% 0%,
+          color-mix(in srgb, var(--room-color-a) 15%, transparent),
+          transparent 70%
+        );
+      }
     }
 
     .color-screen-header {
@@ -423,13 +433,18 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(
-        ellipse at 50% 50%,
-        color-mix(in srgb, var(--room-color-a) 12%, transparent),
-        transparent 65%
-      );
+      background: radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 65%);
       pointer-events: none;
       transition: background var(--transition-ambient);
+    }
+    @supports (color: color-mix(in srgb, red, blue)) {
+      #screen-photos::before {
+        background: radial-gradient(
+          ellipse at 50% 50%,
+          color-mix(in srgb, var(--room-color-a) 12%, transparent),
+          transparent 65%
+        );
+      }
     }
 
     .photo-container {
@@ -543,13 +558,18 @@
       left: 0;
       right: 0;
       height: 240px;
-      background: radial-gradient(
-        ellipse at 50% 0%,
-        color-mix(in srgb, var(--room-color-a) 12%, transparent),
-        transparent 70%
-      );
+      background: radial-gradient(ellipse at 50% 0%, transparent 0%, transparent 70%);
       pointer-events: none;
       transition: background var(--transition-ambient);
+    }
+    @supports (color: color-mix(in srgb, red, blue)) {
+      #screen-text::before {
+        background: radial-gradient(
+          ellipse at 50% 0%,
+          color-mix(in srgb, var(--room-color-a) 12%, transparent),
+          transparent 70%
+        );
+      }
     }
 
     .text-prompt {
@@ -620,14 +640,18 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background:
-        radial-gradient(
+      background: radial-gradient(ellipse at 50% 30%, transparent 0%, transparent 60%);
+      pointer-events: none;
+      transition: background var(--transition-ambient);
+    }
+    @supports (color: color-mix(in srgb, red, blue)) {
+      #screen-demo::before {
+        background: radial-gradient(
           ellipse at 50% 30%,
           color-mix(in srgb, var(--room-color-a) 8%, transparent),
           transparent 60%
         );
-      pointer-events: none;
-      transition: background var(--transition-ambient);
+      }
     }
 
     .demo-title {

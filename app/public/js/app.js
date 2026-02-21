@@ -212,7 +212,10 @@ function wireUI() {
   // Q&A form
   $('qa-submit-btn').addEventListener('click', () => handleQASubmit());
   $('qa-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleQASubmit();
+    if (e.key === 'Enter') {
+      e.preventDefault(); // prevent newline/form submission on Android soft keyboard
+      handleQASubmit();
+    }
   });
 
   // Photo swipe
@@ -419,8 +422,11 @@ function handleColorTap(color, btn) {
   // Send to server
   ws.sendColor(state.name || 'Anonymous', color.hex);
   state.colorsSent++;
-  // Note: totalColorChanges is incremented in the server's 'color' broadcast handler,
-  // not here, to avoid double-counting (server echoes color back to all clients).
+  // The server excludes the sender from the 'color' broadcast, so we must
+  // increment totalColorChanges here for our own taps to show in the demo counter.
+  state.totalColorChanges++;
+  $('demo-count-number').textContent = state.totalColorChanges;
+  appendTerminalLine(state.name || 'Anonymous', color.hex, color.hex);
 
   // Update bottom strip — set both the CSS var and direct background for max compat
   $('sent-color-swatch').style.setProperty('--current-color', color.hex);
@@ -881,6 +887,11 @@ function switchMode(mode, flash = true) {
   // should not cause silent drops on the next mode's messages
   _selfSentTexts.clear();
   _selfSentQAs.clear();
+
+  // Stop photo slideshow timer when leaving photos mode to prevent timer leak
+  if (mode !== 'photos') {
+    clearInterval(photoTimer);
+  }
 
   if (flash) {
     doModeFlash(() => showScreen(mode));

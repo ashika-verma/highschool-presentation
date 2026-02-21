@@ -384,7 +384,7 @@ wss.on('connection', (socket) => {
   socket.send(JSON.stringify({
     type: 'welcome',
     mode: appState.mode,
-    count: appState.clients.size,
+    count: studentCount(),
     totalColorChanges: appState.totalColorChanges,
     roomColor: appState.roomColorHex,
     photos: appState.photos,
