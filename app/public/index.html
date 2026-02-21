@@ -822,7 +822,7 @@
           type="text"
           id="name-input"
           class="input-pixel"
-          placeholder="what do you go by?"
+          placeholder="first name or nickname"
           maxlength="24"
           autocomplete="off"
           spellcheck="false"
@@ -855,11 +855,14 @@
       <span class="lobby-joined-icon lobby-pulse" aria-hidden="true">💡</span>
       <h2 id="lobby-joined-msg">You're in!</h2>
       <p>
-        Ashika's lights are live.<br>
+        The lights are on.<br>
         Your color is in the mix.<br>
-        The app will switch screens as the talk goes on.
+        Screens switch automatically — just watch.
       </p>
       <div id="joined-color-preview" class="dither-bg" aria-hidden="true"></div>
+      <p style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-dim);margin-top:var(--space-4);letter-spacing:0.04em">
+        color changing live as others tap
+      </p>
     </div>
   </section>
 
@@ -869,7 +872,7 @@
   <section id="screen-color" class="screen" aria-label="Color control">
     <div class="color-screen-header">
       <h2>Change the lights</h2>
-      <p>Last tap wins — changes Ashika's room right now</p>
+      <p>Tap any color. It changes Ashika's lights right now.</p>
     </div>
 
     <div id="color-grid-main">
@@ -882,8 +885,8 @@
     <div class="color-sent-strip">
       <div class="color-sent-strip__swatch" id="sent-color-swatch"></div>
       <div>
-        <span class="color-sent-strip__label" id="sent-color-name">—</span>
-        <div class="color-sent-strip__text" id="sent-color-status">tap any color to send it</div>
+        <span class="color-sent-strip__label" id="sent-color-name">Choose a color</span>
+        <div class="color-sent-strip__text" id="sent-color-status">tap to send it to Ashika's lights</div>
       </div>
     </div>
   </section>

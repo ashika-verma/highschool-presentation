@@ -232,10 +232,14 @@ function selectLobbyColor(color, btn) {
   btn.classList.add('selected');
   btn.setAttribute('aria-checked', 'true');
 
-  // Update dither preview
+  // Update preview strip
   const strip = $('lobby-preview-strip');
   strip.style.setProperty('--room-color-a', color.hex);
   strip.style.setProperty('--room-color-b', color.colorB);
+
+  // Also update the root so the join button (which inherits --room-color-a) updates too
+  document.documentElement.style.setProperty('--room-color-a', color.hex);
+  document.documentElement.style.setProperty('--room-color-b', color.colorB);
 }
 
 function handleJoin() {
@@ -274,6 +278,13 @@ function showJoinedState() {
 function updateLobbyCount(count) {
   state.roomCount = count;
   $('lobby-count').textContent = count;
+
+  // Update label: "in the room right now" vs "be the first"
+  const label = document.querySelector('.lobby-counter__label');
+  if (label) {
+    label.textContent = count === 0 ? 'be the first to join' : 'in the room right now';
+  }
+
   renderPeopleRow(count);
 }
 
@@ -353,10 +364,14 @@ function handleColorTap(color, btn) {
   );
   btn.classList.add('selected');
 
+  // Haptic feedback (Android Chrome + supported iOS)
+  if (navigator.vibrate) navigator.vibrate(18);
+
   // Send to server
   ws.sendColor(state.name || 'Anonymous', color.hex);
   state.colorsSent++;
-  state.totalColorChanges++;
+  // Note: totalColorChanges is incremented in the server's 'color' broadcast handler,
+  // not here, to avoid double-counting (server echoes color back to all clients).
 
   // Update bottom strip
   $('sent-color-swatch').style.background = color.hex;
@@ -393,10 +408,33 @@ function showZapFeedback(hex) {
 
   layer.appendChild(zap);
 
-  // Clean up after animation finishes
-  zap.addEventListener('animationend', () => {
-    zap.remove();
-  }, { once: true });
+  // Clean up after the zap-out animation finishes.
+  // animationend fires for each animation (zap-in then zap-out) so we must
+  // only remove on the last one (zap-out). Check animationName to be precise.
+  zap.addEventListener('animationend', (e) => {
+    if (e.animationName === 'zap-out') {
+      zap.remove();
+    }
+  });
+}
+
+// ─── Toast notification (non-NYC zap) ──────────────────────────────────────
+// Lightweight confirmation toast — used for actions that aren't "send to NYC"
+
+function showToast(message, hex) {
+  const layer = $('zap-layer');
+  const toast = document.createElement('div');
+  toast.className = 'zap-feedback';
+  toast.textContent = message;
+  toast.style.color = 'rgba(0,0,0,0.85)';
+  toast.style.background = hex || '#4ADE80';
+  toast.style.padding = '10px 20px';
+  toast.style.boxShadow = `0 0 32px -4px ${hex || '#4ADE80'}, 0 4px 16px rgba(0,0,0,0.4)`;
+
+  layer.appendChild(toast);
+  toast.addEventListener('animationend', (e) => {
+    if (e.animationName === 'zap-out') toast.remove();
+  });
 }
 
 // ─── Room color (ambient background) ──────────────────────────────────────
@@ -466,6 +504,8 @@ function handleReaction(emoji, btn) {
   bumpReaction(emoji);
   btn.classList.add('just-tapped');
   btn.addEventListener('animationend', () => btn.classList.remove('just-tapped'), { once: true });
+  // Haptic feedback
+  if (navigator.vibrate) navigator.vibrate(12);
 }
 
 function bumpReaction(emoji) {
@@ -496,8 +536,8 @@ function submitParkedQuestion() {
   ws.sendQuestion(state.name || 'Anonymous', text);
   closeQuestionModal();
 
-  // Brief confirmation
-  showZapFeedback(state.colorHex);
+  // Brief confirmation — show a question-specific toast, not the NYC zap
+  showToast('Question sent', state.colorHex);
 }
 
 // ─── Free text ─────────────────────────────────────────────────────────────
