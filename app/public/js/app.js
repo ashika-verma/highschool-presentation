@@ -574,6 +574,8 @@ function bumpReaction(emoji) {
   // Update ALL matching count badges (same emoji in ambient + Q&A)
   document.querySelectorAll(`[data-emoji-count="${emoji}"]`).forEach(el => {
     el.textContent = state.reactionCounts[emoji];
+    // Show count only once it's non-zero so initial state doesn't look dead
+    el.classList.add('has-count');
   });
 }
 

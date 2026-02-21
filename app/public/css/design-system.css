@@ -595,6 +595,13 @@ body {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1;
+  /* Hide zero counts — they make the UI look dead on load */
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.reaction-btn .reaction-count.has-count {
+  opacity: 1;
 }
 
 @keyframes reaction-pulse {

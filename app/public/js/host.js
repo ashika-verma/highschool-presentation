@@ -304,6 +304,7 @@ function bumpReaction(emoji) {
   // Update count badge
   document.querySelectorAll(`[data-pulse-emoji="${emoji}"]`).forEach(el => {
     el.textContent = total;
+    el.classList.add('has-count');
   });
 
   // Update max for relative bar sizing
