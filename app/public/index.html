@@ -375,8 +375,10 @@
       display: inline-block;
       font-family: var(--font-mono);
       font-size: var(--text-xs);
-      color: rgba(255, 255, 255, 0.6);
-      background: rgba(0, 0, 0, 0.25);
+      /* Increased to white 80% for legibility on bright room colors (e.g. Lemon) */
+      color: rgba(255, 255, 255, 0.85);
+      /* Darkened from 0.25 to 0.5 — ensures text is readable on any room color */
+      background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       padding: 5px 10px;
@@ -913,9 +915,6 @@
         Ashika controls the screens.
       </p>
       <div id="joined-color-preview" class="dither-bg" aria-hidden="true"></div>
-      <p style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-dim);margin-top:var(--space-4);letter-spacing:0.04em">
-        color changing live as others tap
-      </p>
     </div>
   </section>
 

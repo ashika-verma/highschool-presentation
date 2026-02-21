@@ -60,6 +60,16 @@ const screens = {
   sendoff: $('screen-sendoff'),
 };
 
+// ─── Debounce helper ────────────────────────────────────────────────────────
+
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
 // ─── Boot ──────────────────────────────────────────────────────────────────
 
 function boot() {
@@ -351,7 +361,11 @@ function updateLobbyCount(count) {
   renderPeopleRow(count);
 }
 
-function renderPeopleRow(count) {
+// Debounced version — batches rapid join/leave events into a single DOM update.
+// With 30 students joining simultaneously, this prevents 30 complete DOM rebuilds.
+const renderPeopleRow = debounce(_renderPeopleRowImmediate, 80);
+
+function _renderPeopleRowImmediate(count) {
   const row = $('lobby-people-row');
   row.innerHTML = '';
 
