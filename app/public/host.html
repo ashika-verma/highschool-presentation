@@ -157,10 +157,25 @@
       color: var(--color-text-muted);
       background: var(--color-surface);
       border: 1px solid var(--color-border);
-      padding: 5px 12px;
+      padding: 5px 12px 5px 10px;
       border-radius: var(--radius-full);
       letter-spacing: 0.04em;
       transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* CSS dot replaces the literal ● bullet char — screen-reader friendly */
+    .host-status-pill::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.5;
+      flex-shrink: 0;
     }
 
     .host-status-pill.is-live {
@@ -169,11 +184,21 @@
       border: 1px solid color-mix(in srgb, var(--color-green) 25%, transparent);
     }
 
+    .host-status-pill.is-live::before {
+      opacity: 1;
+      animation: live-pulse 2.4s ease-in-out infinite;
+    }
+
     /* ── Mode grid ──────────────────────────────────────────────── */
     .mode-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: var(--space-2);
+    }
+
+    @keyframes live-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
     }
 
     /* Give buttons extra height to accommodate the cue line */
@@ -263,7 +288,7 @@
       <span>Light Room</span>
       Host Dashboard
     </h1>
-    <div id="host-status-pill" class="host-status-pill">● connecting</div>
+    <div id="host-status-pill" class="host-status-pill" aria-live="polite">connecting</div>
   </div>
 
   <!-- Stats row -->

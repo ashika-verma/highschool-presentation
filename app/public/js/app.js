@@ -1041,10 +1041,11 @@ function doModeFlash(callback) {
 function animateCounter() {
   const el = $('demo-count-number');
   const target = state.totalColorChanges;
-  // Start from current displayed value so re-entering demo doesn't flash to 0
+  // Start from current displayed value so re-entering demo doesn't flash to 0.
+  // The initial HTML value is '—' so parseInt returns NaN → we fall back to 0.
   const startVal = parseInt(el.textContent, 10) || 0;
   if (startVal >= target) {
-    el.textContent = target;
+    el.textContent = target > 0 ? target : '—';
     return;
   }
   const duration = 2000;

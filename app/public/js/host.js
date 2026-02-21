@@ -99,7 +99,7 @@ function connectHost() {
 
   ws.addEventListener('connected', () => {
     const pill = $('host-status-pill');
-    pill.textContent = '● live';
+    pill.textContent = 'live';
     pill.classList.add('is-live');
     pill.style.color = '';  // let CSS class handle it
 
@@ -109,7 +109,7 @@ function connectHost() {
 
   ws.addEventListener('disconnected', () => {
     const pill = $('host-status-pill');
-    pill.textContent = '● offline';
+    pill.textContent = 'offline';
     pill.classList.remove('is-live');
     pill.style.color = '#ff6b6b';
   });
