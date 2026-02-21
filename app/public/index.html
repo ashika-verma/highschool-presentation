@@ -228,6 +228,19 @@
       50%       { transform: scale(1.08); opacity: 0.75; }
     }
 
+    @keyframes input-shake {
+      0%   { transform: translateX(0); }
+      18%  { transform: translateX(-6px); }
+      36%  { transform: translateX(6px); }
+      54%  { transform: translateX(-4px); }
+      72%  { transform: translateX(4px); }
+      100% { transform: translateX(0); }
+    }
+
+    .input-shake {
+      animation: input-shake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
     /* ══════════════════════════════════════════════════════════
        SCREEN 2: COLOR CONTROL
        ══════════════════════════════════════════════════════════ */
@@ -447,7 +460,15 @@
         transform var(--transition-fast),
         box-shadow var(--transition-fast);
       padding: 0;
+      /* Expand the invisible tap area to 44px without growing the dot visually */
       min-height: 0;
+      position: relative;
+    }
+
+    .photo-dot::after {
+      content: '';
+      position: absolute;
+      inset: -18px;
     }
 
     .photo-dot.active {
@@ -827,7 +848,9 @@
           placeholder="first name or nickname"
           maxlength="24"
           autocomplete="off"
+          autocapitalize="words"
           spellcheck="false"
+          enterkeyhint="go"
           required
         >
 
@@ -870,7 +893,7 @@
       <p>
         The lights are on.<br>
         Your color is in the mix.<br>
-        Screens switch automatically — just watch.
+        Ashika will switch screens from the front.
       </p>
       <div id="joined-color-preview" class="dither-bg" aria-hidden="true"></div>
       <p style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-dim);margin-top:var(--space-4);letter-spacing:0.04em">
@@ -1065,6 +1088,7 @@
           placeholder="type your question..."
           maxlength="200"
           autocomplete="off"
+          enterkeyhint="send"
           aria-label="Your question"
         >
         <button

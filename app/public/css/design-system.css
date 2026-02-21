@@ -409,7 +409,7 @@ body {
 
 .input:focus {
   border-color: var(--room-color-a);
-  box-shadow: 0 0 0 3px rgba(255, 110, 180, 0.15);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--room-color-a) 15%, transparent);
 }
 @supports (color: color-mix(in srgb, red, blue)) {
   .input:focus {
@@ -449,7 +449,7 @@ body {
 
 .input-pixel:focus {
   border-color: var(--room-color-a);
-  box-shadow: 0 0 0 3px rgba(255, 110, 180, 0.15);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--room-color-a) 15%, transparent);
 }
 @supports (color: color-mix(in srgb, red, blue)) {
   .input-pixel:focus {

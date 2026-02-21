@@ -362,7 +362,7 @@ wss.on('connection', (socket) => {
   socket.send(JSON.stringify({
     type: 'welcome',
     mode: appState.mode,
-    count: studentCount(),
+    count: appState.clients.size,
     totalColorChanges: appState.totalColorChanges,
     roomColor: appState.roomColorHex,
     photos: appState.photos,
@@ -464,6 +464,8 @@ function handleMessage(socket, msg) {
 
       const entry = { name: client.name, text, hex: client.hex };
       appState.textResponses.push(entry);
+      // Cap in-memory storage so it doesn't grow unbounded across a long session
+      if (appState.textResponses.length > 200) appState.textResponses.shift();
 
       broadcast({ type: 'text_response', ...entry });
       break;
@@ -476,6 +478,8 @@ function handleMessage(socket, msg) {
 
       const entry = { name: client.name, text, hex: client.hex };
       appState.questions.push(entry);
+      // Cap in-memory storage
+      if (appState.questions.length > 200) appState.questions.shift();
 
       broadcast({ type: 'question', ...entry });
       break;

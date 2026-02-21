@@ -176,6 +176,13 @@ function wireUI() {
     if (e.target === $('question-modal')) closeQuestionModal();
   });
 
+  // Escape key closes modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('question-modal').classList.contains('hidden')) {
+      closeQuestionModal();
+    }
+  });
+
   // Free-text form
   $('text-form').addEventListener('submit', e => {
     e.preventDefault();
@@ -253,6 +260,12 @@ function handleJoin() {
   if (!name) {
     nameEl.focus();
     nameEl.style.borderColor = '#ff6b6b';
+    // Shake the input to draw attention
+    nameEl.classList.remove('input-shake');
+    // Force reflow so the animation restarts if triggered again
+    void nameEl.offsetWidth;
+    nameEl.classList.add('input-shake');
+    nameEl.addEventListener('animationend', () => nameEl.classList.remove('input-shake'), { once: true });
     nameEl.addEventListener('input', () => {
       nameEl.style.borderColor = '';
     }, { once: true });
@@ -262,7 +275,7 @@ function handleJoin() {
   state.name = name;
   ws.sendJoin(name, state.colorHex);
 
-  // Optimistically show joined state
+  // Optimistically show joined state — server will confirm via 'joined' message
   showJoinedState();
 }
 
@@ -533,12 +546,15 @@ function bumpReaction(emoji) {
 
 function openQuestionModal() {
   $('question-modal').classList.remove('hidden');
-  $('park-input').focus();
+  // Focus the textarea after a tick so the modal animation doesn't fight it
+  setTimeout(() => $('park-input').focus(), 50);
 }
 
 function closeQuestionModal() {
   $('question-modal').classList.add('hidden');
   $('park-input').value = '';
+  // Return focus to the button that opened the modal
+  $('park-question-btn').focus();
 }
 
 function submitParkedQuestion() {
@@ -596,6 +612,12 @@ function addTextFeedItem({ name, text, hex }, animate = true) {
   `;
 
   feed.appendChild(item);
+
+  // Cap feed DOM at 40 items so it never grows unbounded
+  while (feed.children.length > 40) {
+    feed.removeChild(feed.firstChild);
+  }
+
   feed.scrollTop = feed.scrollHeight;
 }
 
@@ -637,6 +659,12 @@ function addQAFeedItem({ name, text, hex }, animate = true) {
   `;
 
   feed.appendChild(item);
+
+  // Cap DOM at 60 items — Q&A can fill up fast with a full class
+  while (feed.children.length > 60) {
+    feed.removeChild(feed.firstChild);
+  }
+
   feed.scrollTop = feed.scrollHeight;
 }
 
@@ -822,7 +850,8 @@ function switchMode(mode, flash = true) {
     // Clear the static "connecting to NYC..." placeholder line before showing real logs
     const terminal = $('demo-terminal');
     if (terminal) terminal.innerHTML = '<span class="terminal-cursor" aria-hidden="true"></span>';
-    triggerConfetti();
+    // Confetti is triggered once here via mode switch; demo_start message also fires confetti,
+    // so only trigger here — the demo_start handler is the canonical source of truth.
     animateCounter();
   }
 
