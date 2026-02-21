@@ -246,12 +246,17 @@ function wireUI() {
     }
   });
 
-  // Text textarea: Ctrl+Enter / Cmd+Enter submits (regular Enter = newline in textarea is fine,
-  // but we also wire it to submit on a plain Enter since it's a short-answer field)
+  // Text textarea: Enter key submits (it's a short-answer field, not a multi-line editor)
   $('text-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // submit on Enter, Shift+Enter still inserts newline (we prevent both here since it's short-form)
-      $('text-form').requestSubmit();
+      e.preventDefault();
+      const form = $('text-form');
+      // requestSubmit() fires form validation; fallback to submit() for iOS < 15.4
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
     }
   });
 
@@ -463,6 +468,10 @@ function _renderPeopleRowImmediate(count) {
 // Prevents UI churn from accidental rapid taps.
 let lastColorTapAt = 0;
 const COLOR_TAP_RATE_MS = 300;
+
+// Text response rate limit — matches server 8s guard
+let lastTextSentAt = 0;
+const CLIENT_TEXT_RATE_MS = 8000;
 
 // Timer for resetting the color sent status text — debounced so multiple
 // rapid taps don't leave stale timers stepping on each other.
@@ -689,6 +698,11 @@ function closeQuestionModal() {
   $('park-question-btn').focus();
 }
 
+// Server-side rate limit for questions is 5s. Track last question send time client-side
+// so we can warn the user if they hit the limit (instead of silently dropping).
+let lastQuestionSentAt = 0;
+const CLIENT_QUESTION_RATE_MS = 5000;
+
 function submitParkedQuestion() {
   const text = $('park-input').value.trim();
   if (!text) return;
@@ -696,6 +710,16 @@ function submitParkedQuestion() {
   // Prevent double-submit on rapid taps
   const btn = $('park-submit-btn');
   if (btn.disabled) return;
+
+  // Client-side rate limit mirrors server: warn instead of silently dropping
+  const now = Date.now();
+  if (now - lastQuestionSentAt < CLIENT_QUESTION_RATE_MS) {
+    const remaining = Math.ceil((CLIENT_QUESTION_RATE_MS - (now - lastQuestionSentAt)) / 1000);
+    showToast(`Wait ${remaining}s`, '#888899');
+    return;
+  }
+  lastQuestionSentAt = now;
+
   btn.disabled = true;
 
   ws.sendQuestion(state.name || 'Anonymous', text);
@@ -714,6 +738,18 @@ function handleTextSubmit() {
   const input = $('text-input');
   const text = input.value.trim();
   if (!text) return;
+
+  // Client-side rate limit mirrors server 8s guard — show feedback instead of silent drop
+  const now = Date.now();
+  if (now - lastTextSentAt < CLIENT_TEXT_RATE_MS) {
+    const remaining = Math.ceil((CLIENT_TEXT_RATE_MS - (now - lastTextSentAt)) / 1000);
+    const btn = $('text-submit-btn');
+    const origText = btn.textContent;
+    btn.textContent = `Wait ${remaining}s`;
+    setTimeout(() => { btn.textContent = origText; }, 1200);
+    return;
+  }
+  lastTextSentAt = now;
 
   // Add optimistically — mark so server echo doesn't double-add
   const key = `${state.name}::${text}`;
@@ -771,6 +807,15 @@ function handleQASubmit() {
     input.focus();
     return;
   }
+
+  // Client-side rate limit mirrors server 5s guard — gives user feedback instead of silent drop
+  const now = Date.now();
+  if (now - lastQuestionSentAt < CLIENT_QUESTION_RATE_MS) {
+    const remaining = Math.ceil((CLIENT_QUESTION_RATE_MS - (now - lastQuestionSentAt)) / 1000);
+    showToast(`Wait ${remaining}s`, '#888899');
+    return;
+  }
+  lastQuestionSentAt = now;
 
   // Add optimistically — mark so server echo doesn't double-add
   const key = `${state.name}::${text}`;
@@ -1257,8 +1302,22 @@ function initConnectionTimeout() {
   ws.addEventListener('connected', () => clearTimeout(timer), { once: true });
 }
 
+// ─── Visibility change reconnect ─────────────────────────────────────────────
+// iOS Safari can suspend backgrounded tabs. When the student returns to the app,
+// the WebSocket may have been silently closed. Force a reconnect attempt on
+// visibility restore so the app comes back to life immediately.
+
+function initVisibilityReconnect() {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && !ws.connected) {
+      ws.connect();
+    }
+  });
+}
+
 // ─── Go ─────────────────────────────────────────────────────────────────────
 
 boot();
 initKeyboardFix();
 initConnectionTimeout();
+initVisibilityReconnect();
