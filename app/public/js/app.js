@@ -358,6 +358,18 @@ function updateLobbyCount(count) {
     label.textContent = count === 0 ? 'be the first to join' : `in the room right now`;
   }
 
+  // Update joined-state count label (only visible after join)
+  const joinedCount = $('lobby-joined-count');
+  if (joinedCount) {
+    if (count > 1) {
+      joinedCount.textContent = `${count} people in the room`;
+    } else if (count === 1) {
+      joinedCount.textContent = `just you so far`;
+    } else {
+      joinedCount.textContent = '';
+    }
+  }
+
   renderPeopleRow(count);
 }
 
@@ -962,7 +974,7 @@ function switchMode(mode, flash = true) {
     $('sent-color-name').textContent = displayName;
     $('sent-color-status').textContent = state.lastSentHex
       ? `last sent — tap to change`
-      : `your color — tap to send`;
+      : `your pick — tap a swatch`;
   }
 
   if (mode === 'ambient') {

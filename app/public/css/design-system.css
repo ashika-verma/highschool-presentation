@@ -1469,6 +1469,14 @@ body {
 
 .btn-pixel:active { transform: scale(0.96); }
 
+.btn-pixel:disabled,
+.btn-pixel[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  pointer-events: none;
+}
+
 .btn-pixel--wide { width: 100%; }
 
 .btn-pixel--lg {
