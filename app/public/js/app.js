@@ -340,6 +340,10 @@ function renderPeopleRow(count) {
 let lastColorTapAt = 0;
 const COLOR_TAP_RATE_MS = 300;
 
+// Timer for resetting the color sent status text — debounced so multiple
+// rapid taps don't leave stale timers stepping on each other.
+let colorStatusResetTimer = null;
+
 function renderColorGridMain() {
   const grid = $('color-palette-main');
   grid.innerHTML = '';
@@ -394,8 +398,9 @@ function handleColorTap(color, btn) {
   // Update ambient user tag
   updateAmbientTag();
 
-  // Reset status text after 2 seconds
-  setTimeout(() => {
+  // Reset status text after 2 seconds — debounced to avoid stale timers
+  clearTimeout(colorStatusResetTimer);
+  colorStatusResetTimer = setTimeout(() => {
     $('sent-color-status').textContent = `${state.colorsSent} sent total`;
   }, 2000);
 }
@@ -540,8 +545,16 @@ function submitParkedQuestion() {
   const text = $('park-input').value.trim();
   if (!text) return;
 
+  // Prevent double-submit on rapid taps
+  const btn = $('park-submit-btn');
+  if (btn.disabled) return;
+  btn.disabled = true;
+
   ws.sendQuestion(state.name || 'Anonymous', text);
   closeQuestionModal();
+
+  // Re-enable after modal closes (modal hides immediately, btn reset is safety)
+  setTimeout(() => { btn.disabled = false; }, 500);
 
   // Brief confirmation — show a question-specific toast, not the NYC zap
   showToast('Question sent', state.colorHex);
