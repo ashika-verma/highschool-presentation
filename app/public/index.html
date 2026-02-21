@@ -473,7 +473,7 @@
       }
     }
 
-    /* Slide empty state */
+    /* Slide empty state — must be readable even on a pitch-dark background */
     .slide-empty-state {
       position: absolute;
       inset: 0;
@@ -482,11 +482,11 @@
       align-items: center;
       justify-content: center;
       gap: var(--space-3);
-      color: rgba(255,255,255,0.25);
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      /* Higher opacity + slightly larger text so it's visible on dark bg */
+      color: rgba(255,255,255,0.55);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      letter-spacing: 0.03em;
       pointer-events: none;
     }
 

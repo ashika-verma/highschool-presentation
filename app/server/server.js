@@ -367,6 +367,13 @@ const httpServer = http.createServer((req, res) => {
         try {
           const slides = JSON.parse(body);
           if (!Array.isArray(slides)) { res.writeHead(400); res.end('Must be an array'); return; }
+          // Validate each slide is a plain object (not a string/number/null) to prevent
+          // corrupted data from breaking renderSlide() on student clients.
+          for (const slide of slides) {
+            if (!slide || typeof slide !== 'object' || Array.isArray(slide)) {
+              res.writeHead(400); res.end('Each slide must be an object'); return;
+            }
+          }
           appState.slides = slides;
           saveSlides(slides);
           res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -666,12 +673,13 @@ function handleMessage(socket, msg) {
 
     case 'slide_goto': {
       if (msg.key !== HOST_KEY || !client.isHost) return;
+      // Do nothing if there are no slides — avoids broadcasting a
+      // meaningless index that causes renderSlide(undefined) on clients.
+      if (appState.slides.length === 0) return;
       const idx = parseInt(msg.index, 10);
       if (isNaN(idx) || idx < 0) return;
       // Clamp to valid range
-      const clampedIdx = appState.slides.length > 0
-        ? Math.min(idx, appState.slides.length - 1)
-        : 0;
+      const clampedIdx = Math.min(idx, appState.slides.length - 1);
       appState.currentSlideIndex = clampedIdx;
       broadcast({ type: 'slide_goto', index: clampedIdx });
       break;

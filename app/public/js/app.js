@@ -251,8 +251,9 @@ function wireWebSocket() {
 
   // Slide navigation from host
   ws.onMessage('slide_goto', ({ index }) => {
-    state.currentSlide = index;
-    renderSlide(state.slides[index]);
+    const clampedIdx = Math.max(0, Math.min(index, state.slides.length - 1));
+    state.currentSlide = clampedIdx;
+    renderSlide(state.slides[clampedIdx]);
   });
 
   // Full slide list updated after host saves
@@ -704,24 +705,27 @@ function renderSlide(slide) {
   // Clear previous content (keep ::after pseudo-element — it's CSS)
   canvas.innerHTML = '';
 
-  if (!slide) {
-    // Show empty state placeholder
+  if (!slide || typeof slide !== 'object') {
+    // Show empty state placeholder — large enough to be readable on any phone
     const empty = document.createElement('div');
     empty.className = 'slide-empty-state';
-    empty.innerHTML = '<span>no slides yet</span>';
+    empty.innerHTML = '<span>waiting for slides</span>';
     canvas.appendChild(empty);
     canvas.style.background = '#0A0A10';
     return;
   }
 
   // Set background
-  canvas.style.background = slide.bg || '#0A0A10';
+  canvas.style.background = (typeof slide.bg === 'string' && slide.bg) ? slide.bg : '#0A0A10';
 
   // Render elements
-  (slide.elements || []).forEach(el => {
+  (Array.isArray(slide.elements) ? slide.elements : []).forEach(el => {
+    if (!el || typeof el !== 'object') return;
     if (el.type === 'text') {
       const div = document.createElement('div');
       div.className = 'slide-element-text';
+      // CSS class sets transform: translate(-50%, -50%) which centers the element
+      // on its x/y anchor point. left/top alone would offset from the top-left corner.
       div.style.left = `${el.x ?? 50}%`;
       div.style.top  = `${el.y ?? 50}%`;
       div.style.fontSize   = `${el.size ?? 20}px`;
@@ -734,18 +738,21 @@ function renderSlide(slide) {
       div.textContent = el.content || '';
       canvas.appendChild(div);
     } else if (el.type === 'image') {
+      // Sanitize src: must start with /photos/ — no external URLs (XSS / data-exfil guard)
+      const safeSrc = (typeof el.src === 'string' && /^\/photos\//.test(el.src)) ? el.src : null;
+      // Don't append an img with no src — browser fires a request to the current page URL
+      if (!safeSrc) return;
       const img = document.createElement('img');
       img.className = 'slide-element-img';
-      img.style.left  = `${el.x ?? 50}%`;
-      img.style.top   = `${el.y ?? 50}%`;
+      // CSS class sets transform: translate(-50%, -50%) — same center-anchor as text
+      img.style.left = `${el.x ?? 50}%`;
+      img.style.top  = `${el.y ?? 50}%`;
       img.style.width = `${el.width ?? 80}%`;
       img.alt = '';
       img.decoding = 'async';
-      // Sanitize src: must start with /photos/ or be a relative path — no external URLs
-      const safeSrc = (typeof el.src === 'string' && /^\/photos\//.test(el.src)) ? el.src : '';
-      if (safeSrc) {
-        img.src = safeSrc;
-      }
+      // Broken image guard: show nothing (canvas bg) rather than browser's broken icon
+      img.onerror = () => { img.style.display = 'none'; };
+      img.src = safeSrc;
       canvas.appendChild(img);
     }
   });
@@ -1082,8 +1089,10 @@ function switchMode(mode, flash = true) {
 
   // Mode-specific setup (runs before screen switch / flash so state is ready when screen appears)
   if (mode === 'photos') {
-    // Render current slide when entering slides mode
-    renderSlide(state.slides[state.currentSlide]);
+    // Clamp index in case server reset or slide list changed — renderSlide(undefined) shows empty state
+    const safeIdx = Math.max(0, Math.min(state.currentSlide, state.slides.length - 1));
+    state.currentSlide = safeIdx;
+    renderSlide(state.slides[safeIdx]);
   }
 
   if (mode === 'demo') {
