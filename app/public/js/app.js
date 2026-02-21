@@ -271,7 +271,7 @@ function showJoinedState() {
   const joined = $('lobby-joined');
   joined.classList.remove('hidden');
 
-  $('lobby-joined-msg').textContent = `You're in, ${state.name}! 💡 Watch the lights change.`;
+  $('lobby-joined-msg').textContent = `You're in, ${state.name}.`;
 
   const preview = $('joined-color-preview');
   preview.style.setProperty('--room-color-a', state.colorHex);
@@ -597,6 +597,16 @@ function handleQASubmit() {
   addQAFeedItem({ name: state.name, text: text, hex: state.colorHex }, true);
 
   input.value = '';
+
+  // Brief confirmation on submit button
+  const submitBtn = $('qa-submit-btn');
+  const origText = submitBtn.textContent;
+  submitBtn.textContent = 'Sent!';
+  submitBtn.disabled = true;
+  setTimeout(() => {
+    submitBtn.textContent = origText;
+    submitBtn.disabled = false;
+  }, 1200);
 }
 
 function addQAFeedItem({ name, text, hex }, animate = true) {
@@ -784,6 +794,9 @@ function switchMode(mode, flash = true) {
 
   // Mode-specific side effects
   if (mode === 'demo') {
+    // Clear the static "connecting to NYC..." placeholder line before showing real logs
+    const terminal = $('demo-terminal');
+    if (terminal) terminal.innerHTML = '<span class="terminal-cursor" aria-hidden="true"></span>';
     triggerConfetti();
     animateCounter();
   }

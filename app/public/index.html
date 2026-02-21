@@ -804,14 +804,14 @@
           NYC — Live
         </p>
         <h1>Your phone controls<br>lights in <em>New York City</em></h1>
-        <p>Pick a color. It changes the actual<br>lightbulbs in Ashika's apartment right now.</p>
+        <p>Pick a color. It changes the lightbulbs<br>in Ashika's apartment right now.</p>
       </div>
 
       <!-- Live counter -->
       <div class="lobby-counter" id="lobby-counter-box">
         <div>
           <div class="lobby-counter__number" id="lobby-count">0</div>
-          <div class="lobby-counter__label">in the room right now</div>
+          <div class="lobby-counter__label">be the first to join</div>
           <div class="people-row" id="lobby-people-row">
             <!-- Person SVGs injected by JS -->
           </div>
@@ -838,19 +838,19 @@
           <!-- Swatches injected by JS from palette.js -->
         </div>
 
-        <!-- Selected color name label -->
+        <!-- Color preview bar (was dither-bg, kept class for JS compat) -->
+        <div id="lobby-preview-strip" class="dither-bg" aria-hidden="true"></div>
+
+        <!-- Selected color name label — below the strip -->
         <p id="lobby-color-name-label" style="
           font-family: var(--font-mono);
           font-size: var(--text-xs);
           color: var(--room-color-a);
           letter-spacing: 0.06em;
           text-align: center;
-          margin: var(--space-2) 0 0;
+          margin: var(--space-1) 0 0;
           transition: color var(--transition-glow);
         " aria-live="polite"></p>
-
-        <!-- Color preview bar (was dither-bg, kept class for JS compat) -->
-        <div id="lobby-preview-strip" class="dither-bg" aria-hidden="true"></div>
 
         <button
           type="submit"
