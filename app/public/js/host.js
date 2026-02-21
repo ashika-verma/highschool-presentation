@@ -300,8 +300,11 @@ function setRoomColor(hex) {
   bar.style.setProperty('--room-color-a', hex);
   bar.style.setProperty('--room-color-b', colorB);
   $('host-room-color-label').textContent = hex;
-  // Update CSS root vars so active mode buttons use correct contrast text
+  // Update CSS root vars so active mode buttons use correct contrast text.
+  // Also set --room-color-b so the room-color-bar gradient second stop updates —
+  // without this, the bar gradient always ends at the initial #FFB3D9.
   document.documentElement.style.setProperty('--room-color-a', hex);
+  document.documentElement.style.setProperty('--room-color-b', colorB);
   document.documentElement.style.setProperty('--room-btn-text', contrastColor(hex));
 }
 

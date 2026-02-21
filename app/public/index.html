@@ -98,11 +98,12 @@
     }
 
     .lobby-eyebrow .live-dot {
-      width: 6px;
-      height: 6px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: var(--room-color-a);
-      box-shadow: 0 0 8px 2px var(--room-color-a);
+      /* Larger glow spread so it's visible on bright classroom projectors */
+      box-shadow: 0 0 10px 3px var(--room-color-a);
       animation: live-pulse 2.4s ease-in-out infinite;
       transition: background var(--transition-glow), box-shadow var(--transition-glow);
     }
@@ -348,8 +349,9 @@
       border-radius: var(--radius-sm);
       background: var(--current-color, #FF6EB4);
       flex-shrink: 0;
-      box-shadow: 0 0 12px -2px currentColor;
-      transition: background var(--transition-glow);
+      /* Use the CSS var directly — currentColor resolves to text color, not swatch color */
+      box-shadow: 0 0 14px -2px var(--current-color, #FF6EB4);
+      transition: background var(--transition-glow), box-shadow var(--transition-glow);
     }
 
     .color-sent-strip__text {
@@ -503,6 +505,9 @@
       position: relative;
       /* Allow screen to scroll when keyboard is open */
       overflow-y: auto;
+      /* Flex layout so feed fills remaining vertical space */
+      display: flex;
+      flex-direction: column;
     }
 
     #screen-text::before {
@@ -535,6 +540,7 @@
       line-height: 1.3;
       margin-bottom: var(--space-5);
       position: relative;
+      text-align: center;
     }
 
     .text-prompt em {
@@ -572,9 +578,20 @@
     }
 
     #text-feed {
-      max-height: 28vh;
+      /* Flex child: grow to fill remaining vertical space after prompt+form */
+      flex: 1;
+      min-height: 80px;
       overflow-y: auto;
       margin-top: var(--space-4);
+    }
+
+    /* Feed section wrapper flexes to fill remaining vertical space */
+    .text-feed-section {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      margin-top: var(--space-6);
     }
 
     /* ══════════════════════════════════════════════════════════
@@ -1033,7 +1050,7 @@
       </button>
     </form>
 
-    <div style="margin-top: var(--space-6)">
+    <div class="text-feed-section">
       <p class="text-feed-label">everyone's answers</p>
       <div class="feed" id="text-feed" aria-live="polite" aria-label="Live responses">
         <!-- Feed items injected by JS -->
