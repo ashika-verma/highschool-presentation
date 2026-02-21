@@ -163,6 +163,15 @@ function wireWebSocket() {
       $('qa-feed').innerHTML = '';
       data.questions.forEach(q => addQAFeedItem(q, false));
     }
+
+    // CRITICAL: Re-register with the server after reconnect.
+    // The server's client record is reset on each WS connection — if the student
+    // had previously joined, they must re-send their join message so the server
+    // knows their name. Without this, post-reconnect color/reaction/text sends
+    // are silently dropped (server guards: if (!client.name) return).
+    if (state.joined && state.name) {
+      ws.sendJoin(state.name, state.lastSentHex || state.colorHex);
+    }
   });
 
   // Someone joined → update lobby counter
