@@ -1143,7 +1143,29 @@ function initKeyboardFix() {
   });
 }
 
+// ─── Connection timeout safeguard ───────────────────────────────────────────
+// If the WS never connects after 30s, show an actionable message so students
+// don't sit forever staring at a "connecting" pill with no explanation.
+
+function initConnectionTimeout() {
+  const TIMEOUT_MS = 30_000;
+  const timer = setTimeout(() => {
+    if (!ws.connected) {
+      // Update the offline banner to show a hard error
+      const banner = $('offline-banner');
+      if (banner && banner.style.display !== 'none') {
+        banner.textContent = 'Cannot connect — check your WiFi and reload the page';
+        banner.style.display = 'block';
+      }
+    }
+  }, TIMEOUT_MS);
+
+  // Cancel timeout once connected
+  ws.addEventListener('connected', () => clearTimeout(timer), { once: true });
+}
+
 // ─── Go ─────────────────────────────────────────────────────────────────────
 
 boot();
 initKeyboardFix();
+initConnectionTimeout();

@@ -148,8 +148,9 @@ function sendToWiz(hex) {
 // Prevents a student from flooding the server/bulbs by mashing colors.
 // Allows at most 1 color change per COLOR_RATE_MS per client.
 
-const COLOR_RATE_MS    = 300;  // minimum ms between accepted color changes per client
-const QUESTION_RATE_MS = 5000; // minimum ms between questions per client (prevents spam)
+const COLOR_RATE_MS    = 300;   // minimum ms between accepted color changes per client
+const QUESTION_RATE_MS = 5000;  // minimum ms between questions per client (prevents spam)
+const TEXT_RATE_MS     = 8000;  // minimum ms between text responses (one thoughtful answer)
 
 // ─── HTTP server + static file serving ─────────────────────────────────────
 
@@ -379,7 +380,7 @@ const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
 wss.on('connection', (socket) => {
   // Register new connection with blank state
-  appState.clients.set(socket, { name: null, hex: null, isHost: false, colorsSent: 0, lastColorAt: 0, lastQuestionAt: 0 });
+  appState.clients.set(socket, { name: null, hex: null, isHost: false, colorsSent: 0, lastColorAt: 0, lastQuestionAt: 0, lastTextAt: 0 });
 
   // Send welcome payload
   socket.send(JSON.stringify({
@@ -488,6 +489,11 @@ function handleMessage(socket, msg) {
       if (!client.name) return;
       const text = sanitize(msg.text, 200);
       if (!text) return;
+
+      // Rate-limit: one text response per 8 seconds — encourages thoughtful answers
+      const nowT = Date.now();
+      if (nowT - client.lastTextAt < TEXT_RATE_MS) return;
+      client.lastTextAt = nowT;
 
       const entry = { name: client.name, text, hex: client.hex };
       appState.textResponses.push(entry);
