@@ -480,7 +480,7 @@ body {
 .color-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-2);
+  gap: 10px; /* slightly wider gap for finger separation */
   padding: var(--space-1);
 }
 
@@ -704,8 +704,8 @@ body {
   padding: var(--space-4);
   overflow-y: auto;
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 1.8;
+  font-size: var(--text-sm); /* was xs — 13px minimum for code readability */
+  line-height: 1.9;
   color: rgba(120, 220, 140, 0.85);
 }
 
@@ -813,14 +813,15 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: var(--z-modal);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: var(--space-4);
+  /* Small bottom padding so sheet sits above safe area */
+  padding: 0 0 env(safe-area-inset-bottom, 0px);
 }
 
 .modal-sheet {
@@ -829,9 +830,11 @@ body {
   background: var(--color-surface);
   border: 1px solid var(--color-border-hi);
   border-radius: var(--radius-xl) var(--radius-xl) var(--radius-md) var(--radius-md);
-  padding: var(--space-6);
-  max-height: 80dvh;
+  padding: var(--space-6) var(--space-5);
+  max-height: 85dvh; /* slightly taller allowance */
   overflow-y: auto;
+  /* Ensure modal sheet doesn't touch screen edges on narrow phones */
+  margin: 0 4px;
 }
 
 /* ============================================================
