@@ -1009,6 +1009,10 @@ function handleQASubmit() {
 
 function addQAFeedItem({ name, text, hex }, animate = true) {
   const feed = $('qa-feed');
+  // Remove placeholder on first real question
+  const placeholder = $('qa-feed-placeholder');
+  if (placeholder) placeholder.remove();
+
   const item = document.createElement('div');
   item.className = 'feed-item';
   item.style.setProperty('--item-color', hex || '#FF6EB4');

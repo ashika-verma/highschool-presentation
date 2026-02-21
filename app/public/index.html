@@ -1078,7 +1078,8 @@
 
       <!-- Scrolling question feed — below reactions so reactions are always reachable -->
       <div class="feed" id="qa-feed" aria-live="polite" aria-label="Questions">
-        <!-- Injected by JS -->
+        <!-- Placeholder text — cleared by JS when first question arrives -->
+        <p id="qa-feed-placeholder" style="font-family:var(--font-mono);font-size:var(--text-xs);color:rgba(255,255,255,0.35);text-align:center;padding:var(--space-4) 0;letter-spacing:0.04em">be the first to ask</p>
       </div>
 
       <!-- Input row -->
@@ -1123,8 +1124,8 @@
         margin-top: var(--space-12);
         font-family: var(--font-mono);
         font-size: var(--text-xs);
-        color: rgba(255,255,255,0.25);
-        letter-spacing: 0.08em;
+        color: rgba(255,255,255,0.55);
+        letter-spacing: 0.06em;
         text-transform: uppercase;
       ">you just controlled real lights in NYC</p>
     </div>
