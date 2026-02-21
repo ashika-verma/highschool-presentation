@@ -423,11 +423,11 @@ function _renderPeopleRowImmediate(count) {
   const row = $('lobby-people-row');
   row.innerHTML = '';
 
-  // Show up to 16 color dots (after that show overflow count)
-  const MAX_DOTS = 16;
+  // Show up to 20 color dots (after that show overflow count)
+  const MAX_DOTS = 20;
   const shown = Math.min(count, MAX_DOTS);
-  // Use a spread of palette colors for variety
-  const colors = PALETTE.slice(0, 16).map(p => p.hex);
+  // Use all palette colors for variety — 30 colors means minimal repetition
+  const colors = PALETTE.map(p => p.hex);
 
   for (let i = 0; i < shown; i++) {
     const dot = document.createElement('span');
@@ -997,30 +997,25 @@ function switchMode(mode, flash = true) {
     document.activeElement.blur();
   }
 
-  // Clear dedup sets on mode switch — any pending server echoes that never arrived
-  // should not cause silent drops on the next mode's messages
-  _selfSentTexts.clear();
-  _selfSentQAs.clear();
+  // Clear dedup sets shortly after mode switch.
+  // Immediate clear risks a race: if the server echo arrives in the same tick as the
+  // mode switch, the key is gone and the echo would double-add the item to the new feed.
+  // A 2s delay ensures any in-flight echo arrives and is correctly deduped before the set clears.
+  setTimeout(() => {
+    _selfSentTexts.clear();
+    _selfSentQAs.clear();
+  }, 2000);
 
   // Stop photo slideshow timer when leaving photos mode to prevent timer leak
   if (mode !== 'photos') {
     clearInterval(photoTimer);
   }
 
-  if (flash) {
-    doModeFlash(() => showScreen(mode));
-  } else {
-    showScreen(mode, false);
-  }
-
-  // Mode-specific side effects
+  // Mode-specific setup (runs before screen switch / flash so state is ready when screen appears)
   if (mode === 'demo') {
     // Clear the static "connecting to NYC..." placeholder line before showing real logs
     const terminal = $('demo-terminal');
     if (terminal) terminal.innerHTML = '<span class="terminal-cursor" aria-hidden="true"></span>';
-    // Confetti is triggered once here via mode switch; demo_start message also fires confetti,
-    // so only trigger here — the demo_start handler is the canonical source of truth.
-    animateCounter();
   }
 
   if (mode === 'color') {
@@ -1041,8 +1036,25 @@ function switchMode(mode, flash = true) {
     setRoomColor(state.roomColorHex);
   }
 
+  // Sendoff sparkles: respect prefers-reduced-motion
   if (mode === 'sendoff') {
-    initSparkles($('sendoff-sparkles'), 40);
+    if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      initSparkles($('sendoff-sparkles'), 40);
+    }
+  }
+
+  const afterSwitch = () => {
+    // Counter animation runs AFTER the flash completes so it isn't wasted under the overlay
+    if (mode === 'demo') {
+      animateCounter();
+    }
+  };
+
+  if (flash) {
+    doModeFlash(() => { showScreen(mode); afterSwitch(); });
+  } else {
+    showScreen(mode, false);
+    afterSwitch();
   }
 }
 

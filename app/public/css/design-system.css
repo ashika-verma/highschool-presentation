@@ -10,11 +10,11 @@
 
 /* ============================================================
    FONT IMPORTS
+   Google Fonts are loaded via <link> in each HTML file's <head> —
+   not here via @import — to avoid an extra blocking HTTP round-trip.
+   The @import would mean: parse CSS → see @import → fetch fonts → render.
+   The <link> in HTML means: fetch fonts + parse CSS in parallel.
    ============================================================ */
-/* font-display=swap is already included in the &display=swap query param below —
-   this ensures text is visible in the fallback font while custom fonts load (FOUT),
-   rather than invisible (FOIT) during the 2-4s load time on slow school WiFi. */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 /* ============================================================
    CSS CUSTOM PROPERTIES — DESIGN TOKENS

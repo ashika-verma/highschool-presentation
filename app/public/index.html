@@ -9,6 +9,10 @@
   <title>Light Room — Ashika's Talk</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Load Google Fonts directly as a <link> rather than via @import inside CSS.
+       This removes one extra HTTP round-trip (CSS can't be parsed until the @import resolves).
+       font-display=swap ensures text renders immediately in fallback font. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Space+Grotesk:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="/css/design-system.css">
   <style>
     /* ── App-level layout ─────────────────────────────────────── */
