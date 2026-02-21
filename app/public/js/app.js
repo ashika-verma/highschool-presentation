@@ -60,6 +60,9 @@ const screens = {
   sendoff: $('screen-sendoff'),
 };
 
+// ─── Palette hex cache — avoids re-mapping on every renderPeopleRow call ────
+const PALETTE_HEXES = PALETTE.map(p => p.hex);
+
 // ─── Debounce helper ────────────────────────────────────────────────────────
 
 function debounce(fn, delay) {
@@ -138,11 +141,32 @@ function wireWebSocket() {
   // Server welcome — contains initial state (fires on connect AND reconnect)
   ws.onMessage('welcome', (data) => {
     if (data.count !== undefined) updateLobbyCount(data.count);
-    // Always apply the mode from welcome — even if it matches current state,
-    // a reconnecting student needs the correct screen shown
     if (data.mode) {
-      state.mode = null; // force switchMode to not short-circuit on same-mode check
-      switchMode(data.mode, false); // no flash on reconnect
+      if (!state.joined && data.mode !== 'lobby') {
+        // Late joiner: talk has started but they haven't registered yet.
+        // Keep them on the lobby form so they can enter their name/color.
+        // Store the target mode — switch to it once they join.
+        state._pendingMode = data.mode;
+        // Show a subtle mid-talk hint above the header
+        if (!document.querySelector('.late-join-hint')) {
+          const hint = document.createElement('p');
+          hint.className = 'late-join-hint';
+          hint.textContent = '⚡ talk in progress — join to participate';
+          hint.style.cssText = [
+            'font-size:11px',
+            'color:rgba(255,200,80,0.9)',
+            'font-family:var(--font-mono)',
+            'letter-spacing:0.05em',
+            'margin-bottom:var(--space-3)',
+          ].join(';');
+          const header = document.querySelector('.lobby-header');
+          if (header) header.prepend(hint);
+        }
+      } else {
+        // Already joined (reconnect) or still on lobby — apply mode normally
+        state.mode = null; // force switchMode to not short-circuit on same-mode check
+        switchMode(data.mode, false); // no flash on reconnect
+      }
     }
     if (data.totalColorChanges !== undefined) {
       state.totalColorChanges = data.totalColorChanges;
@@ -202,6 +226,13 @@ function wireWebSocket() {
     updateLobbyCount(count);
     state.joined = true;
     showJoinedState();
+
+    // Late joiner: switch to current mode after showing join confirmation briefly
+    if (state._pendingMode && state._pendingMode !== 'lobby') {
+      const targetMode = state._pendingMode;
+      state._pendingMode = null;
+      setTimeout(() => switchMode(targetMode, true), 900);
+    }
   });
 
   // Demo: trigger confetti
@@ -449,7 +480,7 @@ function _renderPeopleRowImmediate(count) {
   const MAX_DOTS = 20;
   const shown = Math.min(count, MAX_DOTS);
   // Use all palette colors for variety — 30 colors means minimal repetition
-  const colors = PALETTE.map(p => p.hex);
+  const colors = PALETTE_HEXES;
 
   for (let i = 0; i < shown; i++) {
     const dot = document.createElement('span');
@@ -514,6 +545,13 @@ function renderColorGridMain() {
 }
 
 function handleColorTap(color, btn) {
+  // If the student hasn't joined yet, their taps are silently dropped by the server
+  // (server guard: if (!client.name) return). Show a gentle prompt instead of fake feedback.
+  if (!state.joined) {
+    showToast('Join first to control the lights!', '#888899');
+    return;
+  }
+
   // Client-side rate limit — drop taps that arrive too fast
   const now = Date.now();
   if (now - lastColorTapAt < COLOR_TAP_RATE_MS) return;
@@ -654,10 +692,10 @@ function initSparkles(container, count) {
   if (!container) return;
   container.innerHTML = '';
 
-  // Include the current room color in the sparkle palette so sparkles feel
-  // connected to the live light color. Blend it with a fixed palette for variety.
+  // Include the current room color prominently — sparkles feel connected to the live light.
+  // Blend with palette colors for variety (room color appears 3x for bias toward current color).
   const roomColor = state.roomColorHex || '#FF6EB4';
-  const colors = [roomColor, roomColor, '#FFD93D', '#FF6EB4', '#6BCB77', '#4DBBFF', '#C77DFF', '#FFFFFF'];
+  const colors = [roomColor, roomColor, roomColor, ...PALETTE_HEXES.slice(0, 8), '#FFFFFF'];
 
   for (let i = 0; i < count; i++) {
     const sparkle = document.createElement('div');
@@ -1025,7 +1063,7 @@ function triggerConfetti() {
   setTimeout(() => { _confettiActive = false; }, 2500);
 
   const layer = $('confetti-layer');
-  const colors = PALETTE.slice(0, 20).map(p => p.hex);
+  const colors = PALETTE_HEXES.slice(0, 20);
 
   for (let i = 0; i < 60; i++) {
     const piece = document.createElement('div');
@@ -1097,6 +1135,11 @@ function switchMode(mode, flash = true) {
   if (mode === 'ambient') {
     updateAmbientTag();
     setRoomColor(state.roomColorHex);
+    // Re-initialize sparkles with the current room color so they glow in the live color,
+    // not always in the default Hot Pink they were initialized with at boot time.
+    if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      initSparkles($('sparkle-container'), 18);
+    }
   }
 
   // Sendoff sparkles: respect prefers-reduced-motion
