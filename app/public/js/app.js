@@ -14,7 +14,6 @@
 
 import { ws } from './ws-client.js';
 import { PALETTE, deriveDitherPair, findByHex } from './palette.js';
-import { Icons } from './icons.js';
 
 // ─── Session state ─────────────────────────────────────────────────────────
 
@@ -276,27 +275,36 @@ function renderPeopleRow(count) {
   const row = $('lobby-people-row');
   row.innerHTML = '';
 
-  // Show up to 12 person icons (after that it gets cluttered)
-  const shown = Math.min(count, 12);
-  const colors = [
-    '#FF6EB4','#FFD93D','#6BCB77','#4DBBFF','#C77DFF',
-    '#FF8C42','#00C9A7','#FF6B6B','#FFEE58','#9999FF',
-    '#FF00FF','#39FF14',
-  ];
+  // Show up to 16 color dots (after that show overflow count)
+  const MAX_DOTS = 16;
+  const shown = Math.min(count, MAX_DOTS);
+  // Use a spread of palette colors for variety
+  const colors = PALETTE.slice(0, 16).map(p => p.hex);
 
   for (let i = 0; i < shown; i++) {
-    const el = document.createElement('span');
-    el.innerHTML = Icons.person({ color: colors[i % colors.length], size: 24 });
-    el.setAttribute('aria-hidden', 'true');
-    row.appendChild(el);
+    const dot = document.createElement('span');
+    dot.setAttribute('aria-hidden', 'true');
+    dot.style.cssText = `
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: ${colors[i % colors.length]};
+      box-shadow: 0 0 6px 1px ${colors[i % colors.length]}88;
+      flex-shrink: 0;
+    `;
+    row.appendChild(dot);
   }
 
-  if (count > 12) {
+  if (count > MAX_DOTS) {
     const more = document.createElement('span');
-    more.style.fontFamily = 'var(--font-pixel)';
-    more.style.fontSize = 'var(--text-xs)';
-    more.style.color = 'var(--color-text-muted)';
-    more.textContent = `+${count - 12}`;
+    more.style.cssText = `
+      font-family: var(--font-sans);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-left: 2px;
+    `;
+    more.textContent = `+${count - MAX_DOTS}`;
     row.appendChild(more);
   }
 }
@@ -561,6 +569,12 @@ function initPhotoSlideshow() {
   const nav = $('photo-nav');
   nav.innerHTML = '';
 
+  if (state.photos.length === 0) {
+    // No photos yet — show graceful placeholder, no nav dots needed
+    $('photo-counter-text').textContent = '';
+    return;
+  }
+
   state.photos.forEach((_, i) => {
     const dot = document.createElement('button');
     dot.className = `photo-dot ${i === 0 ? 'active' : ''}`;
@@ -801,6 +815,48 @@ function escAttr(str) {
     .replace(/'/g, '&#39;');
 }
 
+// ─── Mobile keyboard viewport fix ──────────────────────────────────────────
+//
+// On mobile, when the software keyboard opens, `window.innerHeight` does NOT
+// update reliably across browsers. `visualViewport.height` reflects the actual
+// visible area. We use it to shrink the app-root so inputs/submit buttons
+// don't disappear behind the keyboard.
+//
+// Applies to text input and Q&A screens where users type.
+
+function initKeyboardFix() {
+  if (!window.visualViewport) return; // not supported (rare)
+
+  const appRoot = document.getElementById('app');
+
+  function onViewportResize() {
+    const vvHeight = window.visualViewport.height;
+    const vvOffset = window.visualViewport.offsetTop;
+    // Set app root height to the visible viewport height
+    appRoot.style.height = `${vvHeight}px`;
+    // Shift app root down if viewport has scrolled (e.g. iOS Safari address bar)
+    appRoot.style.transform = `translateY(${vvOffset}px)`;
+  }
+
+  function onViewportScroll() {
+    onViewportResize();
+  }
+
+  window.visualViewport.addEventListener('resize', onViewportResize);
+  window.visualViewport.addEventListener('scroll', onViewportScroll);
+
+  // Also scroll active textarea/input into view when focused
+  document.querySelectorAll('input, textarea').forEach(input => {
+    input.addEventListener('focus', () => {
+      // Give keyboard time to open before scrolling
+      setTimeout(() => {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    });
+  });
+}
+
 // ─── Go ─────────────────────────────────────────────────────────────────────
 
 boot();
+initKeyboardFix();

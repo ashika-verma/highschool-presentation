@@ -167,6 +167,28 @@
       gap: var(--space-2);
     }
 
+    /* Give buttons extra height to accommodate the cue line */
+    .host-mode-btn {
+      min-height: 76px;
+    }
+
+    /* Talk-cue label under mode name */
+    .mode-cue {
+      display: block;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      text-transform: none;
+      color: rgba(255, 255, 255, 0.38);
+      margin-top: 3px;
+      line-height: 1.3;
+    }
+
+    .host-mode-btn.active .mode-cue {
+      color: rgba(0, 0, 0, 0.55);
+    }
+
     /* Host color grid — smaller swatches than student view */
     #host-color-grid {
       grid-template-columns: repeat(6, 1fr);
@@ -270,34 +292,42 @@
       <button class="host-mode-btn" data-mode="lobby" aria-label="Switch to Lobby mode">
         <span class="mode-emoji">🏠</span>
         Lobby
+        <span class="mode-cue">students scanning + joining</span>
       </button>
       <button class="host-mode-btn" data-mode="color" aria-label="Switch to Color Control mode">
         <span class="mode-emoji">🎨</span>
         Color Control
+        <span class="mode-cue">lights are live — opening bit</span>
       </button>
       <button class="host-mode-btn" data-mode="ambient" aria-label="Switch to Ambient mode">
         <span class="mode-emoji">✨</span>
         Ambient
+        <span class="mode-cue">story time — reactions on</span>
       </button>
       <button class="host-mode-btn" data-mode="photos" aria-label="Switch to Photo Collage mode">
         <span class="mode-emoji">📸</span>
         Photos
+        <span class="mode-cue">hs + MIT collage on phones</span>
       </button>
       <button class="host-mode-btn" data-mode="text" aria-label="Switch to Free Text mode">
         <span class="mode-emoji">💬</span>
         Open Question
+        <span class="mode-cue">"what do you actually love?"</span>
       </button>
       <button class="host-mode-btn" data-mode="demo" aria-label="Switch to Demo Reveal mode">
         <span class="mode-emoji">🎉</span>
         Demo Reveal
+        <span class="mode-cue">the counter + terminal moment</span>
       </button>
       <button class="host-mode-btn" data-mode="qa" aria-label="Switch to Q&A mode">
         <span class="mode-emoji">🙋</span>
         Q&amp;A
+        <span class="mode-cue">take questions from the room</span>
       </button>
       <button class="host-mode-btn" data-mode="sendoff" aria-label="Switch to Send-off mode">
         <span class="mode-emoji">💖</span>
         Send-off
+        <span class="mode-cue">make something. show someone.</span>
       </button>
     </div>
   </div>

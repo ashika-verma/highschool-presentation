@@ -485,6 +485,33 @@
       letter-spacing: 0.04em;
     }
 
+    /* Placeholder shown when no photos are loaded */
+    .photo-placeholder-empty {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+    }
+
+    .photo-placeholder-icon {
+      font-size: 40px;
+      opacity: 0.5;
+      animation: live-pulse 3s ease-in-out infinite;
+    }
+
+    .photo-placeholder-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
     /* Photo decorations — subtler now */
     .photo-frame__decoration {
       position: absolute;
@@ -500,8 +527,10 @@
 
     #screen-text {
       background: var(--color-bg);
-      padding: var(--space-8) var(--space-5);
+      padding: var(--space-8) var(--space-5) var(--space-5);
       position: relative;
+      /* Allow screen to scroll when keyboard is open */
+      overflow-y: auto;
     }
 
     #screen-text::before {
@@ -932,14 +961,10 @@
         <div class="photo-frame__decoration" style="top:-10px; right:-10px" id="photo-deco-1">⭐</div>
         <div class="photo-frame__decoration" style="bottom:40px; left:-12px" id="photo-deco-2">💖</div>
 
-        <!-- Placeholder — real photos come from /photos/ -->
-        <div
-          id="photo-display"
-          style="width:100%; aspect-ratio:4/3; background:var(--color-surface-2); display:flex; align-items:center; justify-content:center;"
-        >
-          <p style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-dim); text-align:center; padding:1rem; line-height:2; letter-spacing:0.04em">
-            Add photos to<br>/photos/highschool/<br>and /photos/college/
-          </p>
+        <!-- Photo display — JS populates this with real images; shows placeholder when none loaded -->
+        <div id="photo-display" class="photo-placeholder-empty">
+          <span class="photo-placeholder-icon" aria-hidden="true">📸</span>
+          <p class="photo-placeholder-label">photos incoming</p>
         </div>
         <div class="photo-frame__caption" id="photo-caption">CSHS</div>
       </div>

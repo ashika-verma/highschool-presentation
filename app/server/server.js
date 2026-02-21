@@ -146,6 +146,101 @@ const httpServer = http.createServer((req, res) => {
   const url = new URL(req.url, `http://localhost`);
   const pathname = url.pathname;
 
+  // ── /qr — QR code generator page ──
+  // Usage: /qr?url=https://abc123.ngrok.io
+  // Renders a page with a QR code pointing to the given URL.
+  if (pathname === '/qr') {
+    const targetUrl = url.searchParams.get('url') || `http://localhost:${PORT}`;
+    const safeUrl = targetUrl.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR — Light Room</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0A0A10;
+      color: #F0F0F5;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 32px 24px;
+    }
+    h1 {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #FF6EB4;
+      text-shadow: 0 0 32px #FF6EB488;
+    }
+    #qr-container {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 0 60px -8px #FF6EB455;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #qr-container canvas { display: block; border-radius: 4px; }
+    .url-label {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      color: #888899;
+      word-break: break-all;
+      text-align: center;
+      max-width: 360px;
+      line-height: 1.6;
+      letter-spacing: 0.03em;
+    }
+    .hint {
+      font-size: 12px;
+      color: rgba(240,240,245,0.35);
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Light Room</h1>
+  <div id="qr-container">
+    <canvas id="qr-canvas"></canvas>
+  </div>
+  <p class="url-label">${safeUrl}</p>
+  <p class="hint">Students scan this to join</p>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    QRCode.toCanvas(
+      document.getElementById('qr-canvas'),
+      ${JSON.stringify(targetUrl)},
+      {
+        width: 280,
+        margin: 1,
+        color: { dark: '#000000', light: '#FFFFFF' }
+      },
+      function(err) {
+        if (err) {
+          document.getElementById('qr-container').innerHTML =
+            '<p style="color:#ff6b6b;padding:20px;font-size:13px">Failed to generate QR. Check the URL parameter.</p>';
+        }
+      }
+    );
+  </script>
+</body>
+</html>`;
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(html);
+    return;
+  }
+
   // ── REST: host auth check ──
   if (req.method === 'POST' && pathname === '/auth') {
     let body = '';
