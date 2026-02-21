@@ -408,8 +408,14 @@ body {
 }
 
 .input:focus {
-  border-color: color-mix(in srgb, var(--room-color-a) 60%, white);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--room-color-a) 15%, transparent);
+  border-color: var(--room-color-a);
+  box-shadow: 0 0 0 3px rgba(255, 110, 180, 0.15);
+}
+@supports (color: color-mix(in srgb, red, blue)) {
+  .input:focus {
+    border-color: color-mix(in srgb, var(--room-color-a) 60%, white);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--room-color-a) 15%, transparent);
+  }
 }
 
 .input--textarea {
@@ -442,8 +448,14 @@ body {
 }
 
 .input-pixel:focus {
-  border-color: color-mix(in srgb, var(--room-color-a) 60%, white);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--room-color-a) 15%, transparent);
+  border-color: var(--room-color-a);
+  box-shadow: 0 0 0 3px rgba(255, 110, 180, 0.15);
+}
+@supports (color: color-mix(in srgb, red, blue)) {
+  .input-pixel:focus {
+    border-color: color-mix(in srgb, var(--room-color-a) 60%, white);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--room-color-a) 15%, transparent);
+  }
 }
 
 .input-pixel--textarea {
@@ -1061,10 +1073,16 @@ body {
 }
 
 .host-mode-btn.active {
-  background: color-mix(in srgb, var(--room-color-a) 20%, var(--color-surface));
-  border-color: color-mix(in srgb, var(--room-color-a) 50%, transparent);
+  background: var(--color-surface-2);
+  border-color: var(--room-color-a);
   color: var(--color-text);
   box-shadow: 0 0 16px -4px var(--room-color-a);
+}
+@supports (color: color-mix(in srgb, red, blue)) {
+  .host-mode-btn.active {
+    background: color-mix(in srgb, var(--room-color-a) 20%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--room-color-a) 50%, transparent);
+  }
 }
 
 .host-mode-btn:active {
@@ -1331,8 +1349,13 @@ body {
    ============================================================ */
 
 :focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--room-color-a) 80%, white);
+  outline: 2px solid var(--room-color-a);
   outline-offset: 3px;
+}
+@supports (color: color-mix(in srgb, red, blue)) {
+  :focus-visible {
+    outline-color: color-mix(in srgb, var(--room-color-a) 80%, white);
+  }
 }
 
 /* ============================================================

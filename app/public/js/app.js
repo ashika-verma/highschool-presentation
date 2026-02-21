@@ -71,14 +71,17 @@ function boot() {
 function wireWebSocket() {
   ws.addEventListener('connected', () => {
     setConnectionStatus('connected', false);
+    showOfflineBanner(false);
   });
 
   ws.addEventListener('disconnected', () => {
     setConnectionStatus('disconnected', true);
+    showOfflineBanner(true);
   });
 
   ws.addEventListener('reconnecting', (e) => {
     setConnectionStatus(`reconnecting...`, true);
+    showOfflineBanner(true);
   });
 
   // Server pushed a mode change
@@ -241,7 +244,10 @@ function handleJoin() {
 
   if (!name) {
     nameEl.focus();
-    nameEl.style.setProperty('--border-color', 'var(--color-pink)');
+    nameEl.style.borderColor = '#ff6b6b';
+    nameEl.addEventListener('input', () => {
+      nameEl.style.borderColor = '';
+    }, { once: true });
     return;
   }
 
@@ -257,7 +263,7 @@ function showJoinedState() {
   const joined = $('lobby-joined');
   joined.classList.remove('hidden');
 
-  $('lobby-joined-msg').textContent = `You're in, ${state.name}! 🎮 Watch the lights.`;
+  $('lobby-joined-msg').textContent = `You're in, ${state.name}! 💡 Watch the lights change.`;
 
   const preview = $('joined-color-preview');
   preview.style.setProperty('--room-color-a', state.colorHex);
@@ -311,6 +317,11 @@ function renderPeopleRow(count) {
 
 // ─── Color control ─────────────────────────────────────────────────────────
 
+// Client-side rate limit: matches server-side 300ms guard.
+// Prevents UI churn from accidental rapid taps.
+let lastColorTapAt = 0;
+const COLOR_TAP_RATE_MS = 300;
+
 function renderColorGridMain() {
   const grid = $('color-palette-main');
   grid.innerHTML = '';
@@ -331,6 +342,11 @@ function renderColorGridMain() {
 }
 
 function handleColorTap(color, btn) {
+  // Client-side rate limit — drop taps that arrive too fast
+  const now = Date.now();
+  if (now - lastColorTapAt < COLOR_TAP_RATE_MS) return;
+  lastColorTapAt = now;
+
   // Visual: mark selected
   $('color-palette-main').querySelectorAll('.color-swatch').forEach(s =>
     s.classList.remove('selected')
@@ -345,7 +361,7 @@ function handleColorTap(color, btn) {
   // Update bottom strip
   $('sent-color-swatch').style.background = color.hex;
   $('sent-color-name').textContent = color.name;
-  $('sent-color-status').textContent = '→ NYC ⚡ sent!';
+  $('sent-color-status').textContent = 'sent to NYC';
 
   // ZAP animation
   showZapFeedback(color.hex);
@@ -370,10 +386,10 @@ function showZapFeedback(hex) {
     <span style="font-size:28px">⚡</span>
     <span>→ NYC</span>
   `;
-  zap.style.color = '#FFFFFF';
+  zap.style.color = 'rgba(0,0,0,0.85)';
   zap.style.background = hex;
-  zap.style.padding = '8px 16px';
-  zap.style.boxShadow = '4px 4px 0 0 #2D1B00, -4px 4px 0 0 #2D1B00, 4px -4px 0 0 #2D1B00, -4px -4px 0 0 #2D1B00';
+  zap.style.padding = '10px 20px';
+  zap.style.boxShadow = `0 0 32px -4px ${hex}, 0 4px 16px rgba(0,0,0,0.4)`;
 
   layer.appendChild(zap);
 
@@ -408,7 +424,10 @@ function setRoomColor(hex) {
 function updateAmbientTag() {
   const tag = $('ambient-user-tag');
   if (state.name) {
-    tag.textContent = `${state.name} • ${state.colorsSent} change${state.colorsSent !== 1 ? 's' : ''} sent`;
+    const sent = state.colorsSent;
+    tag.textContent = sent > 0
+      ? `${state.name} • ${sent} color${sent !== 1 ? 's' : ''} sent to NYC`
+      : `${state.name} • react below`;
   }
 }
 
@@ -497,7 +516,7 @@ function handleTextSubmit() {
   $('text-submit-btn').textContent = 'Sent! ✓';
   $('text-submit-btn').disabled = true;
   setTimeout(() => {
-    $('text-submit-btn').textContent = 'Send it →';
+    $('text-submit-btn').textContent = 'Send it';
     $('text-submit-btn').disabled = false;
   }, 3000);
 }
@@ -813,6 +832,14 @@ function escAttr(str) {
   return String(str)
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// ─── Offline banner ──────────────────────────────────────────────────────────
+
+function showOfflineBanner(show) {
+  const banner = $('offline-banner');
+  if (!banner) return;
+  banner.style.display = show ? 'block' : 'none';
 }
 
 // ─── Mobile keyboard viewport fix ──────────────────────────────────────────

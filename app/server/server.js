@@ -96,6 +96,21 @@ function buildPhotoList() {
 }
 
 // ─── WiZ bulb UDP ──────────────────────────────────────────────────────────
+// Single persistent UDP socket — avoids creating/destroying a socket on every
+// color change, which can cause file-descriptor exhaustion under rapid tapping.
+
+let wizSocket = null;
+
+function getWizSocket() {
+  if (wizSocket) return wizSocket;
+  wizSocket = dgram.createSocket('udp4');
+  wizSocket.on('error', (err) => {
+    console.error('[wiz] UDP socket error:', err.message);
+    wizSocket.close();
+    wizSocket = null; // will be recreated on next send
+  });
+  return wizSocket;
+}
 
 function hexToRgb(hex) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -113,18 +128,21 @@ function sendToWiz(hex) {
     params: { r, g, b, dimming: 90 },
   });
 
-  const client = dgram.createSocket('udp4');
+  const socket = getWizSocket();
   const buf = Buffer.from(msg);
 
   WIZ_IPS.forEach(ip => {
-    client.send(buf, 0, buf.length, WIZ_PORT, ip.trim(), (err) => {
+    socket.send(buf, 0, buf.length, WIZ_PORT, ip.trim(), (err) => {
       if (err) console.error(`[wiz] UDP error to ${ip}:`, err.message);
     });
   });
-
-  // Close after all sends complete
-  setTimeout(() => client.close(), 500);
 }
+
+// ─── Per-client rate limiter ────────────────────────────────────────────────
+// Prevents a student from flooding the server/bulbs by mashing colors.
+// Allows at most 1 color change per COLOR_RATE_MS per client.
+
+const COLOR_RATE_MS = 300; // minimum ms between accepted color changes per client
 
 // ─── HTTP server + static file serving ─────────────────────────────────────
 
@@ -338,7 +356,7 @@ const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
 wss.on('connection', (socket) => {
   // Register new connection with blank state
-  appState.clients.set(socket, { name: null, hex: null, isHost: false, colorsSent: 0 });
+  appState.clients.set(socket, { name: null, hex: null, isHost: false, colorsSent: 0, lastColorAt: 0 });
 
   // Send welcome payload
   socket.send(JSON.stringify({
@@ -411,6 +429,11 @@ function handleMessage(socket, msg) {
       if (!client.name) return;
       const hex = sanitizeHex(msg.hex);
       if (!hex) return;
+
+      // Rate limit: drop color changes that arrive faster than COLOR_RATE_MS
+      const now = Date.now();
+      if (now - client.lastColorAt < COLOR_RATE_MS) return;
+      client.lastColorAt = now;
 
       client.hex = hex;
       client.colorsSent++;
@@ -551,6 +574,7 @@ httpServer.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('\n  Shutting down...');
+  if (wizSocket) { try { wizSocket.close(); } catch (_) {} }
   wss.close();
   httpServer.close(() => process.exit(0));
 });

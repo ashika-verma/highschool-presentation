@@ -7,6 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Light Room — Ashika's Talk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="/css/design-system.css">
   <style>
     /* ── App-level layout ─────────────────────────────────────── */
@@ -16,25 +18,10 @@
       overscroll-behavior: none;
     }
 
-    /* ── Connection status ──────────────────────────────────────── */
-    #connection-status {
-      position: fixed;
-      top: var(--space-3);
-      right: var(--space-3);
-      z-index: var(--z-top);
-      font-family: var(--font-mono);
-      font-size: var(--text-2xs);
-      padding: 4px 10px;
-      border-radius: var(--radius-full);
-      background: var(--color-surface-2);
-      border: 1px solid var(--color-border);
-      color: var(--color-text-muted);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
+    /* ── Lobby palette: compact swatches (6-col, 5 rows for 30 colors) ─── */
+    #lobby-palette .color-swatch {
+      height: 44px;
     }
-
-    #connection-status.visible { opacity: 1; }
 
     /* ══════════════════════════════════════════════════════════
        SCREEN 1: LOBBY
@@ -814,8 +801,8 @@
           <span class="live-dot" aria-hidden="true"></span>
           NYC — Live
         </p>
-        <h1>You're connecting<br>to <em>New York City</em></h1>
-        <p>Pick a color. Your choice changes<br>the actual lights in Ashika's room.</p>
+        <h1>Your phone controls<br>lights in <em>New York City</em></h1>
+        <p>Pick a color. It changes the actual<br>lightbulbs in Ashika's apartment right now.</p>
       </div>
 
       <!-- Live counter -->
@@ -844,8 +831,8 @@
 
         <span class="lobby-section-label mt-4">Choose your color</span>
 
-        <!-- Color palette — 4 columns of large swatches -->
-        <div class="color-grid" id="lobby-palette" role="radiogroup" aria-label="Choose a color">
+        <!-- Color palette — 6 columns of swatches on lobby (5 rows for 30 colors) -->
+        <div class="color-grid" id="lobby-palette" role="radiogroup" aria-label="Choose a color" style="grid-template-columns: repeat(6, 1fr)">
           <!-- Swatches injected by JS from palette.js -->
         </div>
 
@@ -870,7 +857,7 @@
       <p>
         Ashika's lights are live.<br>
         Your color is in the mix.<br>
-        Watch for your turn.
+        The app will switch screens as the talk goes on.
       </p>
       <div id="joined-color-preview" class="dither-bg" aria-hidden="true"></div>
     </div>
@@ -882,7 +869,7 @@
   <section id="screen-color" class="screen" aria-label="Color control">
     <div class="color-screen-header">
       <h2>Change the lights</h2>
-      <p>Last color sent wins</p>
+      <p>Last tap wins — changes Ashika's room right now</p>
     </div>
 
     <div id="color-grid-main">
@@ -896,7 +883,7 @@
       <div class="color-sent-strip__swatch" id="sent-color-swatch"></div>
       <div>
         <span class="color-sent-strip__label" id="sent-color-name">—</span>
-        <div class="color-sent-strip__text" id="sent-color-status">tap a color above</div>
+        <div class="color-sent-strip__text" id="sent-color-status">tap any color to send it</div>
       </div>
     </div>
   </section>
@@ -909,7 +896,7 @@
 
     <div class="ambient-content">
       <div class="ambient-corner">
-        <p id="ambient-user-tag">watching the lights</p>
+        <p id="ambient-user-tag">you're connected • react below</p>
       </div>
 
       <div class="ambient-spacer" id="sparkle-container" aria-hidden="true">
@@ -942,10 +929,10 @@
           <button
             class="btn-pixel btn-pixel--sm"
             id="park-question-btn"
-            aria-label="Park a question for later"
+            aria-label="Save a question for Ashika"
             aria-haspopup="dialog"
           >
-            Park a question
+            Save a question
           </button>
         </div>
       </div>
@@ -963,8 +950,8 @@
 
         <!-- Photo display — JS populates this with real images; shows placeholder when none loaded -->
         <div id="photo-display" class="photo-placeholder-empty">
-          <span class="photo-placeholder-icon" aria-hidden="true">📸</span>
-          <p class="photo-placeholder-label">photos incoming</p>
+          <span class="photo-placeholder-icon" aria-hidden="true">🖼️</span>
+          <p class="photo-placeholder-label">photos loading...</p>
         </div>
         <div class="photo-frame__caption" id="photo-caption">CSHS</div>
       </div>
@@ -1115,9 +1102,9 @@
 <!-- ══════════════════════════════════════════════════════════
      MODAL: Park a question
      ══════════════════════════════════════════════════════════ -->
-<div id="question-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Park a question">
+<div id="question-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Save a question">
   <div class="modal-sheet">
-    <h3>Park a question</h3>
+    <h3>Save a question</h3>
     <p class="modal-desc">
       Ashika will see it on her screen.<br>She'll call on you later.
     </p>
@@ -1151,6 +1138,26 @@
     </form>
   </div>
 </div>
+
+<!-- Offline banner — shown when WebSocket is disconnected -->
+<div id="offline-banner" aria-live="assertive" style="
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: #1a1a26;
+  border-top: 1px solid rgba(255,100,100,0.3);
+  color: rgba(255,180,180,0.9);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 16px;
+  z-index: var(--z-top);
+  letter-spacing: 0.01em;
+">Reconnecting... hold tight</div>
 
 <!-- ZAP feedback layer -->
 <div id="zap-layer" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;z-index:var(--z-top)"></div>

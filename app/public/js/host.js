@@ -68,11 +68,10 @@ function attemptAuth(key) {
       }
     })
     .catch(() => {
-      // During dev without server, just proceed
-      state.authed = true;
-      state.hostKey = key;
-      showDashboard();
-      connectHost();
+      // Network error (server unreachable) — show error rather than bypassing auth
+      const err = $('auth-error');
+      err.textContent = 'Cannot reach server. Is it running?';
+      err.style.display = 'block';
     });
 }
 
@@ -108,7 +107,7 @@ function connectHost() {
 
   ws.addEventListener('disconnected', () => {
     $('host-status-pill').textContent = '● offline';
-    $('host-status-pill').style.color = 'var(--color-pink)';
+    $('host-status-pill').style.color = '#ff6b6b';
   });
 
   ws.onMessage('welcome', (data) => {
