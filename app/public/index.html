@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0A0A10">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -16,6 +16,19 @@
       height: 100%;
       background: var(--color-bg);
       overscroll-behavior: none;
+    }
+
+    /* iOS Safari input zoom fix: any input < 16px triggers auto-zoom.
+       Set all student-facing inputs to exactly 16px so iOS never zooms. */
+    input, textarea {
+      font-size: 16px !important;
+    }
+
+    /* iOS safe-area: push bottom-docked elements above home indicator */
+    .color-sent-strip,
+    .qa-input-row,
+    #offline-banner {
+      padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
     }
 
     /* ── Lobby palette: compact swatches (6-col, 5 rows for 30 colors) ─── */
@@ -1044,6 +1057,7 @@
         rows="3"
         autocomplete="off"
         spellcheck="false"
+        enterkeyhint="send"
         aria-label="What do you love"
       ></textarea>
       <button
@@ -1159,6 +1173,14 @@
         Keep going.
       </p>
       <p class="sendoff__credit">— Ashika Verma, MIT EECS '24</p>
+      <p style="
+        margin-top: var(--space-12);
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: rgba(255,255,255,0.25);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      ">you just controlled real lights in NYC</p>
     </div>
   </section>
 

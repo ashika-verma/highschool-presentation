@@ -246,6 +246,15 @@ function wireUI() {
     }
   });
 
+  // Text textarea: Ctrl+Enter / Cmd+Enter submits (regular Enter = newline in textarea is fine,
+  // but we also wire it to submit on a plain Enter since it's a short-answer field)
+  $('text-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // submit on Enter, Shift+Enter still inserts newline (we prevent both here since it's short-form)
+      $('text-form').requestSubmit();
+    }
+  });
+
   // Photo swipe
   wirePhotoSwipe();
 }
@@ -336,8 +345,24 @@ function handleJoin() {
   state.name = name;
   ws.sendJoin(name, state.colorHex);
 
-  // Optimistically show joined state — server will confirm via 'joined' message
+  // Show a pending state — set joined=true only when server confirms via 'joined'.
+  // If the server rejects the name (invisible chars, etc.) state.joined stays false
+  // and the form remains usable. We show the joined view optimistically for UX speed
+  // but keep a recovery timer: if no 'joined' message in 5s, restore the form.
   showJoinedState();
+
+  const joinTimeout = setTimeout(() => {
+    if (!state.joined) {
+      // Server never confirmed — show form again with an error hint
+      $('lobby-joined').classList.add('hidden');
+      $('lobby-form-view').classList.remove('hidden');
+      nameEl.style.borderColor = '#ff6b6b';
+      nameEl.focus();
+    }
+  }, 5000);
+
+  // Cancel the timeout once the server confirms
+  ws.addEventListener('msg:joined', () => clearTimeout(joinTimeout), { once: true });
 }
 
 function showJoinedState() {
@@ -731,10 +756,21 @@ function addTextFeedItem({ name, text, hex }, animate = true) {
 
 // ─── Q&A ───────────────────────────────────────────────────────────────────
 
+function shakeInput(el) {
+  el.classList.remove('input-shake');
+  void el.offsetWidth; // force reflow to restart animation
+  el.classList.add('input-shake');
+  el.addEventListener('animationend', () => el.classList.remove('input-shake'), { once: true });
+}
+
 function handleQASubmit() {
   const input = $('qa-input');
   const text = input.value.trim();
-  if (!text) return;
+  if (!text) {
+    shakeInput(input);
+    input.focus();
+    return;
+  }
 
   // Add optimistically — mark so server echo doesn't double-add
   const key = `${state.name}::${text}`;

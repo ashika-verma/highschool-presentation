@@ -177,7 +177,13 @@ const httpServer = http.createServer((req, res) => {
   // Renders a page with a QR code pointing to the given URL.
   if (pathname === '/qr') {
     const targetUrl = url.searchParams.get('url') || `http://localhost:${PORT}`;
-    const safeUrl = targetUrl.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    // Escape all HTML special chars for safe embedding in HTML text content
+    const safeUrl = targetUrl
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -583,7 +589,9 @@ function studentCount() {
 
 function sanitize(str, maxLen = 100) {
   if (typeof str !== 'string') return '';
-  return str.trim().slice(0, maxLen).replace(/[<>]/g, '');
+  // Strip angle brackets (XSS), newlines/carriage returns (terminal injection),
+  // and null bytes. Trim and cap length.
+  return str.trim().slice(0, maxLen).replace(/[<>\n\r\0]/g, '');
 }
 
 function sanitizeHex(str) {
