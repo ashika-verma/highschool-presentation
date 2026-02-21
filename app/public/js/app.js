@@ -375,6 +375,7 @@ function wireWebSocket() {
     const clampedIdx = Math.max(0, Math.min(index, state.slides.length - 1));
     state.currentSlide = clampedIdx;
     renderSlide(state.slides[clampedIdx]);
+    updateSlidePill();
   });
 
   // Full slide list updated after host saves
@@ -382,6 +383,7 @@ function wireWebSocket() {
     state.slides = slides;
     state.currentSlide = currentSlideIndex ?? 0;
     renderSlide(state.slides[state.currentSlide]);
+    updateSlidePill();
   });
 }
 
@@ -830,6 +832,22 @@ function setRoomColor(hex) {
 // Each element is positioned absolutely using x/y as % from center.
 // The slide spec: { id, bg, elements: [ { type: 'text'|'image', ... } ] }
 
+// ─── Slide progress pill ───────────────────────────────────────────────────
+// Shows "1 / 3" style indicator. Hidden when 0 or 1 slides (no navigation context needed).
+
+function updateSlidePill() {
+  const pill = $('slide-progress-pill');
+  if (!pill) return;
+  const total = state.slides.length;
+  if (total <= 1) {
+    pill.style.display = 'none';
+    return;
+  }
+  const current = state.currentSlide + 1; // 1-indexed for display
+  pill.style.display = 'block';
+  pill.textContent = `${current} / ${total}`;
+}
+
 function renderSlide(slide) {
   const canvas = $('slide-canvas');
   if (!canvas) return;
@@ -1244,9 +1262,17 @@ function switchMode(mode, flash = true) {
   // (used for things that don't depend on the DOM being visible)
 
   if (mode === 'demo') {
-    // Clear the static "connecting to NYC..." placeholder line before showing real logs
+    // Only clear the terminal if it contains only the static placeholder text.
+    // On reconnect, real color log lines may already be present — don't wipe those.
+    // We detect "placeholder-only" by checking if there are no `.terminal-line--name`
+    // elements (those only appear once real color events have been appended).
     const terminal = $('demo-terminal');
-    if (terminal) terminal.innerHTML = '<span class="terminal-cursor" aria-hidden="true"></span>';
+    if (terminal) {
+      const hasRealLines = terminal.querySelector('.terminal-line--name');
+      if (!hasRealLines) {
+        terminal.innerHTML = '<span class="terminal-cursor" aria-hidden="true"></span>';
+      }
+    }
   }
 
   if (mode === 'color') {
@@ -1296,6 +1322,7 @@ function switchMode(mode, flash = true) {
       const safeIdx = Math.max(0, Math.min(state.currentSlide, state.slides.length - 1));
       state.currentSlide = safeIdx;
       renderSlide(state.slides[safeIdx]);
+      updateSlidePill();
     }
   };
 
