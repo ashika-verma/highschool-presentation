@@ -141,9 +141,13 @@ function wireWebSocket() {
     }
     if (data.roomColor) setRoomColor(data.roomColor);
     if (data.textResponses) {
+      // Clear existing feed before replaying server state to prevent duplicates on reconnect
+      $('text-feed').innerHTML = '';
       data.textResponses.forEach(r => addTextFeedItem(r, false));
     }
     if (data.questions) {
+      // Same for Q&A feed
+      $('qa-feed').innerHTML = '';
       data.questions.forEach(q => addQAFeedItem(q, false));
     }
   });
@@ -823,11 +827,10 @@ function wirePhotoSwipe() {
 
 function appendTerminalLine(name, hex, originalHex) {
   const terminal = $('demo-terminal');
-  const ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   const line = document.createElement('div');
   line.innerHTML = `
-    <span class="terminal-line terminal-line--timestamp">[${ts}] </span><span class="terminal-line terminal-line--name" style="--item-color:${escAttr(originalHex)}">${escHtml(name)}</span><span class="terminal-line"> → ${escHtml(originalHex)}</span>
+    <span class="terminal-line terminal-line--name" style="--item-color:${escAttr(originalHex)}">${escHtml(name)}</span><span class="terminal-line"> → ${escHtml(originalHex)}</span>
   `;
 
   terminal.appendChild(line);
@@ -934,6 +937,12 @@ function showScreen(name, animate = true) {
 }
 
 function doModeFlash(callback) {
+  // Skip flash for users who prefer reduced motion — call callback immediately
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    callback?.();
+    return;
+  }
+
   const flash = $('mode-flash');
   // Remove and re-add class to restart animation even if already running
   flash.className = '';
@@ -941,7 +950,16 @@ function doModeFlash(callback) {
   // Force reflow so class removal is applied before we re-add it
   void flash.offsetWidth;
   flash.className = 'mode-flash';
+
+  // Safety timeout: if animationend never fires (CSS disabled, unusual browser),
+  // still trigger the callback so the app doesn't get stuck.
+  const safetyTimer = setTimeout(() => {
+    flash.style.display = 'none';
+    callback?.();
+  }, 700);
+
   flash.addEventListener('animationend', () => {
+    clearTimeout(safetyTimer);
     flash.style.display = 'none';
     callback?.();
   }, { once: true });
