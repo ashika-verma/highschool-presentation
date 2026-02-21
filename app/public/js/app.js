@@ -155,6 +155,17 @@ function wireWebSocket() {
       initPhotoSlideshow();
     }
     if (data.roomColor) setRoomColor(data.roomColor);
+    if (data.reactionCounts) {
+      // Sync cumulative reaction counts from server — fixes late joiners seeing "0" for all
+      Object.entries(data.reactionCounts).forEach(([emoji, count]) => {
+        state.reactionCounts[emoji] = count;
+        // Update all matching count badges
+        document.querySelectorAll(`[data-emoji-count="${emoji}"]`).forEach(el => {
+          el.textContent = count;
+          if (count > 0) el.classList.add('has-count');
+        });
+      });
+    }
     if (data.textResponses) {
       // Clear existing feed before replaying server state to prevent duplicates on reconnect
       $('text-feed').innerHTML = '';

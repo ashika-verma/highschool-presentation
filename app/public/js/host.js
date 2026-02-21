@@ -61,6 +61,9 @@ function attemptAuth(key) {
       if (r.ok) {
         state.authed = true;
         state.hostKey = key;
+        // Strip the key from the URL bar — prevents shoulder-surfing and
+        // accidental sharing of the URL with the key visible.
+        history.replaceState({}, '', '/host');
         showDashboard();
         connectHost();
       } else {
@@ -128,6 +131,25 @@ function connectHost() {
       renderStudentList();
     }
     if (data.roomColor) setRoomColor(data.roomColor);
+    if (data.reactionCounts) {
+      // Restore cumulative reaction counts from server so host reconnect shows accurate totals
+      Object.entries(data.reactionCounts).forEach(([emoji, count]) => {
+        state.reactionCounts[emoji] = count;
+        document.querySelectorAll(`[data-pulse-emoji="${emoji}"]`).forEach(el => {
+          el.textContent = count;
+          if (count > 0) el.classList.add('has-count');
+        });
+      });
+      // Recalculate max for bar sizing
+      reactionMaxSeen = Math.max(1, ...Object.values(state.reactionCounts));
+      // Re-render all bars
+      Object.entries(pulseBars).forEach(([em, { bar }]) => {
+        const count = state.reactionCounts[em] || 0;
+        const pct = Math.round((count / reactionMaxSeen) * 100);
+        const barEl = $(bar);
+        if (barEl) barEl.style.width = `${pct}%`;
+      });
+    }
     if (data.questions) {
       data.questions.forEach(q => addQuestion(q, false));
     }

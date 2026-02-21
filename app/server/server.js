@@ -66,6 +66,9 @@ const appState = {
   questions: [],
   textResponses: [],
   photos: buildPhotoList(),
+  // Reaction totals — persisted so late-joining students and reconnecting host
+  // see accurate cumulative counts, not "0" for everything.
+  reactionCounts: { '👀': 0, '💡': 0, '🔥': 0, '😮': 0 },
 };
 
 // ─── Photo list ────────────────────────────────────────────────────────────
@@ -398,6 +401,8 @@ wss.on('connection', (socket) => {
     photos: appState.photos,
     textResponses: appState.textResponses.slice(-10),
     questions: appState.questions.slice(-10),
+    // Cumulative reaction counts — lets late joiners and reconnectors see accurate totals
+    reactionCounts: appState.reactionCounts,
     students: [...appState.clients.entries()]
       .filter(([, c]) => c.name && !c.isHost)
       .map(([, c]) => ({ name: c.name, hex: c.hex, colorsSent: c.colorsSent })),
@@ -486,6 +491,9 @@ function handleMessage(socket, msg) {
       const emoji = sanitizeEmoji(msg.emoji);
       if (!emoji) return;
 
+      // Persist cumulative count — welcome payload sends this to late joiners / reconnectors
+      appState.reactionCounts[emoji] = (appState.reactionCounts[emoji] || 0) + 1;
+
       // Exclude sender — they already bumped their own reaction count in handleReaction()
       broadcast({ type: 'reaction', name: client.name, emoji }, socket);
       break;
@@ -533,6 +541,14 @@ function handleMessage(socket, msg) {
 
     case 'host_join': {
       if (msg.key !== HOST_KEY) return;
+      // Only one host socket allowed at a time — reject if another host is already connected.
+      // This prevents a student who intercepts the key from taking over host controls.
+      const existingHost = [...appState.clients.values()].find(c => c.isHost);
+      if (existingHost && existingHost !== client) {
+        // Another host socket is already live — silently reject this attempt.
+        // The legitimate host will see their dashboard work normally.
+        return;
+      }
       client.isHost = true;
       client.name   = '__host__';
       break;
