@@ -736,6 +736,15 @@ function renderSlide(slide) {
   // Set background
   canvas.style.background = (typeof slide.bg === 'string' && slide.bg) ? slide.bg : '#0A0A10';
 
+  // Responsive font scaling:
+  // The host editor designs slides at roughly 600px canvas width.
+  // On a 360px student phone, a 48px font would dominate.
+  // Scale by the ratio of the actual canvas width to the design reference width.
+  // Clamped between 0.5x and 1.0x so tiny phones still get readable text.
+  const DESIGN_REF_WIDTH = 600;
+  const canvasWidth = canvas.clientWidth || window.innerWidth;
+  const fontScale = Math.max(0.5, Math.min(1.0, canvasWidth / DESIGN_REF_WIDTH));
+
   // Render elements
   (Array.isArray(slide.elements) ? slide.elements : []).forEach(el => {
     if (!el || typeof el !== 'object') return;
@@ -746,7 +755,8 @@ function renderSlide(slide) {
       // on its x/y anchor point. left/top alone would offset from the top-left corner.
       div.style.left = `${el.x ?? 50}%`;
       div.style.top  = `${el.y ?? 50}%`;
-      div.style.fontSize   = `${el.size ?? 20}px`;
+      // Apply responsive scale — multiply configured size by viewport ratio
+      div.style.fontSize   = `${Math.round((el.size ?? 20) * fontScale)}px`;
       div.style.color      = el.color || '#FFFFFF';
       div.style.fontWeight = el.weight ?? 400;
       div.style.textAlign  = el.align || 'center';
