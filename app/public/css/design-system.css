@@ -922,10 +922,16 @@ body {
 .mode-flash {
   position: fixed;
   inset: 0;
-  background: #000000;
+  /* Dark blend rather than pure black — doesn't look like an app crash */
+  background: color-mix(in srgb, var(--room-color-a) 12%, #020208);
   z-index: var(--z-top);
   pointer-events: none;
   animation: mode-flash 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .mode-flash {
+    background: #020208;
+  }
 }
 
 /* ============================================================
