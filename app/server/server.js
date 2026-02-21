@@ -184,7 +184,7 @@ const httpServer = http.createServer((req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR — Light Room</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500&display=swap&font-display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #0A0A10;

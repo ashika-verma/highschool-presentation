@@ -547,7 +547,10 @@ function initSparkles(container, count) {
   if (!container) return;
   container.innerHTML = '';
 
-  const colors = ['#FFD93D', '#FF6EB4', '#6BCB77', '#4DBBFF', '#C77DFF', '#FF8C42', '#FFFFFF'];
+  // Include the current room color in the sparkle palette so sparkles feel
+  // connected to the live light color. Blend it with a fixed palette for variety.
+  const roomColor = state.roomColorHex || '#FF6EB4';
+  const colors = [roomColor, roomColor, '#FFD93D', '#FF6EB4', '#6BCB77', '#4DBBFF', '#C77DFF', '#FFFFFF'];
 
   for (let i = 0; i < count; i++) {
     const sparkle = document.createElement('div');
@@ -859,7 +862,14 @@ function appendTerminalLine(name, hex, originalHex) {
 
 // ─── Confetti ──────────────────────────────────────────────────────────────
 
+let _confettiActive = false;
+
 function triggerConfetti() {
+  // Guard against rapid re-trigger (e.g. host switches to demo repeatedly)
+  if (_confettiActive) return;
+  _confettiActive = true;
+  setTimeout(() => { _confettiActive = false; }, 2500);
+
   const layer = $('confetti-layer');
   const colors = PALETTE.slice(0, 20).map(p => p.hex);
 
