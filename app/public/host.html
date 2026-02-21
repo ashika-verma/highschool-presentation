@@ -220,7 +220,10 @@
     }
 
     .host-mode-btn.active .mode-cue {
-      color: rgba(0, 0, 0, 0.55);
+      /* Use the same contrast text variable as student buttons
+         so cue text is readable on any room color tint */
+      color: var(--room-btn-text, rgba(0, 0, 0, 0.55));
+      opacity: 0.7;
     }
 
     /* Host color grid — smaller swatches than student view */

@@ -252,6 +252,9 @@ function setRoomColor(hex) {
   bar.style.setProperty('--room-color-a', hex);
   bar.style.setProperty('--room-color-b', colorB);
   $('host-room-color-label').textContent = hex;
+  // Update CSS root vars so active mode buttons use correct contrast text
+  document.documentElement.style.setProperty('--room-color-a', hex);
+  document.documentElement.style.setProperty('--room-btn-text', contrastColor(hex));
 }
 
 // ─── Student list ────────────────────────────────────────────────────────────
@@ -383,6 +386,21 @@ function addTextResponse({ name, text, hex }, animate = true) {
   }
 
   feed.scrollTop = feed.scrollHeight;
+}
+
+// ─── Contrast helper (mirrors app.js) ────────────────────────────────────────
+// Returns '#000000' or '#FFFFFF' for readable text on the given background.
+
+function contrastColor(hex) {
+  if (!hex || !hex.startsWith('#') || hex.length < 7) return '#000000';
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const lr = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+  const lg = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+  const lb = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+  const luminance = 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+  return luminance > 0.179 ? '#000000' : '#FFFFFF';
 }
 
 // ─── Utilities ───────────────────────────────────────────────────────────────

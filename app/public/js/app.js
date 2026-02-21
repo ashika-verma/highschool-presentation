@@ -345,11 +345,15 @@ function showJoinedState() {
 function updateLobbyCount(count) {
   state.roomCount = count;
   const countEl = $('lobby-count');
+  const counterBox = $('lobby-counter-box');
 
   if (count === 0) {
-    // Hide the number — "0" looks like a broken state
+    // Hide the entire counter box — showing an empty box with "be the first" takes up
+    // space and looks broken to students who join before others.
+    if (counterBox) counterBox.style.display = 'none';
     countEl.style.display = 'none';
   } else {
+    if (counterBox) counterBox.style.display = '';
     countEl.style.display = '';
     countEl.textContent = count;
   }
