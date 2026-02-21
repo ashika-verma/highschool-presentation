@@ -79,9 +79,15 @@ function buildPhotoList() {
     const dir = path.join(photoRoot, folder);
     if (!fs.existsSync(dir)) continue;
 
-    const files = fs.readdirSync(dir)
-      .filter(f => /\.(jpg|jpeg|png|webp|gif)$/i.test(f))
-      .sort();
+    let files;
+    try {
+      files = fs.readdirSync(dir)
+        .filter(f => /\.(jpg|jpeg|png|webp|gif)$/i.test(f))
+        .sort();
+    } catch (err) {
+      console.warn(`[photos] Could not read ${dir}:`, err.message);
+      continue;
+    }
 
     files.forEach(file => {
       results.push({

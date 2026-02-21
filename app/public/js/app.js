@@ -17,6 +17,7 @@ import { PALETTE, deriveDitherPair, findByHex } from './palette.js';
 
 // ─── Dedup sets — prevent double-adding optimistic vs. server-echo items ───
 // Key format: "<name>::<text>"
+// Cleared on mode switch so they don't accumulate if server echo never arrives.
 const _selfSentTexts = new Set();
 const _selfSentQAs   = new Set();
 
@@ -875,6 +876,11 @@ function switchMode(mode, flash = true) {
   if (document.activeElement && document.activeElement !== document.body) {
     document.activeElement.blur();
   }
+
+  // Clear dedup sets on mode switch — any pending server echoes that never arrived
+  // should not cause silent drops on the next mode's messages
+  _selfSentTexts.clear();
+  _selfSentQAs.clear();
 
   if (flash) {
     doModeFlash(() => showScreen(mode));
