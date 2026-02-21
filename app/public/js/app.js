@@ -337,9 +337,15 @@ function toTitleCase(str) {
   return str.replace(/\b\w/g, c => c.toUpperCase());
 }
 
+// Trim all Unicode whitespace — .trim() only strips ASCII whitespace.
+// This catches NBSP (\u00A0), zero-width spaces, and similar invisible chars.
+function fullTrim(str) {
+  return str.replace(/^[\s\u00A0\u2000-\u200B\uFEFF]+|[\s\u00A0\u2000-\u200B\uFEFF]+$/g, '');
+}
+
 function handleJoin() {
   const nameEl = $('name-input');
-  const rawName = nameEl.value.trim();
+  const rawName = fullTrim(nameEl.value);
 
   if (!rawName) {
     nameEl.focus();
@@ -716,7 +722,7 @@ let lastQuestionSentAt = 0;
 const CLIENT_QUESTION_RATE_MS = 5000;
 
 function submitParkedQuestion() {
-  const text = $('park-input').value.trim();
+  const text = fullTrim($('park-input').value);
   if (!text) return;
 
   // Prevent double-submit on rapid taps
@@ -748,7 +754,7 @@ function submitParkedQuestion() {
 
 function handleTextSubmit() {
   const input = $('text-input');
-  const text = input.value.trim();
+  const text = fullTrim(input.value);
   if (!text) return;
 
   // Client-side rate limit mirrors server 8s guard — show feedback instead of silent drop
@@ -813,7 +819,7 @@ function shakeInput(el) {
 
 function handleQASubmit() {
   const input = $('qa-input');
-  const text = input.value.trim();
+  const text = fullTrim(input.value);
   if (!text) {
     shakeInput(input);
     input.focus();

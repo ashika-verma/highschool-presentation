@@ -541,14 +541,14 @@ function handleMessage(socket, msg) {
 
     case 'host_join': {
       if (msg.key !== HOST_KEY) return;
-      // Only one host socket allowed at a time — reject if another host is already connected.
-      // This prevents a student who intercepts the key from taking over host controls.
-      const existingHost = [...appState.clients.values()].find(c => c.isHost);
-      if (existingHost && existingHost !== client) {
-        // Another host socket is already live — silently reject this attempt.
-        // The legitimate host will see their dashboard work normally.
-        return;
-      }
+      // Revoke host status from any previous host socket — this handles page refresh
+      // (old socket may still be alive briefly) and prevents two simultaneous host sessions.
+      // The new connection with the valid key wins host control.
+      appState.clients.forEach((c, s) => {
+        if (c.isHost && s !== socket) {
+          c.isHost = false;
+        }
+      });
       client.isHost = true;
       client.name   = '__host__';
       break;
@@ -606,8 +606,11 @@ function studentCount() {
 function sanitize(str, maxLen = 100) {
   if (typeof str !== 'string') return '';
   // Strip angle brackets (XSS), newlines/carriage returns (terminal injection),
-  // and null bytes. Trim and cap length.
-  return str.trim().slice(0, maxLen).replace(/[<>\n\r\0]/g, '');
+  // and null bytes. Trim all Unicode whitespace (incl. NBSP \u00A0) and cap length.
+  return str
+    .replace(/^[\s\u00A0\u2000-\u200B\uFEFF]+|[\s\u00A0\u2000-\u200B\uFEFF]+$/g, '')
+    .slice(0, maxLen)
+    .replace(/[<>\n\r\0]/g, '');
 }
 
 function sanitizeHex(str) {
