@@ -437,7 +437,8 @@ function handleMessage(socket, msg) {
     case 'join': {
       const name = sanitize(msg.name);
       const hex  = sanitizeHex(msg.hex);
-      if (!name || !hex) return;
+      // Require at least 1 visible character after sanitizing — blocks invisible-char names
+      if (!name || name.replace(/\s/g, '').length < 1 || !hex) return;
 
       client.name = name;
       client.hex  = hex;

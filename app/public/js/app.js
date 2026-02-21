@@ -31,6 +31,9 @@ const state = {
   colorName: 'Hot Pink',
   colorB: '#FFB3D9',
   colorsSent: 0,
+  // Track the most recently tapped color so color screen re-entry shows it
+  lastSentHex: null,
+  lastSentName: null,
   reactionCounts: { '👀': 0, '💡': 0, '🔥': 0, '😮': 0 },
   roomColorHex: '#FF6EB4',
   roomCount: 0,
@@ -434,6 +437,9 @@ function handleColorTap(color, btn) {
   // Send to server
   ws.sendColor(state.name || 'Anonymous', color.hex);
   state.colorsSent++;
+  // Track last sent color so color screen re-entry can show it
+  state.lastSentHex  = color.hex;
+  state.lastSentName = color.name;
   // The server excludes the sender from the 'color' broadcast, so we must
   // increment totalColorChanges here for our own taps to show in the demo counter.
   state.totalColorChanges++;
@@ -933,13 +939,16 @@ function switchMode(mode, flash = true) {
   }
 
   if (mode === 'color') {
-    // Initialize the bottom strip to the student's own color if they've picked one
-    if (state.colorHex) {
-      $('sent-color-swatch').style.setProperty('--current-color', state.colorHex);
-      $('sent-color-swatch').style.background = state.colorHex;
-      $('sent-color-name').textContent = state.colorName || state.colorHex;
-      $('sent-color-status').textContent = 'your color — tap to change';
-    }
+    // Initialize the bottom strip to the last sent color (if any), or the lobby pick.
+    // This ensures re-entering color mode always shows the correct current color.
+    const displayHex  = state.lastSentHex  || state.colorHex;
+    const displayName = state.lastSentName || state.colorName || displayHex;
+    $('sent-color-swatch').style.setProperty('--current-color', displayHex);
+    $('sent-color-swatch').style.background = displayHex;
+    $('sent-color-name').textContent = displayName;
+    $('sent-color-status').textContent = state.lastSentHex
+      ? `last sent — tap to change`
+      : `your color — tap to send`;
   }
 
   if (mode === 'ambient') {
@@ -1035,10 +1044,10 @@ function setConnectionStatus(text, visible) {
     el.classList.add('visible');
     clearTimeout(statusTimer);
   } else {
-    // Connected: show briefly then hide
+    // Connected: show briefly then hide (3s gives students time to notice)
     el.classList.add('visible');
     clearTimeout(statusTimer);
-    statusTimer = setTimeout(() => el.classList.remove('visible'), 2000);
+    statusTimer = setTimeout(() => el.classList.remove('visible'), 3000);
   }
 }
 
