@@ -163,15 +163,16 @@
         box-shadow var(--transition-ambient);
     }
 
-    /* Join button — uses room color */
+    /* Join button — uses room color. Text color switches black/white based on luminance. */
     #lobby-join-btn {
       background: var(--room-color-a);
       border-color: transparent;
-      color: rgba(0, 0, 0, 0.85);
+      color: var(--room-btn-text, rgba(0, 0, 0, 0.85));
       box-shadow: 0 0 24px -4px var(--room-color-a);
       transition:
         background var(--transition-glow),
         box-shadow var(--transition-glow),
+        color var(--transition-glow),
         transform var(--transition-fast);
     }
 
@@ -599,12 +600,13 @@
     #text-submit-btn {
       background: var(--room-color-a);
       border-color: transparent;
-      color: rgba(0, 0, 0, 0.85);
+      color: var(--room-btn-text, rgba(0, 0, 0, 0.85));
       font-weight: 600;
       box-shadow: 0 0 20px -6px var(--room-color-a);
       transition:
         background var(--transition-glow),
         box-shadow var(--transition-glow),
+        color var(--transition-glow),
         transform var(--transition-fast);
     }
 
@@ -762,12 +764,13 @@
     #qa-submit-btn {
       background: var(--room-color-a);
       border-color: transparent;
-      color: rgba(0, 0, 0, 0.85);
+      color: var(--room-btn-text, rgba(0, 0, 0, 0.85));
       font-weight: 700;
       box-shadow: 0 0 14px -4px var(--room-color-a);
       transition:
         background var(--transition-glow),
-        box-shadow var(--transition-glow);
+        box-shadow var(--transition-glow),
+        color var(--transition-glow);
     }
 
     /* ══════════════════════════════════════════════════════════
@@ -796,7 +799,7 @@
     #park-submit-btn {
       background: var(--room-color-a);
       border-color: transparent;
-      color: rgba(0, 0, 0, 0.85);
+      color: var(--room-btn-text, rgba(0, 0, 0, 0.85));
       font-weight: 600;
     }
 

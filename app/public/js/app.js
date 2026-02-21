@@ -291,6 +291,8 @@ function selectLobbyColor(color, btn) {
   // Also update the root so the join button (which inherits --room-color-a) updates too
   document.documentElement.style.setProperty('--room-color-a', color.hex);
   document.documentElement.style.setProperty('--room-color-b', color.colorB);
+  // Update contrast text color so join button text is readable on all palette colors
+  document.documentElement.style.setProperty('--room-btn-text', contrastColor(color.hex));
 }
 
 // Simple title-case: capitalize first letter of each word.
@@ -502,7 +504,7 @@ function showZapFeedback(hex) {
     <span style="font-size:28px">⚡</span>
     <span>→ NYC</span>
   `;
-  zap.style.color = 'rgba(0,0,0,0.85)';
+  zap.style.color = contrastColor(hex);
   zap.style.background = hex;
   zap.style.padding = '10px 20px';
   zap.style.boxShadow = `0 0 32px -4px ${hex}, 0 4px 16px rgba(0,0,0,0.4)`;
@@ -527,10 +529,11 @@ function showToast(message, hex) {
   const toast = document.createElement('div');
   toast.className = 'zap-feedback';
   toast.textContent = message;
-  toast.style.color = 'rgba(0,0,0,0.85)';
-  toast.style.background = hex || '#4ADE80';
+  const toastBg = hex || '#4ADE80';
+  toast.style.color = contrastColor(toastBg);
+  toast.style.background = toastBg;
   toast.style.padding = '10px 20px';
-  toast.style.boxShadow = `0 0 32px -4px ${hex || '#4ADE80'}, 0 4px 16px rgba(0,0,0,0.4)`;
+  toast.style.boxShadow = `0 0 32px -4px ${toastBg}, 0 4px 16px rgba(0,0,0,0.4)`;
 
   layer.appendChild(toast);
   toast.addEventListener('animationend', (e) => {
@@ -556,6 +559,11 @@ function setRoomColor(hex) {
 
   // Update demo counter color too
   $('demo-count-number').style.color = hex;
+
+  // Fix text contrast on colored buttons — some palette colors (Forest, Violet, Cobalt)
+  // are dark enough that black text fails WCAG contrast. Dynamically switch to white.
+  const textColor = contrastColor(hex);
+  document.documentElement.style.setProperty('--room-btn-text', textColor);
 }
 
 // ─── Ambient mode ──────────────────────────────────────────────────────────
@@ -1075,6 +1083,24 @@ function setConnectionStatus(text, visible) {
     clearTimeout(statusTimer);
     statusTimer = setTimeout(() => el.classList.remove('visible'), 3000);
   }
+}
+
+// ─── Contrast color helper ──────────────────────────────────────────────────
+// Returns '#000000' or '#FFFFFF' depending on which provides better contrast
+// against the given background hex color (using WCAG relative luminance).
+
+function contrastColor(hex) {
+  if (!hex || !hex.startsWith('#') || hex.length < 7) return '#000000';
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  // sRGB linearize
+  const lr = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+  const lg = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+  const lb = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+  const luminance = 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+  // WCAG: use white text on dark backgrounds, black text on light backgrounds
+  return luminance > 0.179 ? '#000000' : '#FFFFFF';
 }
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
