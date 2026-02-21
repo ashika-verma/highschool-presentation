@@ -225,6 +225,8 @@ body {
   height: 100dvh;
   position: relative;
   overflow: hidden;
+  /* Hint to browser for keyboard viewport transforms (initKeyboardFix) */
+  will-change: transform;
 }
 
 @media (min-width: 768px) {

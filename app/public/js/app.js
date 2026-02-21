@@ -314,14 +314,19 @@ function showJoinedState() {
 function updateLobbyCount(count) {
   state.roomCount = count;
   const countEl = $('lobby-count');
-  countEl.textContent = count;
-  // Dim the number when 0 so it doesn't look like a dead state
-  countEl.style.opacity = count === 0 ? '0.3' : '1';
+
+  if (count === 0) {
+    // Hide the number — "0" looks like a broken state
+    countEl.style.display = 'none';
+  } else {
+    countEl.style.display = '';
+    countEl.textContent = count;
+  }
 
   // Update label: "in the room right now" vs "be the first"
   const label = document.querySelector('.lobby-counter__label');
   if (label) {
-    label.textContent = count === 0 ? 'be the first to join' : 'in the room right now';
+    label.textContent = count === 0 ? 'be the first to join' : `in the room right now`;
   }
 
   renderPeopleRow(count);
@@ -865,6 +870,11 @@ function triggerConfetti() {
 function switchMode(mode, flash = true) {
   if (mode === state.mode && mode !== 'demo') return;
   state.mode = mode;
+
+  // Blur any active input so the keyboard closes on mode switch
+  if (document.activeElement && document.activeElement !== document.body) {
+    document.activeElement.blur();
+  }
 
   if (flash) {
     doModeFlash(() => showScreen(mode));
