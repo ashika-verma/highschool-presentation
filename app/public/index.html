@@ -39,7 +39,7 @@
 
     /* ── Lobby palette: compact swatches (6-col, 5 rows for 30 colors) ─── */
     #lobby-palette .color-swatch {
-      height: 44px;
+      height: 48px; /* 48px minimum tap target */
     }
 
     /* ══════════════════════════════════════════════════════════
@@ -113,11 +113,11 @@
 
     .lobby-header h1 {
       font-family: var(--font-display);
-      font-size: var(--text-2xl);
+      font-size: clamp(22px, 7vw, 32px); /* responsive: won't overflow on 360px */
       font-weight: 700;
       color: var(--color-text);
       letter-spacing: -0.03em;
-      line-height: 1.15;
+      line-height: 1.2;
       margin-bottom: var(--space-2);
     }
 
@@ -317,7 +317,7 @@
     }
 
     .color-screen-header p {
-      font-size: var(--text-sm);
+      font-size: var(--text-base); /* was sm — easier to read on phones */
       color: var(--color-text-muted);
     }
 
@@ -560,7 +560,7 @@
     }
 
     .text-feed-label {
-      font-size: var(--text-xs);
+      font-size: var(--text-sm); /* was xs */
       font-weight: 600;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -609,8 +609,8 @@
 
     .demo-title {
       font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.12em;
+      font-size: var(--text-sm); /* was xs, now sm for readability */
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--color-text-muted);
       text-align: center;
@@ -619,7 +619,7 @@
     }
 
     .demo-subtitle {
-      font-size: var(--text-sm);
+      font-size: var(--text-base); /* was sm, now base */
       color: var(--color-text-muted);
       text-align: center;
       margin-top: var(--space-2);
@@ -628,7 +628,7 @@
     }
 
     .demo-caption {
-      font-size: var(--text-xs);
+      font-size: var(--text-sm); /* was xs */
       color: var(--color-text-dim);
       text-align: center;
       margin-bottom: var(--space-6);
@@ -674,19 +674,19 @@
 
     .qa-header {
       font-family: var(--font-display);
-      font-size: var(--text-xl);
+      font-size: clamp(20px, 6vw, 28px); /* responsive, no overflow */
       font-weight: 700;
       color: var(--color-text);
       letter-spacing: -0.03em;
       text-align: center;
-      padding: var(--space-4) 0;
+      padding: var(--space-4) 0 var(--space-2);
       margin-bottom: var(--space-2);
     }
 
     .qa-header span {
       display: block;
       font-family: var(--font-sans);
-      font-size: var(--text-sm);
+      font-size: var(--text-base); /* was sm */
       font-weight: 400;
       color: var(--color-text-muted);
       letter-spacing: 0;
@@ -922,7 +922,7 @@
 
       <div class="ambient-bottom">
         <!-- Reaction bar -->
-        <p style="font-family:var(--font-mono);font-size:var(--text-2xs);color:rgba(255,255,255,0.55);text-shadow:0 1px 3px rgba(0,0,0,0.5);text-align:center;letter-spacing:0.06em;margin-bottom:var(--space-1)">tap to react</p>
+        <p style="font-family:var(--font-mono);font-size:var(--text-xs);color:rgba(255,255,255,0.55);text-shadow:0 1px 3px rgba(0,0,0,0.5);text-align:center;letter-spacing:0.06em;margin-bottom:var(--space-1)">tap to react</p>
         <div class="reaction-bar" role="group" aria-label="React to the talk">
           <button class="reaction-btn" data-emoji="👀" aria-label="Eyes reaction">
             <span aria-hidden="true">👀</span>
@@ -945,10 +945,11 @@
         <!-- Park a question -->
         <div class="ambient-action-row">
           <button
-            class="btn-pixel btn-pixel--sm"
+            class="btn-pixel"
             id="park-question-btn"
             aria-label="Save a question for Ashika"
             aria-haspopup="dialog"
+            style="font-size:var(--text-sm)"
           >
             Save a question
           </button>
@@ -1077,9 +1078,10 @@
           aria-label="Your question"
         >
         <button
-          class="btn-pixel btn-pixel--sm"
+          class="btn-pixel"
           id="qa-submit-btn"
           aria-label="Send question"
+          style="min-width:72px"
         >
           Send
         </button>

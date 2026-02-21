@@ -29,9 +29,12 @@
   --font-pixel:   'DM Sans', system-ui, sans-serif;
 
   /* --- Type Scale --- */
-  --text-2xs:  10px;
-  --text-xs:   12px;
-  --text-sm:   13px;
+  /* Minimum 13px on mobile per best practices for readability.
+     --text-xs bumped from 12→13px, --text-2xs from 10→11px.
+     Nothing below 11px ships to students. */
+  --text-2xs:  11px;
+  --text-xs:   13px;
+  --text-sm:   14px;
   --text-base: 15px;
   --text-md:   17px;
   --text-lg:   20px;
@@ -553,18 +556,28 @@ body {
   display: flex;
   gap: var(--space-2);
   justify-content: center;
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-2);
+  /* On narrow screens (360px), buttons must not overflow */
+  flex-wrap: nowrap;
+}
+
+/* On very narrow screens, compress reaction buttons slightly */
+@media (max-width: 380px) {
+  .reaction-btn {
+    min-width: 60px;
+    font-size: 20px;
+  }
 }
 
 .reaction-btn {
-  min-width: 68px;
-  min-height: 52px;
+  min-width: 72px;
+  min-height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   gap: 4px;
-  font-size: 22px;
+  font-size: 24px;
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.12);
   /* Solid fallback for browsers without backdrop-filter (older Android) */
@@ -646,7 +659,7 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
+  font-size: var(--text-base); /* was sm — bumped for mobile readability */
   line-height: 1.6;
   color: var(--color-text);
   border-left: 3px solid var(--item-color, var(--color-accent));
@@ -654,7 +667,7 @@ body {
 
 .feed-item__name {
   color: var(--item-color, var(--color-accent));
-  font-size: var(--text-xs);
+  font-size: var(--text-sm); /* was xs */
   font-weight: 600;
   letter-spacing: 0.02em;
   display: block;
