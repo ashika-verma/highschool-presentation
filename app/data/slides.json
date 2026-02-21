@@ -1,0 +1,38 @@
+[
+  {
+    "id": "slide-1",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "text",
+        "content": "Make your own space.",
+        "size": 36,
+        "color": "#FFFFFF",
+        "x": 50,
+        "y": 38,
+        "align": "center",
+        "weight": 700
+      },
+      {
+        "type": "text",
+        "content": "with whatever you've got.",
+        "size": 20,
+        "color": "#888899",
+        "x": 50,
+        "y": 56,
+        "align": "center",
+        "weight": 400
+      },
+      {
+        "type": "text",
+        "content": "— Ashika Verma",
+        "size": 13,
+        "color": "rgba(255,255,255,0.35)",
+        "x": 50,
+        "y": 70,
+        "align": "center",
+        "weight": 400
+      }
+    ]
+  }
+]

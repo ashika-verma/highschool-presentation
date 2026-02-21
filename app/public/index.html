@@ -1253,8 +1253,22 @@
     </div>
   </section>
 
+  <!-- Floating color bubble — always-accessible after join; hidden in lobby/color/sendoff -->
+  <button id="color-bubble" aria-label="Change your color" aria-haspopup="dialog" style="display:none"></button>
 
 </div><!-- /.app-root -->
+
+<!-- Color drawer (bottom sheet) — outside .app-root so overflow:hidden doesn't clip it -->
+<div id="color-drawer" role="dialog" aria-modal="true" aria-label="Change your color" style="display:none">
+  <div id="color-drawer-backdrop"></div>
+  <div id="color-drawer-sheet">
+    <div id="color-drawer-handle" aria-hidden="true"></div>
+    <p id="color-drawer-title">Change your color</p>
+    <p id="color-drawer-sub">Tap a color — it goes live in NYC right now</p>
+    <div class="color-grid" id="color-drawer-palette" role="radiogroup" aria-label="Choose a color"
+         style="grid-template-columns: repeat(6, 1fr)"></div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════
      MODAL: Park a question
