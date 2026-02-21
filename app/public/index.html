@@ -352,14 +352,14 @@
     }
 
     .color-sent-strip__text {
-      font-size: var(--text-xs);
+      font-size: var(--text-sm); /* was xs */
       color: var(--color-text-muted);
       line-height: 1.5;
     }
 
     .color-sent-strip__label {
       font-family: var(--font-display);
-      font-size: var(--text-sm);
+      font-size: var(--text-base); /* was sm */
       font-weight: 600;
       color: var(--color-text);
       display: block;
@@ -393,18 +393,16 @@
 
     .ambient-corner p {
       display: inline-block;
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      /* Increased to white 80% for legibility on bright room colors (e.g. Lemon) */
-      color: rgba(255, 255, 255, 0.85);
-      /* Darkened from 0.25 to 0.5 — ensures text is readable on any room color */
-      background: rgba(0, 0, 0, 0.5);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm); /* was xs */
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(0, 0, 0, 0.55);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      padding: 5px 10px;
+      padding: 6px 14px;
       border-radius: var(--radius-full);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      letter-spacing: 0.03em;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      letter-spacing: 0.01em;
     }
 
     .ambient-spacer {
@@ -869,13 +867,13 @@
       </p>
       <p style="
         margin-top: var(--space-4);
-        font-size: var(--text-xs);
-        color: var(--color-text-dim);
+        font-size: var(--text-sm);
+        color: var(--color-text-muted);
         font-family: var(--font-mono);
-        letter-spacing: 0.04em;
-        line-height: 1.7;
-      ">sit back — your screen will<br>change automatically when the talk starts</p>
-      <p id="lobby-joined-count" style="font-size:var(--text-xs);color:var(--color-text-dim);margin-top:var(--space-2);font-family:var(--font-mono);letter-spacing:0.04em"></p>
+        letter-spacing: 0.03em;
+        line-height: 1.8;
+      ">sit back — your screen changes automatically<br>when the talk starts</p>
+      <p id="lobby-joined-count" style="font-size:var(--text-sm);color:var(--color-text-dim);margin-top:var(--space-2);font-family:var(--font-mono);letter-spacing:0.03em"></p>
       <div id="joined-color-preview" class="dither-bg" aria-hidden="true"></div>
     </div>
   </section>
@@ -886,7 +884,7 @@
   <section id="screen-color" class="screen" aria-label="Color control">
     <div class="color-screen-header">
       <h2>Change the lights</h2>
-      <p>Tap any color. <span id="color-screen-live" style="display:inline-flex;align-items:center;gap:4px;opacity:0.7;font-size:var(--text-xs)"><span id="color-screen-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--room-color-a);box-shadow:0 0 6px 2px var(--room-color-a);transition:background 0.8s,box-shadow 0.8s" aria-hidden="true"></span>live in NYC</span></p>
+      <p>Tap a color — it goes live in NYC. <span id="color-screen-live" style="display:inline-flex;align-items:center;gap:4px;opacity:0.7;font-size:var(--text-sm)"><span id="color-screen-live-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--room-color-a);box-shadow:0 0 6px 2px var(--room-color-a);transition:background 0.8s,box-shadow 0.8s" aria-hidden="true"></span>live</span></p>
     </div>
 
     <div id="color-grid-main">
@@ -1169,9 +1167,9 @@
   border-top: 1px solid rgba(255,100,100,0.3);
   color: rgba(255,180,180,0.9);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
-  padding: 12px 16px;
+  padding: 14px 16px;
   z-index: var(--z-top);
   letter-spacing: 0.01em;
 ">Reconnecting — hold tight</div>

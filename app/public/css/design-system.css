@@ -1044,27 +1044,22 @@ body {
   position: relative;
   z-index: 1;
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 600;
+  /* clamp ensures it's always readable on 360px but gets bigger on larger phones */
+  font-size: clamp(26px, 8vw, 44px);
+  font-weight: 700;
   color: #FFFFFF;
-  line-height: 1.7;
+  line-height: 1.6;
   letter-spacing: -0.02em;
-}
-
-@media (min-width: 400px) {
-  .sendoff__text {
-    font-size: var(--text-3xl);
-  }
 }
 
 .sendoff__credit {
   position: relative;
   z-index: 1;
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.45);
-  margin-top: var(--space-10);
-  letter-spacing: 0.04em;
+  font-size: var(--text-base); /* was sm */
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: var(--space-8);
+  letter-spacing: 0.03em;
 }
 
 /* ============================================================
