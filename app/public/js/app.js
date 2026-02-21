@@ -85,7 +85,7 @@ function boot() {
   wireWebSocket();
   wireUI();
   // Show lobby screen
-  showScreen('lobby', false);
+  showScreen('lobby');
   // Pre-initialize ambient sparkles (hidden until mode shown, cheap to start early)
   initSparkles($('sparkle-container'), 18);
   // Sendoff sparkles initialized on demand in switchMode — don't double-init here
@@ -111,6 +111,13 @@ function wireWebSocket() {
 
   // Server pushed a mode change
   ws.onMessage('mode', ({ mode }) => {
+    if (!state.joined && mode !== 'lobby') {
+      // Student hasn't completed join yet — store as pending so they catch up
+      // after the server confirms their join. This prevents an unjoined student
+      // from being swept to a non-lobby screen mid-registration.
+      state._pendingMode = mode;
+      return;
+    }
     switchMode(mode);
   });
 
@@ -445,6 +452,17 @@ function showJoinedState() {
   joined.classList.remove('hidden');
 
   $('lobby-joined-msg').textContent = `You're in, ${state.name}.`;
+
+  // Tailor the wait-hint based on whether the talk is already in progress
+  const waitHint = joined.querySelector('.lobby-wait-hint');
+  if (waitHint) {
+    if (state._pendingMode && state._pendingMode !== 'lobby') {
+      // Talk already started — they'll be taken to the right screen shortly
+      waitHint.textContent = 'joining the talk now...';
+    } else {
+      waitHint.textContent = 'sit back — your screen changes automatically when the talk starts';
+    }
+  }
 
   const preview = $('joined-color-preview');
   preview.style.setProperty('--room-color-a', state.colorHex);
@@ -1141,12 +1159,12 @@ function switchMode(mode, flash = true) {
   if (flash) {
     doModeFlash(() => { showScreen(mode); afterSwitch(); });
   } else {
-    showScreen(mode, false);
+    showScreen(mode);
     afterSwitch();
   }
 }
 
-function showScreen(name, animate = true) {
+function showScreen(name) {
   Object.entries(screens).forEach(([key, el]) => {
     if (key === name) {
       el.classList.add('active');
