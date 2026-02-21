@@ -659,10 +659,19 @@ function initPhotoSlideshow() {
   nav.innerHTML = '';
 
   if (state.photos.length === 0) {
-    // No photos yet — show graceful placeholder, no nav dots needed
+    // No photos — show graceful placeholder, hide swipe hint and counter
     $('photo-counter-text').textContent = '';
+    const swipeHint = document.querySelector('.swipe-hint');
+    if (swipeHint) swipeHint.style.display = 'none';
+    // Update placeholder text to say "no photos" rather than "loading..."
+    const placeholderLabel = document.querySelector('.photo-placeholder-label');
+    if (placeholderLabel) placeholderLabel.textContent = 'no photos added yet';
     return;
   }
+
+  // Photos are available — make sure swipe hint is visible
+  const swipeHint = document.querySelector('.swipe-hint');
+  if (swipeHint) swipeHint.style.display = '';
 
   state.photos.forEach((_, i) => {
     const dot = document.createElement('button');
@@ -754,9 +763,12 @@ function appendTerminalLine(name, hex, originalHex) {
 
   terminal.appendChild(line);
 
-  // Keep last 50 lines
-  while (terminal.children.length > 51) {
-    terminal.removeChild(terminal.firstChild);
+  // Keep last 50 log lines. Skip the cursor span (class terminal-cursor)
+  // so it doesn't get removed by the trim — it's a visual decoration, not a log line.
+  const logLines = [...terminal.children].filter(c => !c.classList.contains('terminal-cursor'));
+  while (logLines.length > 50) {
+    const oldest = logLines.shift();
+    oldest.remove();
   }
 
   terminal.scrollTop = terminal.scrollHeight;
