@@ -66,9 +66,9 @@ function boot() {
   wireUI();
   // Show lobby screen
   showScreen('lobby', false);
-  // Start ambient sparkles pre-emptively (hidden until mode shown)
+  // Pre-initialize ambient sparkles (hidden until mode shown, cheap to start early)
   initSparkles($('sparkle-container'), 18);
-  initSparkles($('sendoff-sparkles'), 30);
+  // Sendoff sparkles initialized on demand in switchMode — don't double-init here
 }
 
 // ─── WebSocket event wiring ────────────────────────────────────────────────
@@ -407,8 +407,8 @@ function handleColorTap(color, btn) {
   );
   btn.classList.add('selected');
 
-  // Haptic feedback (Android Chrome + supported iOS)
-  if (navigator.vibrate) navigator.vibrate(18);
+  // Haptic feedback — 20ms minimum for reliable Android vibration
+  if (navigator.vibrate) navigator.vibrate(20);
 
   // Send to server
   ws.sendColor(state.name || 'Anonymous', color.hex);
@@ -548,8 +548,8 @@ function handleReaction(emoji, btn) {
   bumpReaction(emoji);
   btn.classList.add('just-tapped');
   btn.addEventListener('animationend', () => btn.classList.remove('just-tapped'), { once: true });
-  // Haptic feedback
-  if (navigator.vibrate) navigator.vibrate(12);
+  // Haptic feedback — 20ms minimum for reliable Android vibration
+  if (navigator.vibrate) navigator.vibrate(20);
 }
 
 function bumpReaction(emoji) {

@@ -237,19 +237,27 @@ const httpServer = http.createServer((req, res) => {
   <p class="hint" style="margin-top:8px;color:rgba(240,240,245,0.2)">If a warning page appears, tap "Visit Site" to continue</p>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script>
+    // Scale to device pixel ratio for crisp rendering on Retina / projectors
+    const dpr = window.devicePixelRatio || 1;
+    const baseWidth = 280;
     QRCode.toCanvas(
       document.getElementById('qr-canvas'),
       ${JSON.stringify(targetUrl)},
       {
-        width: 280,
-        margin: 1,
+        width: baseWidth * dpr,
+        margin: 2,
         color: { dark: '#000000', light: '#FFFFFF' }
       },
       function(err) {
         if (err) {
           document.getElementById('qr-container').innerHTML =
             '<p style="color:#ff6b6b;padding:20px;font-size:13px">Failed to generate QR. Check the URL parameter.</p>';
+          return;
         }
+        // CSS size keeps it visually at baseWidth regardless of dpr
+        const canvas = document.getElementById('qr-canvas');
+        canvas.style.width  = baseWidth + 'px';
+        canvas.style.height = baseWidth + 'px';
       }
     );
   </script>
@@ -453,8 +461,8 @@ function handleMessage(socket, msg) {
       // Send to WiZ bulbs
       sendToWiz(hex);
 
-      // Broadcast to all clients
-      broadcast({ type: 'color', name: client.name, hex });
+      // Broadcast to all OTHER clients — sender handles their own UI optimistically
+      broadcast({ type: 'color', name: client.name, hex }, socket);
       break;
     }
 
@@ -463,7 +471,8 @@ function handleMessage(socket, msg) {
       const emoji = sanitizeEmoji(msg.emoji);
       if (!emoji) return;
 
-      broadcast({ type: 'reaction', name: client.name, emoji });
+      // Exclude sender — they already bumped their own reaction count in handleReaction()
+      broadcast({ type: 'reaction', name: client.name, emoji }, socket);
       break;
     }
 
