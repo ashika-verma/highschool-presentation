@@ -234,6 +234,7 @@ const httpServer = http.createServer((req, res) => {
   </div>
   <p class="url-label">${safeUrl}</p>
   <p class="hint">Students scan this to join</p>
+  <p class="hint" style="margin-top:8px;color:rgba(240,240,245,0.2)">If a warning page appears, tap "Visit Site" to continue</p>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script>
     QRCode.toCanvas(
@@ -262,7 +263,14 @@ const httpServer = http.createServer((req, res) => {
   // ── REST: host auth check ──
   if (req.method === 'POST' && pathname === '/auth') {
     let body = '';
-    req.on('data', chunk => { body += chunk; });
+    let bodyLen = 0;
+    req.on('data', chunk => {
+      bodyLen += chunk.length;
+      if (bodyLen > 4096) {
+        res.writeHead(413); res.end(); return;
+      }
+      body += chunk;
+    });
     req.on('end', () => {
       try {
         const { key } = JSON.parse(body);
@@ -388,11 +396,13 @@ wss.on('connection', (socket) => {
     const client = appState.clients.get(socket);
     appState.clients.delete(socket);
 
-    // Notify remaining clients of new count
+    const newCount = studentCount();
+
+    // Notify remaining clients of new count (and which student left so host can remove them)
     broadcast({
-      type: 'join', // reuse join for count update
-      name: client?.name,
-      count: studentCount(),
+      type: 'leave',
+      name: client?.name ?? null,
+      count: newCount,
     });
   });
 

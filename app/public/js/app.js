@@ -138,6 +138,11 @@ function wireWebSocket() {
     updateLobbyCount(count);
   });
 
+  // Someone left → update lobby counter
+  ws.onMessage('leave', ({ count }) => {
+    updateLobbyCount(count);
+  });
+
   // Server confirms join
   ws.onMessage('joined', ({ count }) => {
     updateLobbyCount(count);

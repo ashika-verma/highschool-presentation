@@ -140,6 +140,14 @@ function connectHost() {
     }
   });
 
+  ws.onMessage('leave', (data) => {
+    updateStudentCount(data.count);
+    if (data.name && data.name !== '__host__') {
+      state.students.delete(data.name);
+      renderStudentList();
+    }
+  });
+
   ws.onMessage('color', (data) => {
     state.totalColors++;
     $('host-color-count').textContent = state.totalColors;
@@ -147,7 +155,16 @@ function connectHost() {
 
     if (state.students.has(data.name)) {
       state.students.get(data.name).colorsSent++;
-      renderStudentList();
+      // Update just the count cell for this student — don't rebuild the whole list
+      const list = $('student-list');
+      const rows = list.querySelectorAll('.student-row');
+      rows.forEach(row => {
+        const nameEl = row.querySelector('.student-name');
+        if (nameEl && nameEl.textContent === data.name) {
+          const countEl = row.querySelector('.student-count');
+          if (countEl) countEl.textContent = `${state.students.get(data.name).colorsSent} sent`;
+        }
+      });
     }
   });
 

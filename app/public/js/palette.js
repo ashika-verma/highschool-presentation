@@ -42,7 +42,7 @@ export const PALETTE = [
 
   // --- Blues ---
   { id: 'cornflower',    hex: '#6495ED', colorB: '#AABEF6', name: 'Cornflower' },
-  { id: 'cobalt',        hex: '#0047AB', colorB: '#6699CC', name: 'Cobalt' },
+  { id: 'cobalt',        hex: '#2060FF', colorB: '#7AAAFF', name: 'Cobalt' },
   { id: 'periwinkle',    hex: '#9999FF', colorB: '#CCCCFF', name: 'Periwinkle' },
 
   // --- Purples ---
@@ -54,9 +54,9 @@ export const PALETTE = [
   { id: 'fuchsia',       hex: '#FF00FF', colorB: '#FF80FF', name: 'Fuchsia' },
   { id: 'orchid',        hex: '#DA70D6', colorB: '#EDB8EB', name: 'Orchid' },
 
-  // --- Warm Neutrals (still vibrant) ---
-  { id: 'cream',         hex: '#FFF8E7', colorB: '#FFFFFF', name: 'Cream' },
-  { id: 'butter',        hex: '#FFFACD', colorB: '#FFFFFF', name: 'Butter' },
+  // --- Warm Vivids (replaces near-white neutrals that don't glow as bulbs) ---
+  { id: 'amber',         hex: '#FF9500', colorB: '#FFC44D', name: 'Amber' },
+  { id: 'chartreuse',    hex: '#C8FF00', colorB: '#E4FF80', name: 'Chartreuse' },
 
   // --- Wilds ---
   { id: 'electric-blue', hex: '#00FFFF', colorB: '#80FFFF', name: 'Electric' },

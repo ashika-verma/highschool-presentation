@@ -196,10 +196,12 @@ class PixelWSClient extends EventTarget {
    * Convenience: subscribe to typed messages.
    * @param {string} messageType
    * @param {function} handler
+   * @returns {function} unsubscribe function
    */
   onMessage(messageType, handler) {
-    this.addEventListener(`msg:${messageType}`, (e) => handler(e.detail));
-    return () => this.removeEventListener(`msg:${messageType}`, handler);
+    const wrapper = (e) => handler(e.detail);
+    this.addEventListener(`msg:${messageType}`, wrapper);
+    return () => this.removeEventListener(`msg:${messageType}`, wrapper);
   }
 }
 
