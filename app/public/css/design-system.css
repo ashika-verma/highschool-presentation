@@ -249,22 +249,26 @@ body {
 .screen {
   position: absolute;
   inset: 0;
-  /* height: 100% ensures the screen is viewport-bounded even when an ID rule
-     overrides position to `relative` (ID specificity > class specificity).
-     Without a bounded height, overflow-y: auto never triggers — the element
-     grows with content and the parent's overflow:hidden clips instead. */
+  /* height: 100% bounds the screen to the viewport even when an ID rule
+     overrides position from `absolute` to `relative` (ID specificity > class).
+     Without a bounded height, overflow-y: auto never triggers. */
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   /* touch-action: pan-y lets the browser handle vertical swipe-to-scroll natively */
   touch-action: pan-y;
-  display: none;
   flex-direction: column;
+  /* !important beats any ID-level `display: flex` declarations on individual
+     screens (#screen-color, #screen-demo, etc.) that would otherwise keep
+     them visible even when .active is removed. */
+  display: none !important;
 }
 
 .screen.active {
-  display: flex;
+  /* .screen.active has higher specificity than .screen, so this wins among
+     !important rules (specificity still applies within !important tier). */
+  display: flex !important;
 }
 
 /* ============================================================
