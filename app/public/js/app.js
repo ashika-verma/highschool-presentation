@@ -541,7 +541,8 @@ function handleColorTap(color, btn) {
   // Reset status text after 2 seconds — debounced to avoid stale timers
   clearTimeout(colorStatusResetTimer);
   colorStatusResetTimer = setTimeout(() => {
-    $('sent-color-status').textContent = `${state.colorsSent} sent total`;
+    const n = state.colorsSent;
+    $('sent-color-status').textContent = n === 1 ? `you've sent 1` : `you've sent ${n}`;
   }, 2000);
 }
 
@@ -1153,7 +1154,8 @@ function animateCounter() {
   // The initial HTML value is '—' so parseInt returns NaN → we fall back to 0.
   const startVal = parseInt(el.textContent, 10) || 0;
   if (startVal >= target) {
-    el.textContent = target > 0 ? target : '—';
+    // Show 0 rather than '—' so the screen doesn't look broken when no taps have happened
+    el.textContent = target;
     return;
   }
   const duration = 2000;
