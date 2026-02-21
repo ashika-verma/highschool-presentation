@@ -148,7 +148,8 @@ function sendToWiz(hex) {
 // Prevents a student from flooding the server/bulbs by mashing colors.
 // Allows at most 1 color change per COLOR_RATE_MS per client.
 
-const COLOR_RATE_MS = 300; // minimum ms between accepted color changes per client
+const COLOR_RATE_MS    = 300;  // minimum ms between accepted color changes per client
+const QUESTION_RATE_MS = 5000; // minimum ms between questions per client (prevents spam)
 
 // ─── HTTP server + static file serving ─────────────────────────────────────
 
@@ -378,7 +379,7 @@ const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
 wss.on('connection', (socket) => {
   // Register new connection with blank state
-  appState.clients.set(socket, { name: null, hex: null, isHost: false, colorsSent: 0, lastColorAt: 0 });
+  appState.clients.set(socket, { name: null, hex: null, isHost: false, colorsSent: 0, lastColorAt: 0, lastQuestionAt: 0 });
 
   // Send welcome payload
   socket.send(JSON.stringify({
@@ -500,6 +501,11 @@ function handleMessage(socket, msg) {
       if (!client.name) return;
       const text = sanitize(msg.text, 300);
       if (!text) return;
+
+      // Rate-limit: prevent question spam from bored students
+      const nowQ = Date.now();
+      if (nowQ - client.lastQuestionAt < QUESTION_RATE_MS) return;
+      client.lastQuestionAt = nowQ;
 
       const entry = { name: client.name, text, hex: client.hex };
       appState.questions.push(entry);

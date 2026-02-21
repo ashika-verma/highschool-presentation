@@ -280,11 +280,17 @@ function selectLobbyColor(color, btn) {
   document.documentElement.style.setProperty('--room-color-b', color.colorB);
 }
 
+// Simple title-case: capitalize first letter of each word.
+// Prevents ALL-CAPS names from looking like the app is shouting.
+function toTitleCase(str) {
+  return str.replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function handleJoin() {
   const nameEl = $('name-input');
-  const name = nameEl.value.trim();
+  const rawName = nameEl.value.trim();
 
-  if (!name) {
+  if (!rawName) {
     nameEl.focus();
     nameEl.style.borderColor = '#ff6b6b';
     // Shake the input to draw attention
@@ -299,6 +305,8 @@ function handleJoin() {
     return;
   }
 
+  // Normalize to title case so "JESSICA" → "Jessica", "jessica" → "Jessica"
+  const name = toTitleCase(rawName);
   state.name = name;
   ws.sendJoin(name, state.colorHex);
 
@@ -912,6 +920,16 @@ function switchMode(mode, flash = true) {
     // Confetti is triggered once here via mode switch; demo_start message also fires confetti,
     // so only trigger here — the demo_start handler is the canonical source of truth.
     animateCounter();
+  }
+
+  if (mode === 'color') {
+    // Initialize the bottom strip to the student's own color if they've picked one
+    if (state.colorHex) {
+      $('sent-color-swatch').style.setProperty('--current-color', state.colorHex);
+      $('sent-color-swatch').style.background = state.colorHex;
+      $('sent-color-name').textContent = state.colorName || state.colorHex;
+      $('sent-color-status').textContent = 'your color — tap to change';
+    }
   }
 
   if (mode === 'ambient') {

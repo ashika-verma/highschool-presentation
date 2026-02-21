@@ -352,6 +352,12 @@ function addQuestion({ name, text, hex }, animate = true) {
   });
 
   queue.appendChild(item);
+
+  // Cap DOM at 100 question items — prevents unbounded growth in long sessions
+  while (queue.children.length > 100) {
+    queue.removeChild(queue.firstChild);
+  }
+
   queue.scrollTop = queue.scrollHeight;
 }
 
@@ -370,6 +376,12 @@ function addTextResponse({ name, text, hex }, animate = true) {
   item.innerHTML = `<strong>${escHtml(name)}:</strong> ${escHtml(text)}`;
 
   feed.appendChild(item);
+
+  // Cap DOM at 80 text response items
+  while (feed.children.length > 80) {
+    feed.removeChild(feed.firstChild);
+  }
+
   feed.scrollTop = feed.scrollHeight;
 }
 
