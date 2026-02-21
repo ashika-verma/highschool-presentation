@@ -148,7 +148,9 @@ function wireWebSocket() {
       state.totalColorChanges = data.totalColorChanges;
       $('demo-count-number').textContent = state.totalColorChanges;
     }
-    if (data.photos) {
+    if (data.photos !== undefined) {
+      // data.photos may be an empty array (no photos dir) or a populated array.
+      // Always call initPhotoSlideshow so the placeholder shows correctly.
       state.photos = data.photos;
       initPhotoSlideshow();
     }
