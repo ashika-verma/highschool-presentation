@@ -814,6 +814,90 @@
       margin-top: var(--space-2);
     }
 
+    /* ── Floating color bubble ─────────────────────────────────── */
+    #color-bubble {
+      position: absolute;
+      bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+      right: var(--space-4);
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--room-color-a, #FF6EB4);
+      border: 2.5px solid rgba(255, 255, 255, 0.25);
+      box-shadow:
+        0 0 22px -4px var(--room-color-a, #FF6EB4),
+        0 4px 14px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+      z-index: var(--z-overlay);
+      padding: 0;
+      transition:
+        background var(--transition-glow),
+        box-shadow var(--transition-glow),
+        transform var(--transition-fast);
+    }
+
+    #color-bubble:active {
+      transform: scale(0.9);
+    }
+
+    /* ── Color drawer (bottom sheet) ──────────────────────────── */
+    #color-drawer {
+      position: fixed;
+      inset: 0;
+      z-index: var(--z-modal);
+    }
+
+    #color-drawer-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    #color-drawer-sheet {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: var(--color-surface);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      border-top: 1px solid var(--color-border-hi);
+      padding: var(--space-3) var(--space-5)
+               calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
+      animation: drawer-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    @keyframes drawer-up {
+      from { transform: translateX(-50%) translateY(100%); }
+      to   { transform: translateX(-50%) translateY(0); }
+    }
+
+    #color-drawer-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.18);
+      margin: 0 auto var(--space-4);
+    }
+
+    #color-drawer-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-1);
+    }
+
+    #color-drawer-sub {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-4);
+    }
+
     /* ── ZAP feedback ──────────────────────────────────────────── */
     /* .nyc-zap is a container set up in JS — give it the display block */
     .nyc-zap {
@@ -1117,7 +1201,7 @@
       <!-- Scrolling question feed — below reactions so reactions are always reachable -->
       <div class="feed" id="qa-feed" aria-live="polite" aria-label="Questions">
         <!-- Placeholder text — cleared by JS when first question arrives -->
-        <p id="qa-feed-placeholder" style="font-family:var(--font-mono);font-size:var(--text-xs);color:rgba(255,255,255,0.35);text-align:center;padding:var(--space-4) 0;letter-spacing:0.04em">be the first to ask</p>
+        <p id="qa-feed-placeholder" style="font-family:var(--font-mono);font-size:var(--text-xs);color:rgba(255,255,255,0.5);text-align:center;padding:var(--space-4) 0;letter-spacing:0.04em">be the first to ask</p>
       </div>
 
       <!-- Input row -->
@@ -1168,6 +1252,7 @@
       ">you just controlled real lights in NYC</p>
     </div>
   </section>
+
 
 </div><!-- /.app-root -->
 
