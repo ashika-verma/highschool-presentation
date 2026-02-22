@@ -17,11 +17,29 @@
     }
 
     .host-root {
-      max-width: 600px;
+      max-width: 1100px;
       margin: 0 auto;
       min-height: 100dvh;
       padding: var(--space-5);
-      padding-bottom: 120px;
+      padding-bottom: var(--space-10);
+    }
+
+    /* ── Two-column layout for laptop/desktop ────────────────────── */
+    /* Left col: controls (modes, slides, script, color picker).
+       Right col: live data (stats, reactions, students, Q queue).
+       Below 840px: single column so it still works on tablets/small screens. */
+    .host-columns {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+    }
+
+    @media (min-width: 840px) {
+      .host-columns {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-6);
+        align-items: start;
+      }
     }
 
     /* ── Auth gate ──────────────────────────────────────────────── */
@@ -298,237 +316,251 @@
     </div>
   </div>
 
-  <!-- Stats row -->
-  <div class="host-section">
-    <div class="stats-bar">
-      <div class="stat-item">
-        <span class="stat-number" id="host-student-count">0</span>
-        <span class="stat-label">students</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number" id="host-color-count">0</span>
-        <span class="stat-label">colors sent</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number" id="host-q-count">0</span>
-        <span class="stat-label">questions</span>
-      </div>
-    </div>
-  </div>
+  <div class="host-columns">
 
-  <!-- Current room color -->
-  <div class="host-section">
-    <p class="host-section-title">Current room color</p>
-    <div class="room-color-bar" id="host-room-color-bar"></div>
-    <p
-      style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-dim); margin-top:var(--space-2)"
-      id="host-room-color-label"
-    >—</p>
-  </div>
+    <!-- ══ LEFT COLUMN: Controls ══════════════════════════════════ -->
+    <div class="host-col-left">
 
-  <!-- Mode switcher -->
-  <div class="host-section">
-    <p class="host-section-title">Mode switcher</p>
-    <div class="mode-grid">
-      <button class="host-mode-btn" data-mode="lobby" aria-label="Switch to Lobby mode">
-        <span class="mode-emoji">🏠</span>
-        Lobby
-        <span class="mode-cue">students scanning + joining</span>
-      </button>
-      <button class="host-mode-btn" data-mode="color" aria-label="Switch to Color Control mode">
-        <span class="mode-emoji">🎨</span>
-        Color Control
-        <span class="mode-cue">lights are live — opening bit</span>
-      </button>
-      <button class="host-mode-btn" data-mode="ambient" aria-label="Switch to Ambient mode">
-        <span class="mode-emoji">✨</span>
-        Ambient
-        <span class="mode-cue">story time — reactions on</span>
-      </button>
-      <button class="host-mode-btn" data-mode="photos" aria-label="Switch to Photo Collage mode">
-        <span class="mode-emoji">📸</span>
-        Photos
-        <span class="mode-cue">hs + MIT collage on phones</span>
-      </button>
-      <button class="host-mode-btn" data-mode="text" aria-label="Switch to Free Text mode">
-        <span class="mode-emoji">💬</span>
-        Open Question
-        <span class="mode-cue">"what do you actually love?"</span>
-      </button>
-      <button class="host-mode-btn" data-mode="demo" aria-label="Switch to Demo Reveal mode">
-        <span class="mode-emoji">🎉</span>
-        Demo Reveal
-        <span class="mode-cue">the counter + terminal moment</span>
-      </button>
-      <button class="host-mode-btn" data-mode="qa" aria-label="Switch to Q&A mode">
-        <span class="mode-emoji">🙋</span>
-        Q&amp;A
-        <span class="mode-cue">take questions from the room</span>
-      </button>
-      <button class="host-mode-btn" data-mode="sendoff" aria-label="Switch to Send-off mode">
-        <span class="mode-emoji">💖</span>
-        Send-off
-        <span class="mode-cue">make something. show someone.</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Script (teleprompter) -->
-  <div class="host-section" id="script-section" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-3)">
-      <p class="host-section-title" style="margin-bottom:0">Talk Script</p>
-      <span id="script-mode-label" style="font-family:var(--font-mono);font-size:var(--text-2xs);color:var(--room-color-a);letter-spacing:0.06em;text-transform:uppercase"></span>
-    </div>
-    <div id="script-panel" style="
-      max-height:40vh;
-      overflow-y:auto;
-      background:var(--color-surface);
-      border:1px solid var(--color-border);
-      border-radius:var(--radius-md);
-      padding:var(--space-4) var(--space-5);
-      font-family:var(--font-sans);
-      font-size:var(--text-sm);
-      line-height:1.8;
-      color:var(--color-text-muted);
-      scroll-behavior:smooth;
-    " aria-label="Talk script"></div>
-    <p style="font-family:var(--font-mono);font-size:10px;color:var(--color-text-dim);margin-top:var(--space-2);letter-spacing:0.04em">press / to toggle</p>
-  </div>
-
-  <!-- Slides control + editor -->
-  <div class="host-section" id="slides-section">
-    <p class="host-section-title">Slides</p>
-
-    <!-- Nav controls -->
-    <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)">
-      <button class="btn-pixel btn-pixel--sm" id="slide-prev-btn" aria-label="Previous slide">Prev</button>
-      <span id="slide-index-label" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted);flex:1;text-align:center">No slides</span>
-      <button class="btn-pixel btn-pixel--sm" id="slide-next-btn" aria-label="Next slide">Next</button>
-    </div>
-
-    <!-- Slide editor toggle -->
-    <button class="btn-pixel btn-pixel--sm" id="slide-editor-toggle" style="width:100%;margin-bottom:var(--space-3)">
-      Edit Slides
-    </button>
-
-    <!-- Slide editor panel (hidden by default) -->
-    <div id="slide-editor" style="display:none">
-      <!-- Slide list -->
-      <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
-        <div id="slide-list" style="flex:1;display:flex;flex-direction:column;gap:var(--space-2);max-height:120px;overflow-y:auto"></div>
-        <div style="display:flex;flex-direction:column;gap:var(--space-2)">
-          <button class="btn-pixel btn-pixel--sm" id="slide-add-btn" title="Add slide">+</button>
-          <button class="btn-pixel btn-pixel--sm" id="slide-delete-btn" title="Delete slide" style="color:#ff6b6b">Del</button>
+      <!-- Stats row -->
+      <div class="host-section">
+        <div class="stats-bar">
+          <div class="stat-item">
+            <span class="stat-number" id="host-student-count">0</span>
+            <span class="stat-label">students</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="host-color-count">0</span>
+            <span class="stat-label">colors sent</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="host-q-count">0</span>
+            <span class="stat-label">questions</span>
+          </div>
         </div>
       </div>
 
-      <!-- Selected slide editor -->
-      <div id="slide-field-editor" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+      <!-- Current room color -->
+      <div class="host-section">
+        <p class="host-section-title">Current room color</p>
+        <div class="room-color-bar" id="host-room-color-bar"></div>
+        <p
+          style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-dim); margin-top:var(--space-2)"
+          id="host-room-color-label"
+        >—</p>
+      </div>
+
+      <!-- Mode switcher -->
+      <div class="host-section">
+        <p class="host-section-title">Mode switcher</p>
+        <div class="mode-grid">
+          <button class="host-mode-btn" data-mode="lobby" aria-label="Switch to Lobby mode">
+            <span class="mode-emoji">🏠</span>
+            Lobby
+            <span class="mode-cue">students scanning + joining</span>
+          </button>
+          <button class="host-mode-btn" data-mode="color" aria-label="Switch to Color Control mode">
+            <span class="mode-emoji">🎨</span>
+            Color Control
+            <span class="mode-cue">lights are live — opening bit</span>
+          </button>
+          <button class="host-mode-btn" data-mode="ambient" aria-label="Switch to Ambient mode">
+            <span class="mode-emoji">✨</span>
+            Ambient
+            <span class="mode-cue">story time — reactions on</span>
+          </button>
+          <button class="host-mode-btn" data-mode="photos" aria-label="Switch to Photo Collage mode">
+            <span class="mode-emoji">📸</span>
+            Photos
+            <span class="mode-cue">slides on phones</span>
+          </button>
+          <button class="host-mode-btn" data-mode="text" aria-label="Switch to Free Text mode">
+            <span class="mode-emoji">💬</span>
+            Open Question
+            <span class="mode-cue">"what do you actually love?"</span>
+          </button>
+          <button class="host-mode-btn" data-mode="demo" aria-label="Switch to Demo Reveal mode">
+            <span class="mode-emoji">🎉</span>
+            Demo Reveal
+            <span class="mode-cue">counter + terminal moment</span>
+          </button>
+          <button class="host-mode-btn" data-mode="qa" aria-label="Switch to Q&A mode">
+            <span class="mode-emoji">🙋</span>
+            Q&amp;A
+            <span class="mode-cue">take questions from the room</span>
+          </button>
+          <button class="host-mode-btn" data-mode="sendoff" aria-label="Switch to Send-off mode">
+            <span class="mode-emoji">💖</span>
+            Send-off
+            <span class="mode-cue">make something. show someone.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Script (teleprompter) -->
+      <div class="host-section" id="script-section" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-3)">
+          <p class="host-section-title" style="margin-bottom:0">Talk Script</p>
+          <span id="script-mode-label" style="font-family:var(--font-mono);font-size:var(--text-2xs);color:var(--room-color-a);letter-spacing:0.06em;text-transform:uppercase"></span>
+        </div>
+        <div id="script-panel" style="
+          max-height:40vh;
+          overflow-y:auto;
+          background:var(--color-surface);
+          border:1px solid var(--color-border);
+          border-radius:var(--radius-md);
+          padding:var(--space-4) var(--space-5);
+          font-family:var(--font-sans);
+          font-size:var(--text-sm);
+          line-height:1.8;
+          color:var(--color-text-muted);
+          scroll-behavior:smooth;
+        " aria-label="Talk script"></div>
+        <p style="font-family:var(--font-mono);font-size:10px;color:var(--color-text-dim);margin-top:var(--space-2);letter-spacing:0.04em">press / to toggle</p>
+      </div>
+
+      <!-- Slides control + editor -->
+      <div class="host-section" id="slides-section">
+        <p class="host-section-title">Slides</p>
+
+        <!-- Nav controls -->
         <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)">
-          <label style="font-size:var(--text-xs);color:var(--color-text-muted);white-space:nowrap">BG Color</label>
-          <input type="color" id="slide-bg-picker" value="#0A0A10" style="width:48px;height:32px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);cursor:pointer">
-          <span id="slide-bg-hex" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-dim)">#0A0A10</span>
+          <button class="btn-pixel btn-pixel--sm" id="slide-prev-btn" aria-label="Previous slide">Prev</button>
+          <span id="slide-index-label" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted);flex:1;text-align:center">No slides</span>
+          <button class="btn-pixel btn-pixel--sm" id="slide-next-btn" aria-label="Next slide">Next</button>
         </div>
 
-        <!-- Element list -->
-        <div id="slide-element-list" style="display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-3)"></div>
-
-        <!-- Add element buttons -->
-        <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
-          <button class="btn-pixel btn-pixel--sm" id="slide-add-text-btn" style="flex:1">+ Text</button>
-          <button class="btn-pixel btn-pixel--sm" id="slide-add-img-btn" style="flex:1">+ Image</button>
-        </div>
-
-        <!-- Save button -->
-        <button class="btn-pixel btn-pixel--wide" id="slide-save-btn" style="background:var(--room-color-a);color:var(--room-btn-text,#000);border-color:transparent">
-          Save Slides
+        <!-- Slide editor toggle -->
+        <button class="btn-pixel btn-pixel--sm" id="slide-editor-toggle" style="width:100%;margin-bottom:var(--space-3)">
+          Edit Slides
         </button>
-        <p id="slide-save-status" style="font-size:var(--text-xs);color:var(--color-text-dim);text-align:center;margin-top:var(--space-2)"></p>
-      </div>
-    </div>
-  </div>
 
-  <!-- Host color picker — direct bulb override -->
-  <div class="host-section">
-    <p class="host-section-title">Set room color (your pick, instant)</p>
-    <div class="color-grid" id="host-color-grid" role="radiogroup" aria-label="Choose a color to send to lights">
-      <!-- Injected by host.js -->
-    </div>
-    <div class="host-color-preview">
-      <div class="host-color-swatch" id="host-picked-swatch"></div>
-      <span class="host-color-label" id="host-picked-label">select a color above</span>
-    </div>
-  </div>
+        <!-- Slide editor panel (hidden by default) -->
+        <div id="slide-editor" style="display:none">
+          <!-- Slide list -->
+          <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
+            <div id="slide-list" style="flex:1;display:flex;flex-direction:column;gap:var(--space-2);max-height:120px;overflow-y:auto"></div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+              <button class="btn-pixel btn-pixel--sm" id="slide-add-btn" title="Add slide">+</button>
+              <button class="btn-pixel btn-pixel--sm" id="slide-delete-btn" title="Delete slide" style="color:#ff6b6b">Del</button>
+            </div>
+          </div>
 
-  <!-- Reaction pulse -->
-  <div class="host-section">
-    <p class="host-section-title">Reaction pulse</p>
-    <div class="reaction-pulse-grid">
-      <div class="reaction-pulse-item">
-        <div class="reaction-pulse-header">
-          <span class="reaction-pulse-emoji">👀</span>
-          <span class="reaction-pulse-count" data-pulse-emoji="👀">0</span>
-        </div>
-        <div class="pixel-progress">
-          <div class="pixel-progress__bar" id="pulse-bar-eyes" style="--progress-color:#4DBBFF; width:0%"></div>
-        </div>
-      </div>
-      <div class="reaction-pulse-item">
-        <div class="reaction-pulse-header">
-          <span class="reaction-pulse-emoji">💡</span>
-          <span class="reaction-pulse-count" data-pulse-emoji="💡">0</span>
-        </div>
-        <div class="pixel-progress">
-          <div class="pixel-progress__bar" id="pulse-bar-bulb" style="--progress-color:#FBBF24; width:0%"></div>
+          <!-- Selected slide editor -->
+          <div id="slide-field-editor" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+            <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)">
+              <label style="font-size:var(--text-xs);color:var(--color-text-muted);white-space:nowrap">BG Color</label>
+              <input type="color" id="slide-bg-picker" value="#0A0A10" style="width:48px;height:32px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);cursor:pointer">
+              <span id="slide-bg-hex" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-dim)">#0A0A10</span>
+            </div>
+
+            <!-- Element list -->
+            <div id="slide-element-list" style="display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-3)"></div>
+
+            <!-- Add element buttons -->
+            <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
+              <button class="btn-pixel btn-pixel--sm" id="slide-add-text-btn" style="flex:1">+ Text</button>
+              <button class="btn-pixel btn-pixel--sm" id="slide-add-img-btn" style="flex:1">+ Image</button>
+            </div>
+
+            <!-- Save button -->
+            <button class="btn-pixel btn-pixel--wide" id="slide-save-btn" style="background:var(--room-color-a);color:var(--room-btn-text,#000);border-color:transparent">
+              Save Slides
+            </button>
+            <p id="slide-save-status" style="font-size:var(--text-xs);color:var(--color-text-dim);text-align:center;margin-top:var(--space-2)"></p>
+          </div>
         </div>
       </div>
-      <div class="reaction-pulse-item">
-        <div class="reaction-pulse-header">
-          <span class="reaction-pulse-emoji">🔥</span>
-          <span class="reaction-pulse-count" data-pulse-emoji="🔥">0</span>
+
+      <!-- Host color picker — direct bulb override -->
+      <div class="host-section">
+        <p class="host-section-title">Set room color (your pick, instant)</p>
+        <div class="color-grid" id="host-color-grid" role="radiogroup" aria-label="Choose a color to send to lights">
+          <!-- Injected by host.js -->
         </div>
-        <div class="pixel-progress">
-          <div class="pixel-progress__bar" id="pulse-bar-fire" style="--progress-color:#FF6B35; width:0%"></div>
+        <div class="host-color-preview">
+          <div class="host-color-swatch" id="host-picked-swatch"></div>
+          <span class="host-color-label" id="host-picked-label">select a color above</span>
         </div>
       </div>
-      <div class="reaction-pulse-item">
-        <div class="reaction-pulse-header">
-          <span class="reaction-pulse-emoji">😮</span>
-          <span class="reaction-pulse-count" data-pulse-emoji="😮">0</span>
-        </div>
-        <div class="pixel-progress">
-          <div class="pixel-progress__bar" id="pulse-bar-wow" style="--progress-color:#C77DFF; width:0%"></div>
+
+    </div><!-- /.host-col-left -->
+
+    <!-- ══ RIGHT COLUMN: Live data ════════════════════════════════ -->
+    <div class="host-col-right">
+
+      <!-- Reaction pulse -->
+      <div class="host-section">
+        <p class="host-section-title">Reaction pulse</p>
+        <div class="reaction-pulse-grid">
+          <div class="reaction-pulse-item">
+            <div class="reaction-pulse-header">
+              <span class="reaction-pulse-emoji">👀</span>
+              <span class="reaction-pulse-count" data-pulse-emoji="👀">0</span>
+            </div>
+            <div class="pixel-progress">
+              <div class="pixel-progress__bar" id="pulse-bar-eyes" style="--progress-color:#4DBBFF; width:0%"></div>
+            </div>
+          </div>
+          <div class="reaction-pulse-item">
+            <div class="reaction-pulse-header">
+              <span class="reaction-pulse-emoji">💡</span>
+              <span class="reaction-pulse-count" data-pulse-emoji="💡">0</span>
+            </div>
+            <div class="pixel-progress">
+              <div class="pixel-progress__bar" id="pulse-bar-bulb" style="--progress-color:#FBBF24; width:0%"></div>
+            </div>
+          </div>
+          <div class="reaction-pulse-item">
+            <div class="reaction-pulse-header">
+              <span class="reaction-pulse-emoji">🔥</span>
+              <span class="reaction-pulse-count" data-pulse-emoji="🔥">0</span>
+            </div>
+            <div class="pixel-progress">
+              <div class="pixel-progress__bar" id="pulse-bar-fire" style="--progress-color:#FF6B35; width:0%"></div>
+            </div>
+          </div>
+          <div class="reaction-pulse-item">
+            <div class="reaction-pulse-header">
+              <span class="reaction-pulse-emoji">😮</span>
+              <span class="reaction-pulse-count" data-pulse-emoji="😮">0</span>
+            </div>
+            <div class="pixel-progress">
+              <div class="pixel-progress__bar" id="pulse-bar-wow" style="--progress-color:#C77DFF; width:0%"></div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Student list -->
-  <div class="host-section">
-    <p class="host-section-title">Students in the room</p>
-    <div class="student-list" id="student-list" aria-live="polite">
-      <p class="empty-state">Waiting for students...</p>
-    </div>
-  </div>
+      <!-- Student list -->
+      <div class="host-section">
+        <p class="host-section-title">Students in the room</p>
+        <div class="student-list" id="student-list" aria-live="polite">
+          <p class="empty-state">Waiting for students...</p>
+        </div>
+      </div>
 
-  <!-- Text responses -->
-  <div class="host-section" id="text-responses-section">
-    <p class="host-section-title">Open question responses</p>
-    <div class="text-preview-feed" id="host-text-feed" aria-live="polite">
-      <p class="empty-state">Responses will appear here...</p>
-    </div>
-  </div>
+      <!-- Text responses -->
+      <div class="host-section" id="text-responses-section">
+        <p class="host-section-title">Open question responses</p>
+        <div class="text-preview-feed" id="host-text-feed" aria-live="polite">
+          <p class="empty-state">Responses will appear here...</p>
+        </div>
+      </div>
 
-  <!-- Question queue -->
-  <div class="host-section">
-    <p class="host-section-title">
-      Question queue
-      (<span id="q-count-display">0</span>)
-    </p>
-    <div class="question-queue" id="question-queue" aria-live="polite">
-      <p class="empty-state">Questions will appear here...</p>
-    </div>
-  </div>
+      <!-- Question queue -->
+      <div class="host-section">
+        <p class="host-section-title">
+          Question queue
+          (<span id="q-count-display">0</span>)
+        </p>
+        <div class="question-queue" id="question-queue" aria-live="polite">
+          <p class="empty-state">Questions will appear here...</p>
+        </div>
+      </div>
+
+    </div><!-- /.host-col-right -->
+
+  </div><!-- /.host-columns -->
 
 </div><!-- /#host-dashboard -->
 
