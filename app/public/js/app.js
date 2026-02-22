@@ -176,6 +176,8 @@ function openColorDrawer() {
 function closeColorDrawer() {
   const drawer = $('color-drawer');
   if (!drawer || drawer.style.display === 'none') return;
+  // Already in progress — don't double-trigger
+  if (drawer.classList.contains('closing')) return;
 
   // Animate out: slide sheet down + fade backdrop, then hide
   drawer.classList.add('closing');
@@ -199,8 +201,21 @@ function syncColorBubble(hex) {
 function setColorBubbleVisible(visible) {
   const bubble = $('color-bubble');
   if (!bubble) return;
+
+  const wasHidden = bubble.style.display === 'none';
   bubble.style.display = visible ? 'block' : 'none';
-  if (visible) syncColorBubble(state.lastSentHex || state.colorHex);
+
+  if (visible) {
+    syncColorBubble(state.lastSentHex || state.colorHex);
+    // Play intro animation the first time the bubble appears (wasHidden → visible).
+    // Remove and re-add the class so animation replays on each mode transition.
+    if (wasHidden) {
+      bubble.classList.remove('bubble-intro');
+      void bubble.offsetWidth; // force reflow so animation restarts
+      bubble.classList.add('bubble-intro');
+      bubble.addEventListener('animationend', () => bubble.classList.remove('bubble-intro'), { once: true });
+    }
+  }
 }
 
 // ─── Boot ──────────────────────────────────────────────────────────────────
@@ -1511,6 +1526,16 @@ function initKeyboardFix() {
     appRoot.style.height = `${vvHeight}px`;
     // Shift app root down if viewport has scrolled (e.g. iOS Safari address bar)
     appRoot.style.transform = `translateY(${vvOffset}px)`;
+
+    // Hide color bubble when keyboard is visible (viewport shrinks).
+    // On Android, fixed elements don't shift above the keyboard — the bubble
+    // would float over typed text. Threshold: if viewport is more than 150px
+    // shorter than screen height, keyboard is likely open.
+    const keyboardLikelyOpen = (window.screen.height - vvHeight) > 150;
+    const bubble = $('color-bubble');
+    if (bubble && bubble.style.display !== 'none') {
+      bubble.style.visibility = keyboardLikelyOpen ? 'hidden' : 'visible';
+    }
   }
 
   function onViewportScroll() {

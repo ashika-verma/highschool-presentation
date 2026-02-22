@@ -850,6 +850,20 @@
       transform: scale(0.9);
     }
 
+    /* Bubble intro: pulses twice when first shown so students notice it.
+       After the intro animation, the bubble sits still (no infinite pulse —
+       that would be distracting during the talk). */
+    @keyframes bubble-intro {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.15); opacity: 1; }
+      80%  { transform: scale(0.92); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    #color-bubble.bubble-intro {
+      animation: bubble-intro 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
     /* ── Color drawer (bottom sheet) ──────────────────────────── */
     #color-drawer {
       position: fixed;
@@ -1314,7 +1328,9 @@
   </section>
 
   <!-- Floating color bubble — always-accessible after join; hidden in lobby/color/sendoff -->
-  <button id="color-bubble" aria-label="Change your color" aria-haspopup="dialog" style="display:none"></button>
+  <!-- The palette emoji inside communicates "tap to change color" without any text.
+       Font-size 22px centers comfortably in the 52px bubble. -->
+  <button id="color-bubble" aria-label="Change your color" aria-haspopup="dialog" style="display:none;font-size:22px;line-height:1">🎨</button>
 
 </div><!-- /.app-root -->
 
