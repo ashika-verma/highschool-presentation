@@ -11,7 +11,7 @@ HOST_KEY="ashika"
 
 # Paste your WiZ bulb IPs here (comma-separated, no spaces)
 # Find them in the WiZ app → Device Settings → IP address
-WIZ_IPS=""   # e.g. "192.168.1.100,192.168.1.101"
+WIZ_IPS="192.168.1.231,192.168.1.232"   # e.g. "192.168.1.100,192.168.1.101"
 
 PORT=3000
 
@@ -58,13 +58,13 @@ if command -v cloudflared &>/dev/null; then
     echo ""
     echo "  QR code: http://localhost:$PORT/qr?url=https://$TUNNEL_HOSTNAME"
     echo ""
-    cloudflared tunnel run --url http://localhost:$PORT &
+    cloudflared tunnel --protocol http2 run --url http://localhost:$PORT &
     TUNNEL_PID=$!
   else
     # Quick tunnel (random trycloudflare.com URL — no login required)
     # Extract URL from cloudflared output and print QR link
     TMPLOG=$(mktemp)
-    cloudflared tunnel --url http://localhost:$PORT > "$TMPLOG" 2>&1 &
+    cloudflared tunnel --protocol http2 --url http://localhost:$PORT > "$TMPLOG" 2>&1 &
     TUNNEL_PID=$!
 
     # Wait up to 15s for the URL to appear

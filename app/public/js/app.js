@@ -238,7 +238,8 @@ function boot() {
   // Show lobby screen
   showScreen('lobby');
   // Pre-initialize ambient sparkles (hidden until mode shown, cheap to start early)
-  initSparkles($('sparkle-container'), 18);
+  // 28 sparkles fills the screen better — 18 looked sparse on large phones
+  initSparkles($('sparkle-container'), 28);
   // Sendoff sparkles initialized on demand in switchMode — don't double-init here
 }
 
@@ -283,6 +284,7 @@ function wireWebSocket() {
   // Reaction from any student (including self — server echoes)
   ws.onMessage('reaction', ({ name, emoji }) => {
     bumpReaction(emoji);
+    spawnFloatingReaction(emoji);
   });
 
   // Free-text response from any student (server echo — skip if we sent it ourselves)
@@ -885,7 +887,8 @@ function updateSlidePill() {
   }
   const current = state.currentSlide + 1; // 1-indexed for display
   pill.style.display = 'block';
-  pill.textContent = `${current} / ${total}`;
+  // Use words — more readable for a 16-year-old than bare numbers "1 / 3"
+  pill.textContent = `slide ${current} of ${total}`;
 }
 
 function renderSlide(slide) {
@@ -1013,9 +1016,45 @@ function initSparkles(container, count) {
 
 // ─── Reactions ─────────────────────────────────────────────────────────────
 
+const REACTION_VARIANTS = { '🔥': 'fire', '👀': 'eyes', '💡': 'lightbulb', '😮': 'wow' };
+let _floatQueue = [];
+let _floatTimer = null;
+
+function spawnFloatingReaction(emoji) {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  _floatQueue.push(emoji);
+  clearTimeout(_floatTimer);
+  _floatTimer = setTimeout(_flushFloatQueue, 150);
+}
+
+function _flushFloatQueue() {
+  const container = document.getElementById('reactions-float-container');
+  if (!container) return;
+  const emojis = _floatQueue.splice(0);
+
+  // Cap at 8 simultaneous floats to prevent DOM buildup
+  while (container.children.length >= 8) container.firstChild.remove();
+
+  emojis.forEach((emoji, i) => {
+    // Spread horizontally: single emoji at center, multiple spread 15–85% of width
+    const pct = emojis.length === 1 ? 50 : 15 + (i / (emojis.length - 1)) * 70;
+    const el = document.createElement('div');
+    el.className = `floating-reaction floating-reaction--${REACTION_VARIANTS[emoji] || 'eyes'}`;
+    el.style.left = `${pct}%`;
+    el.style.animationDelay = `${i * 40}ms`;
+    const span = document.createElement('span');
+    span.textContent = emoji;
+    el.appendChild(span);
+    container.appendChild(el);
+    const dur = { '🔥': 1650, '👀': 2400, '💡': 2760, '😮': 2160 }[emoji] ?? 2400;
+    setTimeout(() => el.remove(), dur + i * 40 + 100);
+  });
+}
+
 function handleReaction(emoji, btn) {
   ws.sendReaction(state.name || 'Anonymous', emoji);
   bumpReaction(emoji);
+  spawnFloatingReaction(emoji);
   btn.classList.add('just-tapped');
   btn.addEventListener('animationend', () => btn.classList.remove('just-tapped'), { once: true });
   // Haptic feedback — 20ms minimum for reliable Android vibration
@@ -1035,13 +1074,76 @@ function bumpReaction(emoji) {
 
 // ─── Question modal ─────────────────────────────────────────────────────────
 
+// Tracks the visualViewport listener so we can remove it on close.
+let _modalViewportListener = null;
+
+function _applyModalKeyboardOffset() {
+  if (!window.visualViewport) return;
+  const modal = $('question-modal');
+  if (!modal || modal.classList.contains('hidden')) return;
+
+  const vv = window.visualViewport;
+  // Position the overlay to exactly cover the visible viewport.
+  // On iOS, when the keyboard opens, visualViewport.height shrinks and
+  // visualViewport.offsetTop may increase (rubber-band / address bar offset).
+  modal.style.top    = `${vv.offsetTop}px`;
+  modal.style.height = `${vv.height}px`;
+  // left/right/width stay at browser default (0 / 100%) — no change needed.
+
+  // Add bottom padding to the sheet equal to keyboard height so the
+  // textarea + buttons don't sit right at the keyboard edge.
+  // keyboard height ≈ window.innerHeight - (vv.offsetTop + vv.height)
+  const keyboardHeight = Math.max(
+    0,
+    window.innerHeight - vv.offsetTop - vv.height
+  );
+  const sheet = modal.querySelector('.modal-sheet');
+  if (sheet) {
+    // 16px minimum breathing room above the keyboard
+    const extraPad = keyboardHeight > 0 ? keyboardHeight + 16 : 0;
+    sheet.style.paddingBottom = extraPad > 0
+      ? `${extraPad}px`
+      : '';
+  }
+}
+
+function _resetModalKeyboardOffset() {
+  const modal = $('question-modal');
+  if (!modal) return;
+  modal.style.top    = '';
+  modal.style.height = '';
+  const sheet = modal.querySelector('.modal-sheet');
+  if (sheet) sheet.style.paddingBottom = '';
+}
+
 function openQuestionModal() {
   $('question-modal').classList.remove('hidden');
-  // Focus the textarea after a tick so the modal animation doesn't fight it
-  setTimeout(() => $('park-input').focus(), 50);
+
+  // Attach visualViewport listener to keep the modal above the iOS keyboard.
+  if (window.visualViewport && !_modalViewportListener) {
+    _modalViewportListener = _applyModalKeyboardOffset;
+    window.visualViewport.addEventListener('resize', _modalViewportListener);
+    window.visualViewport.addEventListener('scroll', _modalViewportListener);
+  }
+
+  // Focus the textarea after a tick so the modal animation doesn't fight it.
+  // Then apply offset after focus (keyboard will have started opening by then).
+  setTimeout(() => {
+    $('park-input').focus();
+    // Give the keyboard ~300ms to finish opening before measuring
+    setTimeout(_applyModalKeyboardOffset, 300);
+  }, 50);
 }
 
 function closeQuestionModal() {
+  // Remove visualViewport listener before hiding
+  if (window.visualViewport && _modalViewportListener) {
+    window.visualViewport.removeEventListener('resize', _modalViewportListener);
+    window.visualViewport.removeEventListener('scroll', _modalViewportListener);
+    _modalViewportListener = null;
+  }
+  _resetModalKeyboardOffset();
+
   $('question-modal').classList.add('hidden');
   $('park-input').value = '';
   // Return focus to the button that opened the modal
@@ -1326,6 +1428,14 @@ function switchMode(mode, flash = true) {
     $('sent-color-status').textContent = state.lastSentHex
       ? `last sent — tap to change`
       : `your pick — tap a swatch`;
+
+    // Update the h2 based on whether the student has already sent a color.
+    // First entry: "You control the lights" — validates the moment.
+    // Re-entry: "Change the lights" — returns to the functional frame.
+    const h2 = $('color-screen-h2');
+    if (h2) {
+      h2.textContent = state.lastSentHex ? 'Change the lights' : 'You control the lights';
+    }
   }
 
   if (mode === 'ambient') {
@@ -1334,14 +1444,15 @@ function switchMode(mode, flash = true) {
     // Re-initialize sparkles with the current room color so they glow in the live color,
     // not always in the default Hot Pink they were initialized with at boot time.
     if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      initSparkles($('sparkle-container'), 18);
+      initSparkles($('sparkle-container'), 28);
     }
   }
 
   // Sendoff sparkles: respect prefers-reduced-motion
   if (mode === 'sendoff') {
     if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      initSparkles($('sendoff-sparkles'), 40);
+      // 60 sparkles for a richer, more celebratory sendoff field
+      initSparkles($('sendoff-sparkles'), 60);
     }
   }
 

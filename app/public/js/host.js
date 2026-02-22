@@ -233,7 +233,18 @@ function connectHost() {
   ws.onMessage('slides_updated', (data) => {
     state.slides = data.slides;
     state.currentSlideIndex = data.currentSlideIndex ?? 0;
+    // Clamp selectedSlideIndex to valid range in case slides were deleted
+    state.selectedSlideIndex = Math.min(
+      state.selectedSlideIndex,
+      Math.max(0, state.slides.length - 1)
+    );
     renderSlidesNav();
+    // If the editor panel is currently open, refresh its contents so the saved
+    // slides are immediately visible and editable (fixes "save shows nothing" bug).
+    const editorPanel = $('slide-editor');
+    if (editorPanel && editorPanel.style.display !== 'none') {
+      renderSlideFieldEditor();
+    }
   });
 }
 
@@ -493,11 +504,13 @@ function renderSlideList() {
     btn.style.borderColor = i === state.selectedSlideIndex
       ? 'var(--room-color-a)'
       : 'var(--color-border)';
-    // Preview: first text element content or slide id
+    // Preview label: template type + first content field
+    const tpl = slide._template || 'custom';
     const firstText = (slide.elements || []).find(e => e.type === 'text');
-    btn.textContent = firstText
-      ? `${i + 1}. ${firstText.content.slice(0, 24)}`
-      : `${i + 1}. (slide)`;
+    const label = firstText
+      ? `${i + 1}. ${firstText.content.slice(0, 22)}`
+      : `${i + 1}. [${tpl}]`;
+    btn.textContent = label;
     btn.addEventListener('click', () => {
       state.selectedSlideIndex = i;
       renderSlideList();
@@ -507,138 +520,494 @@ function renderSlideList() {
   });
 }
 
+// ─── Template system ──────────────────────────────────────────────────────────
+//
+// Each template defines:
+//   id      — internal key stored as slide._template
+//   label   — display name shown in the picker
+//   icon    — single character or short string for the pill button
+//   fields  — ordered array of { key, label, type, placeholder? }
+//             type: 'text' | 'textarea' | 'image'
+//   compile(fields, bg) → slide data: { bg, elements: [...] }
+//   extract(slide) → { fieldKey: value, ... } — reads values back for re-editing
+
+const SLIDE_TEMPLATES = [
+  {
+    id: 'title',
+    label: 'Title',
+    icon: 'T',
+    fields: [
+      { key: 'headline', label: 'Headline', type: 'text',     placeholder: 'Big bold statement' },
+      { key: 'subtitle', label: 'Subtitle', type: 'textarea', placeholder: 'Supporting line (optional)' },
+    ],
+    compile(vals, bg) {
+      const elements = [];
+      if (vals.headline) {
+        elements.push({
+          type: 'text', content: vals.headline,
+          size: 48, weight: 700, color: '#FFFFFF',
+          x: 50, y: vals.subtitle ? 44 : 50,
+          align: 'center',
+        });
+      }
+      if (vals.subtitle) {
+        elements.push({
+          type: 'text', content: vals.subtitle,
+          size: 20, weight: 400, color: 'rgba(255,255,255,0.65)',
+          x: 50, y: 62,
+          align: 'center',
+        });
+      }
+      return { bg, elements };
+    },
+    extract(slide) {
+      const els = slide.elements || [];
+      const h = els.find(e => e.type === 'text' && e.size >= 40);
+      const s = els.find(e => e.type === 'text' && e.size < 40);
+      return {
+        headline: h?.content || '',
+        subtitle: s?.content || '',
+      };
+    },
+  },
+  {
+    id: 'quote',
+    label: 'Quote',
+    icon: '"',
+    fields: [
+      { key: 'quote', label: 'Quote text', type: 'textarea', placeholder: 'The quote, exactly as you want it displayed' },
+    ],
+    compile(vals, bg) {
+      const elements = [];
+      if (vals.quote) {
+        elements.push({
+          type: 'text', content: vals.quote,
+          size: 36, weight: 300, color: '#FFFFFF',
+          x: 50, y: 50,
+          align: 'center',
+        });
+      }
+      return { bg, elements };
+    },
+    extract(slide) {
+      const el = (slide.elements || []).find(e => e.type === 'text');
+      return { quote: el?.content || '' };
+    },
+  },
+  {
+    id: 'photo-caption',
+    label: 'Photo + Caption',
+    icon: 'Ph',
+    fields: [
+      { key: 'src',     label: 'Image path',  type: 'image',    placeholder: '/photos/highschool/filename.jpg' },
+      { key: 'caption', label: 'Caption text', type: 'text',     placeholder: 'Short caption below the photo' },
+    ],
+    compile(vals, bg) {
+      const elements = [];
+      if (vals.src) {
+        elements.push({
+          type: 'image', src: vals.src,
+          x: 50, y: 44, width: 80,
+        });
+      }
+      if (vals.caption) {
+        elements.push({
+          type: 'text', content: vals.caption,
+          size: 18, weight: 400, color: 'rgba(255,255,255,0.8)',
+          x: 50, y: 80,
+          align: 'center',
+        });
+      }
+      return { bg, elements };
+    },
+    extract(slide) {
+      const els = slide.elements || [];
+      const img = els.find(e => e.type === 'image');
+      const txt = els.find(e => e.type === 'text');
+      return {
+        src:     img?.src     || '',
+        caption: txt?.content || '',
+      };
+    },
+  },
+  {
+    id: 'full-photo',
+    label: 'Full Photo',
+    icon: 'FP',
+    fields: [
+      { key: 'src',   label: 'Image path', type: 'image', placeholder: '/photos/highschool/filename.jpg' },
+      { key: 'label', label: 'Small label (optional)', type: 'text', placeholder: 'e.g. "MIT Media Lab, 2023"' },
+    ],
+    compile(vals, bg) {
+      const elements = [];
+      if (vals.src) {
+        elements.push({
+          type: 'image', src: vals.src,
+          x: 50, y: 50, width: 90,
+        });
+      }
+      if (vals.label) {
+        elements.push({
+          type: 'text', content: vals.label,
+          size: 13, weight: 400, color: 'rgba(255,255,255,0.55)',
+          x: 50, y: 90,
+          align: 'center',
+        });
+      }
+      return { bg, elements };
+    },
+    extract(slide) {
+      const els = slide.elements || [];
+      const img = els.find(e => e.type === 'image');
+      const txt = els.find(e => e.type === 'text');
+      return {
+        src:   img?.src     || '',
+        label: txt?.content || '',
+      };
+    },
+  },
+  {
+    id: 'section-header',
+    label: 'Section Header',
+    icon: 'S',
+    fields: [
+      { key: 'eyebrow',  label: 'Eyebrow label', type: 'text', placeholder: 'e.g. PART 2' },
+      { key: 'headline', label: 'Headline',       type: 'text', placeholder: 'Big transition text' },
+    ],
+    compile(vals, bg) {
+      const elements = [];
+      if (vals.eyebrow) {
+        elements.push({
+          type: 'text', content: vals.eyebrow.toUpperCase(),
+          size: 14, weight: 500, color: 'rgba(255,255,255,0.45)',
+          x: 50, y: 35,
+          align: 'center',
+        });
+      }
+      if (vals.headline) {
+        elements.push({
+          type: 'text', content: vals.headline,
+          size: 40, weight: 700, color: '#FFFFFF',
+          x: 50, y: 50,
+          align: 'center',
+        });
+      }
+      return { bg, elements };
+    },
+    extract(slide) {
+      const els = slide.elements || [];
+      const small = els.find(e => e.type === 'text' && e.size < 20);
+      const big   = els.find(e => e.type === 'text' && e.size >= 20);
+      return {
+        eyebrow:  small?.content || '',
+        headline: big?.content   || '',
+      };
+    },
+  },
+];
+
+// State for the template editor: which template is active for the current slide
+// (keyed by slide index, so switching slides remembers each slide's template).
+const _templateEditorState = new Map(); // slideIndex → { templateId, fieldValues }
+
+function getTemplateById(id) {
+  return SLIDE_TEMPLATES.find(t => t.id === id) || null;
+}
+
+// ─── renderSlideFieldEditor — main entry point ──────────────────────────────
+
 function renderSlideFieldEditor() {
+  const container = $('slide-template-editor');
+  if (!container) return;
+  container.innerHTML = '';
+
   const slide = state.slides[state.selectedSlideIndex];
-  const bgPicker = $('slide-bg-picker');
-  const bgHex = $('slide-bg-hex');
   if (!slide) {
-    const el = $('slide-element-list');
-    if (el) el.innerHTML = '<p style="font-size:11px;color:var(--color-text-dim)">No slide selected</p>';
+    container.innerHTML = `<p style="font-size:13px;color:var(--color-text-dim);text-align:center;padding:var(--space-4) 0">No slide selected. Add one above.</p>`;
     return;
   }
-  if (bgPicker) {
-    bgPicker.value = slide.bg || '#0A0A10';
-    if (bgHex) bgHex.textContent = slide.bg || '#0A0A10';
-    bgPicker.oninput = () => {
-      slide.bg = bgPicker.value;
-      if (bgHex) bgHex.textContent = bgPicker.value;
-    };
-  }
-  renderElementList(slide);
-}
 
-function renderElementList(slide) {
-  const list = $('slide-element-list');
-  if (!list) return;
-  list.innerHTML = '';
-  (slide.elements || []).forEach((el, i) => {
-    const row = document.createElement('div');
-    row.style.cssText = `
-      background: var(--color-surface-2);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      padding: 8px 10px;
-      font-size: 11px;
-      display: flex;
-      flex-direction: column;
+  // Resolve which template is active:
+  // 1. Editor state (user switched template in this session)
+  // 2. slide._template (stored on the slide from a previous save)
+  // 3. Default: 'title'
+  const editorEntry = _templateEditorState.get(state.selectedSlideIndex);
+  const activeTemplateId = editorEntry?.templateId || slide._template || 'title';
+  const activeTemplate   = getTemplateById(activeTemplateId) || SLIDE_TEMPLATES[0];
+
+  // Current field values: editor state > extract from slide > empty
+  const savedValues = editorEntry?.fieldValues || activeTemplate.extract(slide);
+
+  // ── Template picker pills ──────────────────────────────────────────────────
+  const pickerRow = document.createElement('div');
+  pickerRow.style.cssText = `
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: var(--space-4);
+  `;
+  pickerRow.setAttribute('role', 'radiogroup');
+  pickerRow.setAttribute('aria-label', 'Slide template');
+
+  SLIDE_TEMPLATES.forEach(tpl => {
+    const pill = document.createElement('button');
+    pill.type = 'button';
+    pill.role = 'radio';
+    pill.setAttribute('aria-checked', tpl.id === activeTemplateId ? 'true' : 'false');
+    pill.style.cssText = `
+      display: inline-flex;
+      align-items: center;
       gap: 6px;
+      padding: 6px 13px;
+      border-radius: var(--radius-full);
+      border: 1.5px solid ${tpl.id === activeTemplateId ? 'var(--room-color-a)' : 'var(--color-border-hi)'};
+      background: ${tpl.id === activeTemplateId ? 'color-mix(in srgb, var(--room-color-a) 18%, var(--color-surface))' : 'var(--color-surface)'};
+      color: ${tpl.id === activeTemplateId ? 'var(--color-text)' : 'var(--color-text-muted)'};
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: ${tpl.id === activeTemplateId ? '600' : '400'};
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s, color 0.12s;
+      min-height: 36px;
+    `;
+    // Icon badge
+    const iconBadge = document.createElement('span');
+    iconBadge.textContent = tpl.icon;
+    iconBadge.style.cssText = `
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: var(--radius-sm);
+      background: ${tpl.id === activeTemplateId ? 'var(--room-color-a)' : 'var(--color-surface-2)'};
+      color: ${tpl.id === activeTemplateId ? 'var(--room-btn-text, #000)' : 'var(--color-text-muted)'};
+      font-size: 9px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: 0;
+      flex-shrink: 0;
+    `;
+    pill.appendChild(iconBadge);
+    pill.appendChild(document.createTextNode(tpl.label));
+
+    pill.addEventListener('click', () => {
+      // Switch template — extract fresh default values from slide for the new template
+      const newTemplate = getTemplateById(tpl.id);
+      const freshValues = newTemplate ? newTemplate.extract(slide) : {};
+      _templateEditorState.set(state.selectedSlideIndex, {
+        templateId:  tpl.id,
+        fieldValues: freshValues,
+      });
+      renderSlideFieldEditor();
+    });
+
+    pickerRow.appendChild(pill);
+  });
+
+  container.appendChild(pickerRow);
+
+  // ── Content fields (template-specific) ────────────────────────────────────
+  const fieldsSection = document.createElement('div');
+  fieldsSection.style.cssText = 'display:flex;flex-direction:column;gap:var(--space-3);margin-bottom:var(--space-4)';
+
+  // Track current field values as the user types
+  const currentValues = { ...savedValues };
+
+  activeTemplate.fields.forEach(field => {
+    const fieldWrap = document.createElement('div');
+    fieldWrap.style.cssText = 'display:flex;flex-direction:column;gap:6px';
+
+    const lbl = document.createElement('label');
+    lbl.textContent = field.label;
+    lbl.style.cssText = `
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
     `;
 
-    const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between';
-    header.innerHTML = `<span style="font-family:var(--font-mono);color:var(--color-text-muted);font-size:10px">${el.type.toUpperCase()} ${i + 1}</span>`;
-    const delBtn = document.createElement('button');
-    delBtn.textContent = 'x';
-    delBtn.style.cssText = 'font-size:11px;color:#ff6b6b;background:none;border:none;cursor:pointer;padding:0 4px';
-    delBtn.addEventListener('click', () => {
-      slide.elements.splice(i, 1);
-      renderElementList(slide);
-    });
-    header.appendChild(delBtn);
-    row.appendChild(header);
+    let input;
 
-    if (el.type === 'text') {
-      row.appendChild(makeField('Content', el.content, v => { el.content = v; }));
-      row.appendChild(makeFieldRow([
-        ['Size', el.size, v => { el.size = parseInt(v) || 20; }, 'number', 60],
-        ['Weight', el.weight, v => { el.weight = parseInt(v) || 400; }, 'number', 60],
-      ]));
-      row.appendChild(makeFieldRow([
-        ['X%', el.x, v => { el.x = parseFloat(v) || 50; }, 'number', 60],
-        ['Y%', el.y, v => { el.y = parseFloat(v) || 50; }, 'number', 60],
-      ]));
-      row.appendChild(makeColorField('Color', el.color, v => { el.color = v; }));
-    } else if (el.type === 'image') {
-      row.appendChild(makeField('Src path (/photos/...)', el.src, v => { el.src = v; }));
-      row.appendChild(makeFieldRow([
-        ['X%', el.x, v => { el.x = parseFloat(v) || 50; }, 'number', 60],
-        ['Y%', el.y, v => { el.y = parseFloat(v) || 50; }, 'number', 60],
-        ['Width%', el.width, v => { el.width = parseFloat(v) || 80; }, 'number', 60],
-      ]));
+    if (field.type === 'textarea') {
+      input = document.createElement('textarea');
+      input.rows = 3;
+      input.style.cssText = `
+        font-size: 15px;
+        background: var(--color-surface-2);
+        border: 1.5px solid var(--color-border-hi);
+        border-radius: var(--radius-md);
+        color: var(--color-text);
+        padding: 10px 14px;
+        width: 100%;
+        resize: vertical;
+        font-family: var(--font-sans);
+        line-height: 1.5;
+        min-height: 72px;
+        outline: none;
+        transition: border-color 0.12s;
+      `;
+    } else if (field.type === 'image') {
+      // Image field: text input for the path
+      input = document.createElement('input');
+      input.type = 'text';
+      input.style.cssText = `
+        font-size: 14px;
+        font-family: var(--font-mono);
+        background: var(--color-surface-2);
+        border: 1.5px solid var(--color-border-hi);
+        border-radius: var(--radius-md);
+        color: var(--color-text);
+        padding: 10px 14px;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.12s;
+      `;
+    } else {
+      // Default: single-line text
+      input = document.createElement('input');
+      input.type = 'text';
+      input.style.cssText = `
+        font-size: 15px;
+        background: var(--color-surface-2);
+        border: 1.5px solid var(--color-border-hi);
+        border-radius: var(--radius-md);
+        color: var(--color-text);
+        padding: 10px 14px;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.12s;
+      `;
     }
 
-    list.appendChild(row);
-  });
-}
+    input.placeholder = field.placeholder || '';
+    input.value = currentValues[field.key] ?? '';
+    input.setAttribute('aria-label', field.label);
 
-function makeField(label, value, onChange) {
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;flex-direction:column;gap:2px';
-  const lbl = document.createElement('label');
-  lbl.textContent = label;
-  lbl.style.cssText = 'font-size:10px;color:var(--color-text-dim)';
-  const inp = document.createElement('input');
-  inp.type = 'text';
-  inp.value = value ?? '';
-  inp.style.cssText = 'font-size:12px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:4px;color:var(--color-text);padding:4px 8px;width:100%';
-  inp.addEventListener('input', () => onChange(inp.value));
-  wrap.appendChild(lbl);
-  wrap.appendChild(inp);
-  return wrap;
-}
+    // Focus ring
+    input.addEventListener('focus', () => { input.style.borderColor = 'var(--room-color-a)'; });
+    input.addEventListener('blur',  () => { input.style.borderColor = 'var(--color-border-hi)'; });
 
-function makeFieldRow(fields) {
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:8px';
-  fields.forEach(([label, value, onChange, type, w]) => {
-    const wrap = document.createElement('div');
-    wrap.style.cssText = `display:flex;flex-direction:column;gap:2px;width:${w || 80}px`;
-    const lbl = document.createElement('label');
-    lbl.textContent = label;
-    lbl.style.cssText = 'font-size:10px;color:var(--color-text-dim)';
-    const inp = document.createElement('input');
-    inp.type = type || 'text';
-    inp.value = value ?? '';
-    inp.style.cssText = 'font-size:12px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:4px;color:var(--color-text);padding:4px 6px;width:100%';
-    inp.addEventListener('input', () => onChange(inp.value));
-    wrap.appendChild(lbl);
-    wrap.appendChild(inp);
-    row.appendChild(wrap);
-  });
-  return row;
-}
+    // Live-update currentValues and write compiled elements back to slide.
+    // This is intentionally real-time so the data is always up to date before save.
+    input.addEventListener('input', () => {
+      currentValues[field.key] = input.value;
+      // Persist to editor state so switching back to this slide remembers values
+      _templateEditorState.set(state.selectedSlideIndex, {
+        templateId:  activeTemplateId,
+        fieldValues: { ...currentValues },
+      });
+      // Compile elements into the slide (BG is handled separately below)
+      const compiled = activeTemplate.compile(currentValues, slide.bg || '#0A0A10');
+      slide.elements  = compiled.elements;
+      slide._template = activeTemplateId;
+    });
 
-function makeColorField(label, value, onChange) {
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;align-items:center;gap:8px';
-  const lbl = document.createElement('label');
-  lbl.textContent = label;
-  lbl.style.cssText = 'font-size:10px;color:var(--color-text-dim);white-space:nowrap';
-  const inp = document.createElement('input');
-  inp.type = 'color';
-  inp.value = value || '#ffffff';
-  inp.style.cssText = 'width:36px;height:28px;border:1px solid var(--color-border);border-radius:4px;background:var(--color-surface);cursor:pointer';
-  const hexSpan = document.createElement('span');
-  hexSpan.textContent = value || '#ffffff';
-  hexSpan.style.cssText = 'font-family:var(--font-mono);font-size:10px;color:var(--color-text-dim)';
-  inp.addEventListener('input', () => {
-    hexSpan.textContent = inp.value;
-    onChange(inp.value);
+    fieldWrap.appendChild(lbl);
+    fieldWrap.appendChild(input);
+
+    // Helper text under image fields
+    if (field.type === 'image') {
+      const hint = document.createElement('p');
+      hint.textContent = 'Must start with /photos/ — e.g. /photos/highschool/nerds.jpg';
+      hint.style.cssText = 'font-size:11px;color:var(--color-text-dim);font-family:var(--font-mono);letter-spacing:0.03em;margin-top:2px';
+      fieldWrap.appendChild(hint);
+    }
+
+    fieldsSection.appendChild(fieldWrap);
   });
-  wrap.appendChild(lbl);
-  wrap.appendChild(inp);
-  wrap.appendChild(hexSpan);
-  return wrap;
+
+  container.appendChild(fieldsSection);
+
+  // ── Background color picker ────────────────────────────────────────────────
+  const bgSection = document.createElement('div');
+  bgSection.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  `;
+
+  const bgLabel = document.createElement('label');
+  bgLabel.textContent = 'Background';
+  bgLabel.style.cssText = 'font-size:12px;font-weight:600;letter-spacing:0.03em;text-transform:uppercase;color:var(--color-text-muted);white-space:nowrap';
+
+  const bgPicker = document.createElement('input');
+  bgPicker.type = 'color';
+  bgPicker.id = 'slide-bg-picker';
+  bgPicker.value = slide.bg || '#0A0A10';
+  bgPicker.style.cssText = `
+    width: 44px;
+    height: 36px;
+    border: 1.5px solid var(--color-border-hi);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    cursor: pointer;
+    padding: 2px;
+  `;
+
+  const bgHexSpan = document.createElement('span');
+  bgHexSpan.id = 'slide-bg-hex';
+  bgHexSpan.textContent = slide.bg || '#0A0A10';
+  bgHexSpan.style.cssText = 'font-family:var(--font-mono);font-size:12px;color:var(--color-text-dim);flex:1';
+
+  bgPicker.addEventListener('input', () => {
+    slide.bg = bgPicker.value;
+    bgHexSpan.textContent = bgPicker.value;
+    // Re-compile with new BG so elements stay in sync
+    const compiled = activeTemplate.compile(currentValues, bgPicker.value);
+    slide.elements  = compiled.elements;
+    slide._template = activeTemplateId;
+  });
+
+  // Preset bg swatches — common useful values
+  const bgPresets = ['#0A0A10', '#FFFFFF', '#111827', '#1e1b4b', '#14532d', '#7c2d12', '#1e3a5f'];
+  const swatchRow = document.createElement('div');
+  swatchRow.style.cssText = 'display:flex;gap:5px;align-items:center';
+  bgPresets.forEach(hex => {
+    const swatch = document.createElement('button');
+    swatch.type = 'button';
+    swatch.title = hex;
+    swatch.style.cssText = `
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background: ${hex};
+      border: 1.5px solid ${hex === slide.bg ? 'var(--room-color-a)' : 'rgba(255,255,255,0.15)'};
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.1s;
+    `;
+    swatch.addEventListener('click', () => {
+      bgPicker.value = hex;
+      slide.bg = hex;
+      bgHexSpan.textContent = hex;
+      const compiled = activeTemplate.compile(currentValues, hex);
+      slide.elements  = compiled.elements;
+      slide._template = activeTemplateId;
+      // Update swatch active states
+      swatchRow.querySelectorAll('button').forEach(s => {
+        s.style.borderColor = s.title === hex ? 'var(--room-color-a)' : 'rgba(255,255,255,0.15)';
+      });
+    });
+    swatchRow.appendChild(swatch);
+  });
+
+  bgSection.appendChild(bgLabel);
+  bgSection.appendChild(bgPicker);
+  bgSection.appendChild(bgHexSpan);
+  bgSection.appendChild(swatchRow);
+  container.appendChild(bgSection);
+
+  // ── Initial compile — ensure slide data is in sync with template on first render ──
+  // This handles the case where a slide was loaded from JSON without _template metadata.
+  slide._template = activeTemplateId;
+  const initialCompile = activeTemplate.compile(currentValues, slide.bg || '#0A0A10');
+  slide.elements = initialCompile.elements;
 }
 
 function wireSlidesUI() {
@@ -669,14 +1038,18 @@ function wireSlidesUI() {
   });
 
   $('slide-add-btn')?.addEventListener('click', () => {
-    state.slides.push({ id: `slide-${Date.now()}`, bg: '#0A0A10', elements: [] });
+    const newSlide = { id: `slide-${Date.now()}`, bg: '#0A0A10', elements: [], _template: 'title' };
+    state.slides.push(newSlide);
     state.selectedSlideIndex = state.slides.length - 1;
+    // Clear any stale editor state for this index
+    _templateEditorState.delete(state.selectedSlideIndex);
     renderSlideList();
     renderSlideFieldEditor();
   });
 
   $('slide-delete-btn')?.addEventListener('click', () => {
     if (state.slides.length === 0) return;
+    _templateEditorState.delete(state.selectedSlideIndex);
     state.slides.splice(state.selectedSlideIndex, 1);
     state.selectedSlideIndex = Math.max(0, state.selectedSlideIndex - 1);
     if (state.currentSlideIndex >= state.slides.length) {
@@ -684,22 +1057,6 @@ function wireSlidesUI() {
     }
     renderSlidesNav();
     renderSlideFieldEditor();
-  });
-
-  $('slide-add-text-btn')?.addEventListener('click', () => {
-    const slide = state.slides[state.selectedSlideIndex];
-    if (!slide) return;
-    if (!slide.elements) slide.elements = [];
-    slide.elements.push({ type: 'text', content: 'New text', size: 24, color: '#FFFFFF', x: 50, y: 50, align: 'center', weight: 400 });
-    renderElementList(slide);
-  });
-
-  $('slide-add-img-btn')?.addEventListener('click', () => {
-    const slide = state.slides[state.selectedSlideIndex];
-    if (!slide) return;
-    if (!slide.elements) slide.elements = [];
-    slide.elements.push({ type: 'image', src: '/photos/highschool/', x: 50, y: 50, width: 80 });
-    renderElementList(slide);
   });
 
   $('slide-save-btn')?.addEventListener('click', async () => {

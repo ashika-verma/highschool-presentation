@@ -436,7 +436,7 @@
 
         <!-- Slide editor panel (hidden by default) -->
         <div id="slide-editor" style="display:none">
-          <!-- Slide list -->
+          <!-- Slide list + add/delete -->
           <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
             <div id="slide-list" style="flex:1;display:flex;flex-direction:column;gap:var(--space-2);max-height:120px;overflow-y:auto"></div>
             <div style="display:flex;flex-direction:column;gap:var(--space-2)">
@@ -445,29 +445,16 @@
             </div>
           </div>
 
-          <!-- Selected slide editor -->
-          <div id="slide-field-editor" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
-            <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)">
-              <label style="font-size:var(--text-xs);color:var(--color-text-muted);white-space:nowrap">BG Color</label>
-              <input type="color" id="slide-bg-picker" value="#0A0A10" style="width:48px;height:32px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);cursor:pointer">
-              <span id="slide-bg-hex" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-dim)">#0A0A10</span>
-            </div>
-
-            <!-- Element list -->
-            <div id="slide-element-list" style="display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-3)"></div>
-
-            <!-- Add element buttons -->
-            <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
-              <button class="btn-pixel btn-pixel--sm" id="slide-add-text-btn" style="flex:1">+ Text</button>
-              <button class="btn-pixel btn-pixel--sm" id="slide-add-img-btn" style="flex:1">+ Image</button>
-            </div>
-
-            <!-- Save button -->
-            <button class="btn-pixel btn-pixel--wide" id="slide-save-btn" style="background:var(--room-color-a);color:var(--room-btn-text,#000);border-color:transparent">
-              Save Slides
-            </button>
-            <p id="slide-save-status" style="font-size:var(--text-xs);color:var(--color-text-dim);text-align:center;margin-top:var(--space-2)"></p>
+          <!-- Template editor — JS-rendered inside here -->
+          <div id="slide-template-editor" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+            <!-- Populated by renderSlideFieldEditor() in host.js -->
           </div>
+
+          <!-- Save button — always visible at bottom of editor -->
+          <button class="btn-pixel btn-pixel--wide" id="slide-save-btn" style="background:var(--room-color-a);color:var(--room-btn-text,#000);border-color:transparent;margin-top:var(--space-3)">
+            Save Slides
+          </button>
+          <p id="slide-save-status" style="font-size:var(--text-xs);color:var(--color-text-dim);text-align:center;margin-top:var(--space-2)"></p>
         </div>
       </div>
 

@@ -666,17 +666,22 @@
       position: relative;
     }
 
-    /* "you did that." should be the emotional peak — full brightness */
+    /* "you did that." — the emotional climax of the whole talk.
+       Must be big enough to feel like a REVEAL, not a caption.
+       var(--text-3xl) = 44px gets it close to the demo counter's register. */
     .demo-caption-highlight {
       display: block;
       font-family: var(--font-display);
-      font-size: var(--text-xl);
+      font-size: clamp(32px, 10vw, 44px);
       font-weight: 700;
       font-style: normal;
       color: var(--room-color-a);
-      letter-spacing: -0.02em;
-      text-shadow: 0 0 30px color-mix(in srgb, var(--room-color-a) 50%, transparent);
-      margin-top: var(--space-2);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      text-shadow:
+        0 0 40px color-mix(in srgb, var(--room-color-a) 60%, transparent),
+        0 0 80px color-mix(in srgb, var(--room-color-a) 30%, transparent);
+      margin-top: var(--space-3);
       transition: color var(--transition-glow), text-shadow var(--transition-glow);
     }
     @supports not (color: color-mix(in srgb, red, blue)) {
@@ -982,6 +987,39 @@
       /* Text color is set inline by JS via contrastColor() — CSS fallback only */
       color: var(--room-btn-text, rgba(0, 0, 0, 0.85));
     }
+
+    /* ── Floating Emoji Reactions ───────────────────────────────── */
+    @keyframes reaction-float {
+      0%   { transform: translateY(0)      scale(1);   opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(-100vh) scale(0.8); opacity: 0; }
+    }
+    @keyframes reaction-wobble {
+      0%   { transform: translateX(0); }
+      25%  { transform: translateX(var(--wobble, 15px)); }
+      75%  { transform: translateX(calc(var(--wobble, 15px) * -1)); }
+      100% { transform: translateX(0); }
+    }
+    .floating-reaction {
+      position: absolute;
+      bottom: 80px; /* above reaction bar */
+      font-size: 32px;
+      line-height: 1;
+      pointer-events: none;
+      will-change: transform;
+      animation: reaction-float var(--float-dur, 2400ms) ease-out forwards;
+    }
+    .floating-reaction span {
+      display: inline-block;
+      animation: reaction-wobble var(--wobble-dur, 1200ms) ease-in-out infinite;
+    }
+    .floating-reaction--fire     { --float-dur: 1650ms; --wobble: 20px; --wobble-dur: 900ms; }
+    .floating-reaction--eyes     { --float-dur: 2400ms; --wobble: 15px; --wobble-dur: 1200ms; }
+    .floating-reaction--lightbulb{ --float-dur: 2760ms; --wobble: 12px; --wobble-dur: 1400ms; }
+    .floating-reaction--wow      { --float-dur: 2160ms; --wobble: 18px; --wobble-dur: 1000ms; }
+    @media (prefers-reduced-motion: reduce) {
+      .floating-reaction { display: none; }
+    }
   </style>
 </head>
 <body class="noise-layer">
@@ -1094,7 +1132,7 @@
        ══════════════════════════════════════════════════════════ -->
   <section id="screen-color" class="screen" aria-label="Color control">
     <div class="color-screen-header">
-      <h2>Change the lights</h2>
+      <h2 id="color-screen-h2">Change the lights</h2>
       <p>Tap a color — it goes live in NYC. <span id="color-screen-live" style="display:inline-flex;align-items:center;gap:4px;opacity:0.7;font-size:var(--text-sm)"><span id="color-screen-live-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--room-color-a);box-shadow:0 0 6px 2px var(--room-color-a);transition:background 0.8s,box-shadow 0.8s" aria-hidden="true"></span>live</span></p>
     </div>
 
@@ -1130,8 +1168,7 @@
       </div>
 
       <div class="ambient-bottom">
-        <!-- Reaction bar -->
-        <p style="font-family:var(--font-mono);font-size:var(--text-xs);color:rgba(255,255,255,0.55);text-shadow:0 1px 3px rgba(0,0,0,0.5);text-align:center;letter-spacing:0.06em;margin-bottom:var(--space-1)">tap to react</p>
+        <!-- Reaction bar — no label needed, buttons are self-evident -->
         <div class="reaction-bar" role="group" aria-label="React to the talk">
           <button class="reaction-btn" data-emoji="👀" aria-label="Eyes reaction">
             <span aria-hidden="true">👀</span>
@@ -1340,8 +1377,8 @@
         margin-top: clamp(var(--space-6), 8vh, var(--space-12));
         font-family: var(--font-mono);
         font-size: var(--text-xs);
-        color: rgba(255,255,255,0.65);
-        letter-spacing: 0.06em;
+        color: rgba(255,255,255,0.9);
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       ">you just controlled real lights in NYC</p>
     </div>
@@ -1429,6 +1466,9 @@
 
 <!-- ZAP feedback layer -->
 <div id="zap-layer" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;z-index:var(--z-top)"></div>
+
+<!-- Floating emoji reactions layer — outside .app-root so overflow:hidden doesn't clip it -->
+<div id="reactions-float-container" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;z-index:120;overflow:hidden"></div>
 
 <!-- Confetti container -->
 <div id="confetti-layer" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;z-index:var(--z-top);overflow:hidden"></div>

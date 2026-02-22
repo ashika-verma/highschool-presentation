@@ -1,38 +1,70 @@
 [
   {
-    "id": "slide-1",
+    "id": "slide-1771742534182",
+    "bg": "#1e1b4b",
+    "elements": [
+      {
+        "type": "text",
+        "content": "NICEEE\n",
+        "size": 36,
+        "weight": 300,
+        "color": "#FFFFFF",
+        "x": 50,
+        "y": 50,
+        "align": "center"
+      }
+    ],
+    "_template": "quote"
+  },
+  {
+    "id": "slide-1771742547167",
     "bg": "#0A0A10",
     "elements": [
       {
         "type": "text",
-        "content": "Make your own space.",
-        "size": 36,
+        "content": "HELLO",
+        "size": 48,
+        "weight": 700,
         "color": "#FFFFFF",
         "x": 50,
-        "y": 38,
-        "align": "center",
-        "weight": 700
+        "y": 44,
+        "align": "center"
       },
       {
         "type": "text",
-        "content": "with whatever you've got.",
+        "content": "HELLO",
         "size": 20,
-        "color": "#888899",
+        "weight": 400,
+        "color": "rgba(255,255,255,0.65)",
         "x": 50,
-        "y": 56,
-        "align": "center",
-        "weight": 400
+        "y": 62,
+        "align": "center"
+      }
+    ],
+    "_template": "title"
+  },
+  {
+    "id": "slide-1771745687597",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/highschool/nerds.jpg",
+        "x": 50,
+        "y": 44,
+        "width": 80
       },
       {
         "type": "text",
-        "content": "— Ashika Verma",
-        "size": 13,
-        "color": "rgba(255,255,255,0.35)",
+        "content": "orchestra room",
+        "size": 18,
+        "weight": 400,
+        "color": "rgba(255,255,255,0.8)",
         "x": 50,
-        "y": 70,
-        "align": "center",
-        "weight": 400
+        "y": 80,
+        "align": "center"
       }
-    ]
+    ],
+    "_template": "photo-caption"
   }
 ]

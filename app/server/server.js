@@ -136,8 +136,14 @@ function buildPhotoList() {
 // ─── WiZ bulb UDP ──────────────────────────────────────────────────────────
 // Single persistent UDP socket — avoids creating/destroying a socket on every
 // color change, which can cause file-descriptor exhaustion under rapid tapping.
+//
+// Auto-discovery: on startup we broadcast getSystemConfig (same as test.py)
+// to find bulbs automatically. WIZ_IPS env var can still be used to skip it.
+
+const WIZ_BROADCAST = process.env.WIZ_BROADCAST ?? '192.168.1.255';
 
 let wizSocket = null;
+let discoveredWizIPs = []; // populated by discoverWizBulbs() after server starts
 
 function getWizSocket() {
   if (wizSocket) return wizSocket;
@@ -147,7 +153,49 @@ function getWizSocket() {
     wizSocket.close();
     wizSocket = null; // will be recreated on next send
   });
+  wizSocket.bind(() => {
+    wizSocket.setBroadcast(true);
+  });
   return wizSocket;
+}
+
+// Broadcast getSystemConfig and collect responding bulb IPs (mirrors test.py)
+function discoverWizBulbs() {
+  return new Promise((resolve) => {
+    const sock = dgram.createSocket('udp4');
+    const found = new Set();
+
+    sock.on('error', (err) => {
+      console.error('[wiz] Discovery socket error:', err.message);
+      try { sock.close(); } catch (_) {}
+      resolve([]);
+    });
+
+    sock.on('message', (msg, rinfo) => {
+      try {
+        const resp = JSON.parse(msg.toString());
+        if (resp.result && resp.result.mac && !found.has(rinfo.address)) {
+          found.add(rinfo.address);
+          console.log(`[wiz] Found bulb at ${rinfo.address} (MAC: ${resp.result.mac})`);
+        }
+      } catch (_) {}
+    });
+
+    sock.bind(() => {
+      sock.setBroadcast(true);
+      const discMsg = Buffer.from('{"method":"getSystemConfig","params":{}}');
+      sock.send(discMsg, 0, discMsg.length, WIZ_PORT, WIZ_BROADCAST, (err) => {
+        if (err) console.error('[wiz] Broadcast send error:', err.message);
+        else console.log(`[wiz] Discovery broadcast sent to ${WIZ_BROADCAST}:${WIZ_PORT}`);
+      });
+      // Wait 2 seconds for bulbs to respond (same timeout as test.py)
+      setTimeout(() => {
+        const ips = [...found];
+        try { sock.close(); } catch (_) {}
+        resolve(ips);
+      }, 2000);
+    });
+  });
 }
 
 function hexToRgb(hex) {
@@ -158,8 +206,6 @@ function hexToRgb(hex) {
 }
 
 function sendToWiz(hex) {
-  if (WIZ_IPS.length === 0) return;
-
   const { r, g, b } = hexToRgb(hex);
   const msg = JSON.stringify({
     method: 'setPilot',
@@ -169,10 +215,10 @@ function sendToWiz(hex) {
   const socket = getWizSocket();
   const buf = Buffer.from(msg);
 
-  WIZ_IPS.forEach(ip => {
-    socket.send(buf, 0, buf.length, WIZ_PORT, ip.trim(), (err) => {
-      if (err) console.error(`[wiz] UDP error to ${ip}:`, err.message);
-    });
+  // Send as broadcast so all bulbs on the LAN receive it
+  socket.send(buf, 0, buf.length, WIZ_PORT, WIZ_BROADCAST, (err) => {
+    if (err) console.error(`[wiz] Broadcast error:`, err.message);
+    else console.log(`[wiz] broadcast → ${WIZ_BROADCAST} ${hex}`);
   });
 }
 
@@ -751,9 +797,20 @@ httpServer.listen(PORT, () => {
   console.log(`\n  Light Room server running!\n`);
   console.log(`  Student app: http://localhost:${PORT}/`);
   console.log(`  Host dash:   http://localhost:${PORT}/host?key=${HOST_KEY}`);
-  console.log(`  WiZ bulbs:   ${WIZ_IPS.length ? WIZ_IPS.join(', ') : '(none configured — set WIZ_IPS env var)'}`);
+  console.log(`  WiZ bulbs:   ${WIZ_IPS.length ? WIZ_IPS.join(', ') : '(running auto-discovery...)'}`);
   console.log(`\n  Mode: ${appState.mode}`);
   console.log(`  Press Ctrl+C to stop.\n`);
+
+  // Auto-discover WiZ bulbs via broadcast (mirrors test.py approach)
+  discoverWizBulbs().then(ips => {
+    discoveredWizIPs = ips;
+    if (ips.length) {
+      console.log(`[wiz] Auto-discovered ${ips.length} bulb(s): ${ips.join(', ')}`);
+      console.log(`[wiz] Tip: add WIZ_IPS=${ips.join(',')} to start.sh to skip discovery next time.\n`);
+    } else {
+      console.log(`[wiz] No bulbs found on ${WIZ_BROADCAST}. If your subnet differs, set WIZ_BROADCAST env var.\n`);
+    }
+  });
 });
 
 // Graceful shutdown
