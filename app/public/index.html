@@ -815,10 +815,20 @@
     }
 
     /* ── Floating color bubble ─────────────────────────────────── */
+    /* position: fixed so it escapes .app-root overflow:hidden (which clips box-shadow glow)
+       and so it sits at a consistent position regardless of scroll.
+       z-index: var(--z-modal) = 200, which puts it ABOVE the offline-banner (z-top=300)
+       is wrong — we want it BELOW the offline banner so banner reads correctly.
+       Use 150 (between overlay=100 and modal=200) so it floats above content
+       but stays below the offline banner, modal, and zap layer. */
     #color-bubble {
-      position: absolute;
+      position: fixed;
       bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
-      right: var(--space-4);
+      /* On mobile (< 480px wide): sits 16px from the viewport right edge.
+         On desktop (app centered, max-width 480px): sits 16px from the right edge of .app-root.
+         Formula: (vw - 480px)/2 + 16px = 50vw - 240px + 16px = 50vw - 224px.
+         max() ensures it's never less than 16px (protects narrow phones). */
+      right: max(var(--space-4), calc(50vw - 224px));
       width: 52px;
       height: 52px;
       border-radius: 50%;
@@ -828,7 +838,7 @@
         0 0 22px -4px var(--room-color-a, #FF6EB4),
         0 4px 14px rgba(0, 0, 0, 0.45);
       cursor: pointer;
-      z-index: var(--z-overlay);
+      z-index: 150;
       padding: 0;
       transition:
         background var(--transition-glow),
@@ -865,14 +875,42 @@
       background: var(--color-surface);
       border-radius: var(--radius-xl) var(--radius-xl) 0 0;
       border-top: 1px solid var(--color-border-hi);
+      /* Reduced bottom padding: safe-area + var(--space-5) is enough.
+         Was space-8 (32px) which wasted vertical real estate on tall phones. */
       padding: var(--space-3) var(--space-5)
-               calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
+               calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
       animation: drawer-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
     }
 
     @keyframes drawer-up {
       from { transform: translateX(-50%) translateY(100%); }
       to   { transform: translateX(-50%) translateY(0); }
+    }
+
+    @keyframes drawer-down {
+      from { transform: translateX(-50%) translateY(0); }
+      to   { transform: translateX(-50%) translateY(100%); }
+    }
+
+    @keyframes backdrop-out {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+
+    /* When closing: sheet slides down, backdrop fades out */
+    #color-drawer.closing #color-drawer-sheet {
+      animation: drawer-down 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
+    #color-drawer.closing #color-drawer-backdrop {
+      animation: backdrop-out 0.22s ease forwards;
+    }
+
+    /* Compact swatches inside the drawer — 44px instead of 56px default.
+       30 colors × 6 cols = 5 rows × 44px + 4 gaps × 10px = 220 + 40 = 260px.
+       That leaves plenty of room for the title + handle above. */
+    #color-drawer-palette .color-swatch {
+      height: 44px;
     }
 
     #color-drawer-handle {
@@ -1104,10 +1142,12 @@
     </div>
     <!-- Slide progress pill — tells students how many slides there are total
          (host navigates; students have no control). Hidden when 0 or 1 slide. -->
+    <!-- Pill is positioned above the color bubble (52px + 20px bottom + 8px gap = 80px from bottom).
+         The bubble is at bottom: ~20px + safe-area. Pill sits at 80px + safe-area so they never overlap. -->
     <div id="slide-progress-pill" aria-live="polite" aria-label="Slide progress" style="
       display: none;
       position: absolute;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
       right: 16px;
       font-family: var(--font-mono);
       font-size: var(--text-2xs);

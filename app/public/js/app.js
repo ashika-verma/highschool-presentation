@@ -175,7 +175,17 @@ function openColorDrawer() {
 
 function closeColorDrawer() {
   const drawer = $('color-drawer');
-  if (drawer) drawer.style.display = 'none';
+  if (!drawer || drawer.style.display === 'none') return;
+
+  // Animate out: slide sheet down + fade backdrop, then hide
+  drawer.classList.add('closing');
+
+  // Wait for the longer of the two animations (0.22s) + a small buffer
+  const CLOSE_MS = 240;
+  setTimeout(() => {
+    drawer.style.display = 'none';
+    drawer.classList.remove('closing');
+  }, CLOSE_MS);
 }
 
 function syncColorBubble(hex) {
