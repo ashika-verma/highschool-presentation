@@ -840,10 +840,16 @@
       cursor: pointer;
       z-index: 150;
       padding: 0;
+      /* Center the palette emoji icon */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
       transition:
         background var(--transition-glow),
         box-shadow var(--transition-glow),
-        transform var(--transition-fast);
+        transform var(--transition-fast),
+        visibility 0s; /* instant visibility change (keyboard hide) */
     }
 
     #color-bubble:active {
@@ -1328,9 +1334,9 @@
   </section>
 
   <!-- Floating color bubble — always-accessible after join; hidden in lobby/color/sendoff -->
-  <!-- The palette emoji inside communicates "tap to change color" without any text.
-       Font-size 22px centers comfortably in the 52px bubble. -->
-  <button id="color-bubble" aria-label="Change your color" aria-haspopup="dialog" style="display:none;font-size:22px;line-height:1">🎨</button>
+  <!-- Palette emoji communicates "tap to change color" — no text needed.
+       CSS display:flex + align/justify-center centers the emoji inside the 52px circle. -->
+  <button id="color-bubble" aria-label="Change your color" aria-haspopup="dialog" style="display:none;font-size:22px">🎨</button>
 
 </div><!-- /.app-root -->
 

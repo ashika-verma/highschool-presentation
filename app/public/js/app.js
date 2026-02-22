@@ -203,7 +203,9 @@ function setColorBubbleVisible(visible) {
   if (!bubble) return;
 
   const wasHidden = bubble.style.display === 'none';
-  bubble.style.display = visible ? 'block' : 'none';
+  // Use 'flex' to match CSS display:flex (centering the emoji icon).
+  // 'none' hides the bubble completely.
+  bubble.style.display = visible ? 'flex' : 'none';
 
   if (visible) {
     syncColorBubble(state.lastSentHex || state.colorHex);
