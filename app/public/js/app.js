@@ -179,6 +179,12 @@ function closeColorDrawer() {
   // Already in progress — don't double-trigger
   if (drawer.classList.contains('closing')) return;
 
+  // Skip animation for reduced-motion users — close immediately
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    drawer.style.display = 'none';
+    return;
+  }
+
   // Animate out: slide sheet down + fade backdrop, then hide
   drawer.classList.add('closing');
 

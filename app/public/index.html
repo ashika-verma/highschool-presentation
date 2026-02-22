@@ -870,6 +870,20 @@
       animation: bubble-intro 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     }
 
+    /* Skip all bubble/drawer animations for reduced-motion users */
+    @media (prefers-reduced-motion: reduce) {
+      #color-bubble.bubble-intro {
+        animation: none;
+      }
+      #color-drawer-sheet {
+        animation: none !important;
+      }
+      #color-drawer.closing #color-drawer-sheet,
+      #color-drawer.closing #color-drawer-backdrop {
+        animation: none !important;
+      }
+    }
+
     /* ── Color drawer (bottom sheet) ──────────────────────────── */
     #color-drawer {
       position: fixed;
