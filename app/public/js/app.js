@@ -76,11 +76,129 @@ function debounce(fn, delay) {
   };
 }
 
+// ─── Floating color bubble ─────────────────────────────────────────────────
+// A 52px glowing circle in the bottom-right corner that shows the student's
+// current color. Tapping opens a full 30-color bottom drawer so they can change
+// their color from ambient, slides, text, demo, or Q&A without leaving the screen.
+
+function initColorBubble() {
+  const bubble = $('color-bubble');
+  const drawer = $('color-drawer');
+  if (!bubble || !drawer) return;
+
+  renderDrawerPalette();
+
+  bubble.addEventListener('click', openColorDrawer);
+
+  const backdrop = $('color-drawer-backdrop');
+  if (backdrop) backdrop.addEventListener('click', closeColorDrawer);
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && drawer.style.display !== 'none') closeColorDrawer();
+  });
+}
+
+function renderDrawerPalette() {
+  const grid = $('color-drawer-palette');
+  if (!grid) return;
+  grid.innerHTML = '';
+  PALETTE.forEach(color => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'color-swatch';
+    btn.style.setProperty('--swatch-color', color.hex);
+    btn.setAttribute('aria-label', color.name);
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', 'false');
+    btn.dataset.hex   = color.hex;
+    btn.dataset.name  = color.name;
+    btn.dataset.colorB = color.colorB;
+    btn.addEventListener('click', () => handleDrawerColorTap(color, btn));
+    grid.appendChild(btn);
+  });
+}
+
+function handleDrawerColorTap(color, btn) {
+  if (!state.joined) {
+    showToast('Join first to control the lights!', '#888899');
+    closeColorDrawer();
+    return;
+  }
+
+  const now = Date.now();
+  if (now - lastColorTapAt < COLOR_TAP_RATE_MS) return;
+  lastColorTapAt = now;
+
+  // Mark selected in drawer
+  $('color-drawer-palette').querySelectorAll('.color-swatch').forEach(s => {
+    s.classList.remove('selected');
+    s.setAttribute('aria-checked', 'false');
+  });
+  btn.classList.add('selected');
+  btn.setAttribute('aria-checked', 'true');
+
+  if (navigator.vibrate) navigator.vibrate(20);
+
+  ws.sendColor(state.name || 'Anonymous', color.hex);
+  state.colorsSent++;
+  state.lastSentHex  = color.hex;
+  state.lastSentName = color.name;
+  state.totalColorChanges++;
+  const countEl = $('demo-count-number');
+  if (countEl) countEl.textContent = state.totalColorChanges > 0 ? state.totalColorChanges : '—';
+  appendTerminalLine(state.name || 'Anonymous', color.hex, color.hex);
+
+  setRoomColor(color.hex);
+  updateAmbientTag();
+  showZapFeedback(color.hex);
+  syncColorBubble(color.hex);
+
+  closeColorDrawer();
+}
+
+function openColorDrawer() {
+  const drawer = $('color-drawer');
+  if (!drawer) return;
+  drawer.style.display = 'block';
+
+  // Pre-select current color
+  const hex = state.lastSentHex || state.colorHex;
+  const grid = $('color-drawer-palette');
+  if (grid) {
+    grid.querySelectorAll('.color-swatch').forEach(btn => {
+      const sel = btn.dataset.hex === hex;
+      btn.classList.toggle('selected', sel);
+      btn.setAttribute('aria-checked', sel ? 'true' : 'false');
+    });
+  }
+}
+
+function closeColorDrawer() {
+  const drawer = $('color-drawer');
+  if (drawer) drawer.style.display = 'none';
+}
+
+function syncColorBubble(hex) {
+  const bubble = $('color-bubble');
+  if (!bubble) return;
+  const h = hex || state.roomColorHex || '#FF6EB4';
+  bubble.style.background  = h;
+  bubble.style.boxShadow   = `0 0 22px -4px ${h}, 0 4px 14px rgba(0,0,0,0.45)`;
+}
+
+function setColorBubbleVisible(visible) {
+  const bubble = $('color-bubble');
+  if (!bubble) return;
+  bubble.style.display = visible ? 'block' : 'none';
+  if (visible) syncColorBubble(state.lastSentHex || state.colorHex);
+}
+
 // ─── Boot ──────────────────────────────────────────────────────────────────
 
 function boot() {
   renderLobbyPalette();
   renderColorGridMain();
+  initColorBubble();
   ws.connect();
   wireWebSocket();
   wireUI();
@@ -710,6 +828,9 @@ function setRoomColor(hex) {
   // are dark enough that black text fails WCAG contrast. Dynamically switch to white.
   const textColor = contrastColor(hex);
   document.documentElement.style.setProperty('--room-btn-text', textColor);
+
+  // Keep bubble color in sync with the current room color
+  if ($('color-bubble')?.style.display !== 'none') syncColorBubble(hex);
 }
 
 // ─── Slide renderer ────────────────────────────────────────────────────────
@@ -1190,6 +1311,10 @@ function switchMode(mode, flash = true) {
       initSparkles($('sendoff-sparkles'), 40);
     }
   }
+
+  // Color bubble: visible after join in all modes except lobby, color (redundant), sendoff
+  const bubbleModes = new Set(['ambient', 'photos', 'text', 'demo', 'qa']);
+  setColorBubbleVisible(state.joined && bubbleModes.has(mode));
 
   const afterSwitch = () => {
     // Counter animation runs AFTER the flash completes so it isn't wasted under the overlay
