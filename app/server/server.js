@@ -56,24 +56,6 @@ const WIZ_PORT  = 38899;
 
 const PUBLIC_DIR = path.join(__dirname, '../public');
 
-// ─── App state ─────────────────────────────────────────────────────────────
-
-const appState = {
-  mode: 'lobby',
-  roomColorHex: '#FF6EB4',
-  totalColorChanges: 0,
-  clients: new Map(),   // ws → { name, hex, isHost, colorsSent }
-  questions: [],
-  textResponses: [],
-  photos: buildPhotoList(),
-  // Reaction totals — persisted so late-joining students and reconnecting host
-  // see accurate cumulative counts, not "0" for everything.
-  reactionCounts: { '👀': 0, '💡': 0, '🔥': 0, '😮': 0 },
-  // Slides — loaded from disk; default empty array if file doesn't exist
-  slides: loadSlides(),
-  currentSlideIndex: 0,
-};
-
 // ─── Slides ────────────────────────────────────────────────────────────────
 
 const SLIDES_PATH = path.join(__dirname, '../data/slides.json');
@@ -95,6 +77,24 @@ function saveSlides(slides) {
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
   fs.writeFileSync(SLIDES_PATH, JSON.stringify(slides, null, 2), 'utf8');
 }
+
+// ─── App state ─────────────────────────────────────────────────────────────
+
+const appState = {
+  mode: 'lobby',
+  roomColorHex: '#FF6EB4',
+  totalColorChanges: 0,
+  clients: new Map(),   // ws → { name, hex, isHost, colorsSent }
+  questions: [],
+  textResponses: [],
+  photos: buildPhotoList(),
+  // Reaction totals — persisted so late-joining students and reconnecting host
+  // see accurate cumulative counts, not "0" for everything.
+  reactionCounts: { '👀': 0, '💡': 0, '🔥': 0, '😮': 0 },
+  // Slides — loaded from disk; default empty array if file doesn't exist
+  slides: loadSlides(),
+  currentSlideIndex: 0,
+};
 
 // ─── Script ────────────────────────────────────────────────────────────────
 
@@ -593,6 +593,10 @@ function handleMessage(socket, msg) {
       client.name = name;
       client.hex  = hex;
 
+      // Fire the bulb to the student's chosen color immediately on join
+      appState.roomColorHex = hex;
+      sendToWiz(hex);
+
       // Confirm to sender
       socket.send(JSON.stringify({ type: 'joined', count: studentCount() }));
 
@@ -809,6 +813,16 @@ httpServer.listen(PORT, () => {
       console.log(`[wiz] Tip: add WIZ_IPS=${ips.join(',')} to start.sh to skip discovery next time.\n`);
     } else {
       console.log(`[wiz] No bulbs found on ${WIZ_BROADCAST}. If your subnet differs, set WIZ_BROADCAST env var.\n`);
+    }
+  });
+
+  // Watch for changes in slides.json and reload
+  fs.watch(SLIDES_PATH, (eventType, filename) => {
+    if (filename && eventType === 'change') {
+      console.log('[slides] slides.json changed, reloading...');
+      appState.slides = loadSlides();
+      appState.currentSlideIndex = 0;
+      broadcast({ type: 'slides_updated', slides: appState.slides, currentSlideIndex: 0 });
     }
   });
 });

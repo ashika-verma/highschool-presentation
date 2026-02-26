@@ -226,6 +226,26 @@ function setColorBubbleVisible(visible) {
   }
 }
 
+// ─── Screen Wake Lock ──────────────────────────────────────────────────────
+// Prevents the phone screen from sleeping while the app is open.
+// The lock is automatically released when the page is hidden and re-acquired
+// when it becomes visible again (required by the spec).
+
+let _wakeLock = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    _wakeLock = await navigator.wakeLock.request('screen');
+  } catch (_) {
+    // Denied or not supported — not fatal, screen may still sleep
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestWakeLock();
+});
+
 // ─── Boot ──────────────────────────────────────────────────────────────────
 
 function boot() {
@@ -241,6 +261,7 @@ function boot() {
   // 28 sparkles fills the screen better — 18 looked sparse on large phones
   initSparkles($('sparkle-container'), 28);
   // Sendoff sparkles initialized on demand in switchMode — don't double-init here
+  requestWakeLock();
 }
 
 // ─── WebSocket event wiring ────────────────────────────────────────────────
@@ -776,7 +797,7 @@ function handleColorTap(color, btn) {
   $('sent-color-swatch').style.setProperty('--current-color', color.hex);
   $('sent-color-swatch').style.background = color.hex;
   $('sent-color-name').textContent = color.name;
-  $('sent-color-status').textContent = 'sent to NYC';
+  $('sent-color-status').textContent = 'sent';
 
   // ZAP animation
   showZapFeedback(color.hex);
@@ -975,7 +996,7 @@ function updateAmbientTag() {
   const sent = state.colorsSent;
   if (state.name) {
     tag.textContent = sent > 0
-      ? `${state.name} • ${sent} color${sent !== 1 ? 's' : ''} sent to NYC`
+      ? `${state.name} • ${sent} color${sent !== 1 ? 's' : ''} sent`
       : `${state.name} • react below`;
   } else {
     // Reconnected without session — show generic connected state

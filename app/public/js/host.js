@@ -34,7 +34,7 @@ const state = {
   currentSlideIndex: 0,
   selectedSlideIndex: 0,
   // Script
-  scriptVisible: false,
+  scriptVisible: true,
   scriptContent: '',
 };
 
@@ -1088,55 +1088,73 @@ function wireSlidesUI() {
 
 // ─── Teleprompter / Script ────────────────────────────────────────────────────
 
-// Maps mode names to section markers in the script.
-// The script should contain lines like "[→ COLOR MODE]" for auto-scroll.
+// Maps modes to substrings of the actual ## headings in talk.md for auto-scroll.
 const MODE_MARKERS = {
-  lobby:   '[→ LOBBY]',
-  color:   '[→ COLOR MODE]',
-  ambient: '[→ AMBIENT]',
-  photos:  '[→ PHOTOS]',
-  text:    '[→ TEXT]',
-  demo:    '[→ DEMO]',
-  qa:      '[→ Q&A]',
-  sendoff: '[→ SENDOFF]',
+  lobby:   'Before You Start',
+  color:   '0:00',
+  ambient: '2:00',
+  photos:  '6:30',
+  text:    '12:30',
+  demo:    '14:00',
+  sendoff: '16:00',
+  qa:      '~18:00',
 };
 
 function renderScript(text) {
   const panel = $('script-panel');
   if (!panel) return;
 
-  // Simple markdown-lite render: bold, headers, mode markers, linebreaks
-  const html = text
-    .split('\n')
-    .map(line => {
-      // Mode markers — highlight them
-      const isMarker = Object.values(MODE_MARKERS).some(m => line.includes(m));
-      if (isMarker) {
-        return `<div class="script-mode-marker" data-line="${escHtml(line)}" style="
-          font-family:var(--font-mono);
-          font-size:10px;
-          letter-spacing:0.08em;
-          color:var(--room-color-a);
-          background:color-mix(in srgb, var(--room-color-a) 10%, transparent);
-          border-radius:4px;
-          padding:2px 8px;
-          margin:8px 0 4px;
-          display:inline-block;
-        ">${escHtml(line)}</div>`;
-      }
-      // Headers
-      if (line.startsWith('# ')) {
-        return `<div style="font-weight:700;font-size:var(--text-sm);color:var(--color-text);margin-top:12px">${escHtml(line.slice(2))}</div>`;
-      }
-      if (line.startsWith('## ')) {
-        return `<div style="font-weight:600;font-size:13px;color:var(--color-text);margin-top:8px">${escHtml(line.slice(3))}</div>`;
-      }
-      // Bold
-      const boldLine = escHtml(line).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      if (line.trim() === '') return '<div style="height:8px"></div>';
-      return `<div style="margin:1px 0">${boldLine}</div>`;
-    })
-    .join('');
+  const html = text.split('\n').map(line => {
+    // Table separator rows  (|---|---|) — skip entirely
+    if (/^\|[-| :]+\|$/.test(line.trim())) return '';
+
+    // Table data rows — render in mono so columns read naturally
+    if (/^\|.+\|$/.test(line.trim())) {
+      return `<div style="font-family:var(--font-mono);font-size:10px;color:var(--color-text-dim);white-space:pre;margin:1px 0">${escHtml(line)}</div>`;
+    }
+
+    // Horizontal rule ---
+    if (line.trim() === '---') {
+      return '<hr style="border:none;border-top:1px solid var(--color-border);margin:10px 0">';
+    }
+
+    // # Title
+    if (line.startsWith('# ')) {
+      return `<div style="font-weight:700;font-size:15px;color:var(--room-color-a);margin:4px 0 8px">${escHtml(line.slice(2))}</div>`;
+    }
+
+    // ## Section heading — keyed with data-line for mode auto-scroll
+    if (line.startsWith('## ')) {
+      const heading = line.slice(3);
+      return `<div data-line="${escHtml(heading)}" style="font-weight:700;font-size:var(--text-sm);color:var(--color-text);margin-top:16px;margin-bottom:4px">${escHtml(heading)}</div>`;
+    }
+
+    // > Blockquote — spoken words
+    if (line.startsWith('> ')) {
+      const inner = escHtml(line.slice(2))
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/_(.+?)_/g, '<em>$1</em>');
+      return `<div style="border-left:2px solid var(--room-color-a);padding:3px 10px;margin:3px 0;color:var(--color-text);font-size:14px;line-height:1.65">${inner}</div>`;
+    }
+
+    // > alone — blank line inside blockquote
+    if (line.trim() === '>') return '<div style="height:4px"></div>';
+
+    // Blank line
+    if (line.trim() === '') return '<div style="height:6px"></div>';
+
+    // Stage direction: _[text]_ or _text_ on its own line
+    const stageMatch = line.match(/^_(.+)_$/);
+    if (stageMatch) {
+      return `<div style="font-style:italic;color:var(--color-text-dim);font-size:11px;margin:2px 0">${escHtml(stageMatch[1])}</div>`;
+    }
+
+    // Normal line — bold + italic inline
+    const rendered = escHtml(line)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/_(.+?)_/g, '<em>$1</em>');
+    return `<div style="margin:1px 0;color:var(--color-text-muted)">${rendered}</div>`;
+  }).join('');
 
   panel.innerHTML = html;
 }
@@ -1146,9 +1164,12 @@ function scrollScriptToMode(mode) {
   if (!panel || !state.scriptVisible) return;
   const marker = MODE_MARKERS[mode];
   if (!marker) return;
-  const el = panel.querySelector(`[data-line="${escHtml(marker)}"]`);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Find the first heading whose text contains the marker substring
+  for (const el of panel.querySelectorAll('[data-line]')) {
+    if (el.dataset.line.includes(marker)) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
   }
 }
 
@@ -1158,6 +1179,7 @@ async function loadScript() {
     if (res.ok) {
       state.scriptContent = await res.text();
       renderScript(state.scriptContent);
+      scrollScriptToMode(state.currentMode);
     } else {
       const panel = $('script-panel');
       if (panel) panel.innerHTML = '<p style="font-style:italic;color:var(--color-text-dim);font-size:13px">No script file found (create script/talk.md)</p>';
@@ -1172,20 +1194,21 @@ function wireScriptUI() {
   const toggleBtn = $('script-toggle-btn');
   const section = $('script-section');
 
-  function toggleScript() {
-    state.scriptVisible = !state.scriptVisible;
-    if (section) section.style.display = state.scriptVisible ? 'block' : 'none';
+  function setScriptVisible(visible) {
+    state.scriptVisible = visible;
+    if (section) section.style.display = visible ? 'block' : 'none';
     if (toggleBtn) {
-      // Reconstruct innerHTML to preserve the "/" hint span — setting textContent
-      // would blow away the child spans and permanently lose the "/" indicator.
-      const label = state.scriptVisible ? 'Hide Script' : 'Script';
+      const label = visible ? 'Hide Script' : 'Script';
       toggleBtn.innerHTML = `<span>${label}</span><span style="font-family:var(--font-mono);font-size:9px;opacity:0.5;margin-left:5px;letter-spacing:0.04em">/</span>`;
-      toggleBtn.setAttribute('aria-expanded', String(state.scriptVisible));
+      toggleBtn.setAttribute('aria-expanded', String(visible));
     }
-    if (state.scriptVisible) {
-      scrollScriptToMode(state.currentMode);
-    }
+    if (visible) scrollScriptToMode(state.currentMode);
   }
+
+  // Apply initial state
+  setScriptVisible(state.scriptVisible);
+
+  function toggleScript() { setScriptVisible(!state.scriptVisible); }
 
   toggleBtn?.addEventListener('click', toggleScript);
 

@@ -13,6 +13,7 @@ HOST_KEY=ashika2025 WIZ_IPS=192.168.1.100,192.168.1.101 npm start
 ```
 
 The server prints:
+
 ```
 Student app: http://localhost:3000/
 Host dash:   http://localhost:3000/host?key=ashika2025
@@ -23,6 +24,7 @@ Host dash:   http://localhost:3000/host?key=ashika2025
 Students need to reach your server from their phones in Texas.
 
 Options (pick one):
+
 - **ngrok** (easiest): `ngrok http 3000` → gives you a public URL
 - **Tailscale** (if you have it set up)
 - Deploy to Railway/Render/Fly.io (use the Dockerfile below)
@@ -43,6 +45,7 @@ Email the QR code image to the classroom coordinator the day before.
 ### 4. Add photos for the collage
 
 Drop images into:
+
 ```
 photos/highschool/    ← CSHS photos
 photos/college/       ← MIT photos
@@ -63,16 +66,16 @@ Change the `HOST_KEY` env var to something only you know.
 
 ## App modes and when to switch
 
-| Mode | When | What students see |
-|------|------|-------------------|
-| lobby | Before talk starts | Name entry + color picker |
-| color | Opening (0:00) | Full-screen color grid |
-| ambient | During story (~2:00) | Dithered background, reactions |
-| photos | Photo collage | Polaroid slideshow |
-| text | Open question (12:30) | "What do you love?" form + live feed |
-| demo | Demo reveal (14:00) | Counter + terminal log + confetti |
-| qa | Q&A (18:00) | Question form + feed |
-| sendoff | End | "Make something. Show someone. Keep going." |
+| Mode    | When                  | What students see                           |
+| ------- | --------------------- | ------------------------------------------- |
+| lobby   | Before talk starts    | Name entry + color picker                   |
+| color   | Opening (0:00)        | Full-screen color grid                      |
+| ambient | During story (~2:00)  | Dithered background, reactions              |
+| photos  | Photo collage         | Polaroid slideshow                          |
+| text    | Open question (12:30) | "What do you love?" form + live feed        |
+| demo    | Demo reveal (14:00)   | Counter + terminal log + confetti           |
+| qa      | Q&A (18:00)           | Question form + feed                        |
+| sendoff | End                   | "Make something. Show someone. Keep going." |
 
 Switch modes from the host dashboard — big buttons, one tap each.
 
@@ -90,6 +93,7 @@ The server sends UDP packets to port 38899 on each bulb IP:
 ```
 
 Test it manually:
+
 ```bash
 echo '{"method":"setPilot","params":{"r":255,"g":0,"b":128,"dimming":80}}' | nc -u 192.168.1.100 38899
 ```

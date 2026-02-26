@@ -1043,8 +1043,8 @@
           <span class="live-dot" aria-hidden="true"></span>
           NYC — Live
         </p>
-        <h1>Your phone controls<br>lights in <em>New York City</em></h1>
-        <p>Pick a color. Watch Ashika's apartment<br>light up in real time.</p>
+        <h1>Your phone controls<br>color of <em>this website</em></h1>
+        <p>Pick a color.</p>
       </div>
 
       <!-- Live counter — hidden initially, shown by JS when count > 0 -->
@@ -1100,7 +1100,7 @@
           id="lobby-join-btn"
           aria-label="Turn on the lights"
         >
-          Turn on the lights
+        Enter the room
         </button>
       </form>
     </div>
@@ -1112,7 +1112,6 @@
       <p>
         The lights are on.<br>
         Your color is in the mix.<br>
-        Ashika controls the screens.
       </p>
       <p class="lobby-wait-hint" style="
         margin-top: var(--space-4);
@@ -1240,21 +1239,21 @@
        ══════════════════════════════════════════════════════════ -->
   <section id="screen-text" class="screen" aria-label="Open question">
     <p class="text-prompt">
-      What do you actually love?
-      <em>sports, music, art, people — anything.</em>
+      What do you actually like to do?
+      <em>sports, music, art — anything.</em>
     </p>
 
     <form id="text-form" autocomplete="off" novalidate>
       <textarea
         id="text-input"
         class="input-pixel input-pixel--textarea"
-        placeholder="music, art, games, people, places..."
+        placeholder="music, art, games, places..."
         maxlength="200"
         rows="3"
         autocomplete="off"
         spellcheck="false"
         enterkeyhint="send"
-        aria-label="What do you love"
+        aria-label="What do you actually like to do?"
       ></textarea>
       <button
         type="submit"
@@ -1305,7 +1304,7 @@
     <div class="qa-content">
       <h2 class="qa-header">
         Ask Ashika anything
-        <span>MIT, career, life — genuinely anything</span>
+        <span>high school, college, career, life — anything</span>
       </h2>
 
       <!-- Reactions in Q&A — above feed so they're discovered before keyboard opens,
@@ -1368,11 +1367,8 @@
 
     <div style="position:relative; z-index:1; text-align:center">
       <p class="sendoff__text">
-        Make something.<br>
-        Show someone.<br>
-        Keep going.
+        Make something cool!<br>
       </p>
-      <p class="sendoff__credit">— Ashika Verma, MIT EECS '24</p>
       <p style="
         margin-top: clamp(var(--space-6), 8vh, var(--space-12));
         font-family: var(--font-mono);
@@ -1380,7 +1376,7 @@
         color: rgba(255,255,255,0.9);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-      ">you just controlled real lights in NYC</p>
+      ">thanks for listening!</p>
     </div>
   </section>
 

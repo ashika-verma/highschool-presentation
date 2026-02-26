@@ -1,62 +1,238 @@
 [
   {
-    "id": "slide-1771742534182",
-    "bg": "#1e1b4b",
-    "elements": [
-      {
-        "type": "text",
-        "content": "NICEEE\n",
-        "size": 36,
-        "weight": 300,
-        "color": "#FFFFFF",
-        "x": 50,
-        "y": 50,
-        "align": "center"
-      }
-    ],
-    "_template": "quote"
-  },
-  {
-    "id": "slide-1771742547167",
-    "bg": "#0A0A10",
-    "elements": [
-      {
-        "type": "text",
-        "content": "HELLO",
-        "size": 48,
-        "weight": 700,
-        "color": "#FFFFFF",
-        "x": 50,
-        "y": 44,
-        "align": "center"
-      },
-      {
-        "type": "text",
-        "content": "HELLO",
-        "size": 20,
-        "weight": 400,
-        "color": "rgba(255,255,255,0.65)",
-        "x": 50,
-        "y": 62,
-        "align": "center"
-      }
-    ],
-    "_template": "title"
-  },
-  {
-    "id": "slide-1771745687597",
+    "id": "slide-robot",
     "bg": "#0A0A10",
     "elements": [
       {
         "type": "image",
-        "src": "/photos/highschool/nerds.jpg",
+        "src": "/photos/highschool/robot.jpg",
         "x": 50,
         "y": 44,
         "width": 80
       },
       {
         "type": "text",
-        "content": "orchestra room",
+        "content": "a robot of sorts",
+        "size": 18,
+        "weight": 400,
+        "color": "rgba(255,255,255,0.8)",
+        "x": 50,
+        "y": 80,
+        "align": "center"
+      }
+    ],
+    "_template": "photo-caption"
+  },
+  {
+    "id": "slide-badmath",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/highschool/badmath2.jpg",
+        "x": 50,
+        "y": 50,
+        "width": 90
+      }
+    ],
+    "_template": "full-photo"
+  },
+  {
+    "id": "slide-chem-calculator",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/highschool/chem-calculator.jpg",
+        "x": 50,
+        "y": 44,
+        "width": 80
+      },
+      {
+        "type": "text",
+        "content": "a video game i made for mole day!",
+        "size": 18,
+        "weight": 400,
+        "color": "rgba(255,255,255,0.8)",
+        "x": 50,
+        "y": 80,
+        "align": "center"
+      }
+    ],
+    "_template": "photo-caption"
+  },
+  {
+    "id": "slide-violin",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/highschool/violin.jpg",
+        "x": 50,
+        "y": 44,
+        "width": 80
+      },
+      {
+        "type": "text",
+        "content": "played the violin since intermediate school",
+        "size": 18,
+        "weight": 400,
+        "color": "rgba(255,255,255,0.8)",
+        "x": 50,
+        "y": 80,
+        "align": "center"
+      }
+    ],
+    "_template": "photo-caption"
+  },
+  {
+    "id": "slide-vr-video-game",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/highschool/vr-video-game.jpg",
+        "x": 50,
+        "y": 44,
+        "width": 80
+      },
+      {
+        "type": "text",
+        "content": "the VR escape room. code + design + 3D + sound.",
+        "size": 18,
+        "weight": 400,
+        "color": "rgba(255,255,255,0.8)",
+        "x": 50,
+        "y": 80,
+        "align": "center"
+      }
+    ],
+    "_template": "photo-caption"
+  },
+  {
+    "id": "slide-catsoop-hack",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/college/catsoop-hack.jpg",
+        "x": 50,
+        "y": 44,
+        "width": 80
+      },
+      {
+        "type": "text",
+        "content": "hacked into intro to programming class",
+        "size": 18,
+        "weight": 400,
+        "color": "rgba(255,255,255,0.8)",
+        "x": 50,
+        "y": 80,
+        "align": "center"
+      }
+    ],
+    "_template": "photo-caption"
+  },
+  {
+    "id": "slide-lightup-theramin",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/college/lightup-theramin.jpg",
+        "x": 50,
+        "y": 44,
+        "width": 80
+      },
+      {
+        "type": "text",
+        "content": "building my own lightup instrument",
+        "size": 18,
+        "weight": 400,
+        "color": "rgba(255,255,255,0.8)",
+        "x": 50,
+        "y": 80,
+        "align": "center"
+      }
+    ],
+    "_template": "photo-caption"
+  },
+  {
+    "id": "slide-ashika-soloing",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/college/ashika-soloing.jpeg",
+        "x": 50,
+        "y": 44,
+        "width": 80
+      },
+      {
+        "type": "text",
+        "content": "i still love music",
+        "size": 18,
+        "weight": 400,
+        "color": "rgba(255,255,255,0.8)",
+        "x": 50,
+        "y": 80,
+        "align": "center"
+      }
+    ],
+    "_template": "photo-caption"
+  },
+  {
+    "id": "slide-guitar-hero",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/college/guitar-hero.jpg",
+        "x": 50,
+        "y": 44,
+        "width": 80
+      },
+      {
+        "type": "text",
+        "content": "built mini guitar hero (not featured, the cool music)",
+        "size": 18,
+        "weight": 400,
+        "color": "rgba(255,255,255,0.8)",
+        "x": 50,
+        "y": 80,
+        "align": "center"
+      }
+    ],
+    "_template": "photo-caption"
+  },
+  {
+    "id": "slide-video-game",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/college/video-game.jpg",
+        "x": 50,
+        "y": 50,
+        "width": 90
+      }
+    ],
+    "_template": "full-photo"
+  },
+  {
+    "id": "slide-snowman",
+    "bg": "#0A0A10",
+    "elements": [
+      {
+        "type": "image",
+        "src": "/photos/college/snowman.jpg",
+        "x": 50,
+        "y": 44,
+        "width": 80
+      },
+      {
+        "type": "text",
+        "content": "keep building! (this is from yesterday)",
         "size": 18,
         "weight": 400,
         "color": "rgba(255,255,255,0.8)",
